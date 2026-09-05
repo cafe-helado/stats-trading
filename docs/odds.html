@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#EDF0EC">
+<title>Odds, Probability and Price — Chance, visually</title>
+<meta name="description" content="A probability, a set of odds and a price are one object in three notations. Fractional, decimal and American; the overround and what it costs; de-vigging and why the obvious method is wrong; and the same arithmetic read off an option chain.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Odds, Probability and Price — Chance, visually">
+<meta property="og:description" content="A probability, a set of odds and a price are one object in three notations. Fractional, decimal and American; the overround and what it costs; de-vigging and why the obvious method is wrong; and the same arithmetic read off an option chain.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23EDF0EC'/><circle cx='16' cy='16' r='7' fill='none' stroke='%231F4CE8' stroke-width='3'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lab.css">
+<link rel="stylesheet" href="assets/mobile.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chance">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+<header class="serieshead">
+  <div class="in">
+    <a class="home" href="index.html">← Chance, visually</a>
+    <span class="num">No. 01 · Odds</span>
+  </div>
+</header>
+
+<div class="progress" id="prog"></div>
+<nav class="chapnav" id="chapnav" aria-label="Chapters">
+  <a href="#c1"><span>A price is a probability</span><i></i></a>
+  <a href="#c2"><span>Three notations</span><i></i></a>
+  <a href="#c3"><span>They add to more than one</span><i></i></a>
+  <a href="#c4"><span>Taking the margin out</span><i></i></a>
+  <a href="#c5"><span>The same thing on a chain</span><i></i></a>
+  <a href="#c6"><span>Where it stops being one</span><i></i></a>
+  <a href="#c7"><span>Drills</span><i></i></a>
+</nav>
+
+<div class="hero">
+  <canvas id="heroCv" aria-hidden="true"></canvas>
+  <div class="heroInner">
+    <div class="eyebrow">An interactive derivation · No. 01</div>
+    <h1>Three ways to say <em>one</em> number</h1>
+    <p class="sub">A probability, a set of odds and a price are the same object wearing different clothes. Learn to move between them without thinking, then watch what happens when the numbers refuse to add up to one — which they always do.</p>
+  </div>
+  <div class="scrollcue">Scroll ↓</div>
+</div>
+
+<main>
+
+<div class="orient">
+  <h2>Start here</h2>
+  <p class="lede">This is the first page of the series and it assumes nothing — no statistics, no probability, no options. It starts from a single question anyone can answer: <em>what would you pay for a ticket that pays a pound if a coin lands heads?</em> Everything else on this page, and a fair amount of everything else in the series, is that question asked in harder clothes.</p>
+  <ol>
+    <li><b>Move things before you read the explanation.</b> Every figure here is live. The number in the text is the number the figure computes, and if you drag the slider the sentence changes with it.</li>
+    <li><b>Chapters 01 to 04 are betting.</b> They are the cleanest place to learn this, because a bookmaker's margin is visible arithmetic rather than a spread you have to infer.</li>
+    <li><b>Chapters 05 and 06 are the same arithmetic on an option chain</b> — and then the one place where the analogy breaks, which is the most important paragraph on the page.</li>
+  </ol>
+  <details class="drop">
+    <summary>Notation — every symbol used on this page</summary>
+    <table class="ntab">
+      <tr><td>p</td><td>A probability, between 0 and 1. 0.40 and "40%" are the same thing written twice.</td></tr>
+      <tr><td>Decimal odds</td><td>What one unit staked returns <em>in total</em>, stake included. 2.50 means you get 2.50 back for 1 risked.</td></tr>
+      <tr><td>Fractional odds</td><td>Profit against stake. 3/1 means three won for one risked, so 4.00 back in total.</td></tr>
+      <tr><td>American odds</td><td>Profit on a 100 stake if positive; the stake needed to win 100 if negative. +150 and −150 are not mirror images.</td></tr>
+      <tr><td>Overround</td><td>How much more than 100% the implied probabilities add to. The bookmaker's margin, made of arithmetic rather than opinion.</td></tr>
+      <tr><td>Vig / juice</td><td>The same thing under two other names. Every market has one; only some of them print it.</td></tr>
+      <tr><td>De-vigging</td><td>Stripping the margin back out to recover what the market actually thinks. There is more than one way and they disagree.</td></tr>
+      <tr><td>N(d₂)</td><td>The options market's version of an implied probability. Chapter 05 gets there from betting, not from Black–Scholes.</td></tr>
+    </table>
+  </details>
+</div>
+
+<!-- ══════════ 01 ══════════ -->
+<section class="chapter" id="c1">
+  <div class="chead">
+    <div class="cnum">01</div>
+    <h2>A price is a probability, said out loud</h2>
+    <p class="dek">Anything that pays exactly one unit if something happens has a price. That price is what someone believes, converted into money.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Here is a ticket. If the coin lands heads it pays you £1. If it lands tails it pays nothing. What is it worth?</p>
+    <p>Fifty pence, and you did not need any statistics to say so. What you did was multiply: half a chance of a pound is fifty pence. That multiplication has a name — <span class="term" data-t="Expected value" data-def="The average of every outcome, each weighted by how likely it is. Not what will happen; what would happen on average across a great many repetitions of the same situation.">expected value</span> — and it is the entire foundation of the subject.</p>
+    <p>Now run it backwards, because that is the direction that matters. Somebody offers you 62p for the ticket. They have not told you what they think the coin is; they have told you anyway. <b>A price for a one-unit payoff <em>is</em> a probability.</b> There is nothing else it can be.</p>
+    <p>That is why this page comes first. Options, betting markets, insurance and prediction markets are all the same machine, and the machine takes beliefs in and hands prices out. Everything in this series is about reading it in the other direction.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>What the ticket is worth, and what the price is saying</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Fair value</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Offered price</span>
+          </span>
+        </div>
+        <canvas id="cv1" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl1"></div>
+        <div class="kv" style="margin-top:20px" id="kv1"></div>
+      </div>
+    </div>
+    <figcaption>Notice the blue line is straight. A claim paying one unit is worth its probability, exactly and with no curvature — which is why every distortion later in this series has to come from somewhere other than the arithmetic.</figcaption>
+  </figure>
+
+  <div class="mline">price of a £1-if-it-happens ticket = p</div>
+  <p class="mread">Reads as: <b>the price is the probability.</b> Read left to right it prices a belief; read right to left it extracts one from a market. The second direction is the useful one.</p>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Set the offered price to 62p and predict, before you look, what edge you have if the coin really is fair. Then set the payout to £10 and watch what happens to the same edge.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c1" data-patch='{"price":0.62,"payout":1}' data-focus="cv1">Offered 62p</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"price":0.62,"payout":10}' data-focus="cv1">Same price, £10 payout</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"price":0.5,"payout":1,"p":0.5}' data-focus="cv1">Back to fair</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A contract pays $100 if a company is acquired by June and nothing otherwise. It trades at $30. What has the market said?</p>
+    <div class="opts">
+      <button>That the deal is unlikely</button>
+      <button data-ok="1">That it is worth about 30% — the price divided by the payout is the implied probability, and "unlikely" is not a number</button>
+      <button>Nothing — a price is supply and demand, not a belief</button>
+      <button>That the deal will not happen</button>
+    </div>
+    <div class="ans"><b>Thirty percent, and the precision is the point.</b> "Unlikely" cannot be traded against, hedged, or checked afterwards. The whole reason to convert prices into probabilities is that probabilities can be argued with: if you think it is 45%, you now know exactly how much you disagree and exactly what the disagreement is worth. Chapter 06 is about the ways this reading can mislead you, but the reading itself is always available.</div>
+  </div>
+</section>
+
+<!-- ══════════ 02 ══════════ -->
+<section class="chapter" id="c2">
+  <div class="chead">
+    <div class="cnum">02</div>
+    <h2>Three notations, and the one that includes your stake</h2>
+    <p class="dek">Fractional, decimal and American odds all say the same thing. Two of them quote profit and one quotes the total return, which is where every conversion error starts.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The same 25% chance is written <b>3/1</b> in Britain, <b>4.00</b> in Europe, and <b>+300</b> in America. Nothing about the underlying claim differs. What differs is what each notation counts.</p>
+    <p><b>Fractional</b> quotes profit against stake: 3/1 wins three for one risked. <b>Decimal</b> quotes the total coming back including your own money: 4.00 means the one you staked plus the three you won. <b>American</b> quotes profit on a hundred if the price is a longshot (+300 wins 300 on 100) and the stake needed to win a hundred if it is a favourite (−150 risks 150 to win 100).</p>
+    <p>Decimal is the one that includes your stake, and forgetting that is the single most common error in the whole subject. It is also the notation to think in, because the conversion to a probability is a reciprocal and nothing else.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>One probability, in all three notations</h3>
+          <span class="legend" style="margin:0" id="leg2"></span>
+        </div>
+        <canvas id="cv2" height="300"></canvas>
+        <div class="tblwrap" style="margin-top:20px">
+          <table class="rot" id="tab2"></table>
+        </div>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl2"></div>
+        <div class="kv" style="margin-top:20px" id="kv2"></div>
+      </div>
+    </div>
+    <figcaption>Notice the American scale tears in half at 50%. There is no such thing as American odds of zero, and the jump from −100 to +100 crosses a gap the other two notations do not have.</figcaption>
+  </figure>
+
+  <div class="mline">p = 1 / decimal    ·    p = den / (num + den)    ·    p = 100 / (american + 100)</div>
+  <p class="mread">Reads as: <b>decimal odds invert straight to a probability; the other two need the stake added back first.</b> The American formula shown is the positive branch — a negative price uses |a| / (|a| + 100).</p>
+
+  <div class="prose">
+    <p>There is one more thing worth noticing, and it is a real limitation rather than a curiosity. American odds are quoted as whole numbers, so they cannot express every probability. Sweep the whole range and the worst rounding error is <b>0.12 percentage points</b>, and it happens right at the money — near 50%, where a tick of the quote is worth the most. On a market where a percentage point is the entire edge, the notation itself is a source of imprecision.</p>
+  </div>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Predict what the American quote does as the probability crosses 50% from below. Most people expect it to pass through zero.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c2" data-patch='{"p":0.49}' data-focus="cv2">Just under a half</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"p":0.51}' data-focus="cv2">Just over</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"p":0.0909}' data-focus="cv2">A 10/1 shot</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A price moves from decimal 2.00 to decimal 1.80. What happened to the implied probability?</p>
+    <div class="opts">
+      <button>It fell by 10%, in line with the price</button>
+      <button data-ok="1">It rose, from 50.0% to 55.6%. Decimal odds move inversely to probability, so a shorter price means a likelier outcome</button>
+      <button>It rose by 10%</button>
+      <button>Nothing — decimal odds are not a probability</button>
+    </div>
+    <div class="ans"><b>Up from 50.0% to 55.6%.</b> The reciprocal reverses the direction, and the size of the move is not the size of the price move either: a 10% cut in the odds is a 5.6-point rise in the probability here, and would be a different number somewhere else on the scale. Any time you are tempted to reason about a percentage change in odds, convert first.</div>
+  </div>
+</section>
+
+<!-- ══════════ 03 ══════════ -->
+<section class="chapter" id="c3">
+  <div class="chead">
+    <div class="cnum">03</div>
+    <h2>The prices add to more than one, always</h2>
+    <p class="dek">Two outcomes, one of which must happen, both quoted at −110. Their implied probabilities sum to 104.76%. That extra 4.76% is the entire business model.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Take the simplest market there is. Two outcomes, exactly one will occur, and the book quotes <b>−110</b> on each side — risk 110 to win 100, either way.</p>
+    <p>Convert both. Each price implies <b>52.381%</b>. Add them and you get <b>104.762%</b>, which is not a probability of anything, because the two outcomes are exhaustive and their probabilities have to sum to one. The <span class="term" data-t="Overround" data-def="The amount by which the implied probabilities of an exhaustive set of outcomes exceed 100%. It is the bookmaker's margin expressed as arithmetic, and it is the reason back-and-lay both sides is not free money.">overround</span> is the 4.762% left over, and it is not an error — it is the price of using the market.</p>
+    <p>Read it as a hurdle and it becomes concrete. To break even at −110 you must win <b>52.381%</b> of the time, which is the implied probability, which is not a coincidence — it is the same number seen from the other end. A bettor who wins 55% of coin flips at that price makes <b>$5.00</b> per hundred risked. One who wins 52% <em>loses</em> <b>73 cents</b>, despite being right more often than not.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Expected value per 100 risked, against how often you are right</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Expected value</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>Breakeven hit rate</span>
+          </span>
+        </div>
+        <canvas id="cv3" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl3"></div>
+        <div class="kv" style="margin-top:20px" id="kv3"></div>
+      </div>
+    </div>
+    <figcaption>Notice where the blue line crosses zero — it is not at 50%. The gap between one half and that crossing point is the whole of the house's advantage, drawn to scale.</figcaption>
+  </figure>
+
+  <div class="mline">overround = Σ pᵢ − 1     ·     breakeven hit rate = the implied probability</div>
+  <p class="mread">Reads as: <b>add up what the prices imply; the excess over one is the margin.</b> And the price you pay is exactly the hit rate you need, which is why a market's own quote tells you the bar you have to clear.</p>
+
+  <div class="prose">
+    <p>The number that makes this real is how long it takes to know. A bettor with a genuine 55% edge at −110 earns five dollars a bet against a standard deviation of ninety-five. Getting the edge to stand two standard errors clear of zero takes about <b>1,444 bets</b>. That is not a statistical curiosity — it is why a good bettor and a lucky one are indistinguishable for a very long time, and it is the same arithmetic that makes a volatility desk measure itself in dollar gamma rather than hit rate.</p>
+  </div>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Push the price to −200 on both sides and predict the breakeven hit rate before you look. Then ask yourself what kind of market quotes that.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c3" data-patch='{"line":-110}' data-focus="cv3">Standard −110</button>
+      <button class="act ghost" data-preset="c3" data-patch='{"line":-105}' data-focus="cv3">A tight −105</button>
+      <button class="act ghost" data-preset="c3" data-patch='{"line":-200}' data-focus="cv3">A wide −200</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">You back both sides of a −110 two-way market. What is your outcome?</p>
+    <div class="opts">
+      <button>You break even — one wins and one loses</button>
+      <button data-ok="1">You lose the overround. You risk 220 and get back 210 whichever way it goes, a certain loss of 10, which is 4.55% of what you staked</button>
+      <button>You win, because one side always pays</button>
+      <button>It depends which side wins</button>
+    </div>
+    <div class="ans"><b>A guaranteed loss of 4.55% of the stake.</b> This is the cleanest possible demonstration that the overround is real money rather than a bookkeeping artifact — it is the amount you can pay for certainty. It is also the test for whether a market is worth arbitraging: when the implied probabilities sum to <em>less</em> than one, backing everything is free money, which is why that almost never happens and never lasts.</div>
+  </div>
+</section>
+
+<!-- ══════════ 04 ══════════ -->
+<section class="chapter" id="c4">
+  <div class="chead">
+    <div class="cnum">04</div>
+    <h2>Taking the margin back out, and getting it wrong</h2>
+    <p class="dek">To learn what a market thinks you must remove the margin. The obvious method is wrong in a specific and predictable direction.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">A two-way book quotes <b>1.20</b> and <b>4.50</b>. Raw, those imply 83.333% and 22.222%, summing to <b>105.556%</b>. To recover what the market believes you have to take 5.556 points out — and how you take them out changes the answer.</p>
+    <p>The obvious method is to scale everything down proportionally, which gives <b>78.947%</b> and <b>21.053%</b>. Clean, fast, and used everywhere. It also assumes the bookmaker applied its margin evenly across both outcomes, and bookmakers do not.</p>
+    <p>They take more margin on longshots. This is the <span class="term" data-t="Favourite–longshot bias" data-def="The long-observed tendency for low-probability bets to be worse value than high-probability ones. Whether it comes from bettor preferences or from how books are built, its practical effect is that margin is not spread evenly across the outcomes.">favourite–longshot bias</span>, and it is one of the oldest documented regularities in betting markets. Fit the margin as a power instead — raise each implied probability to a common exponent chosen so they sum to one — and the same book gives <b>81.501%</b> and <b>18.499%</b>. The longshot is <b>2.554 points</b> lower than proportional said.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>What the market thinks, under two ways of removing the same margin</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--grey)"></i>Raw implied</span>
+            <span><i class="swl" style="background:var(--blue)"></i>Proportional</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Power</span>
+          </span>
+        </div>
+        <canvas id="cv4" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl4"></div>
+        <div class="kv" style="margin-top:20px" id="kv4"></div>
+      </div>
+    </div>
+    <figcaption>Notice the two methods agree exactly when the book is even-money on both sides, and diverge as the book gets lopsided. Which is precisely when you need the answer.</figcaption>
+  </figure>
+
+  <div class="mline">proportional:  qᵢ = pᵢ / Σpⱼ        power:  qᵢ = pᵢ<sup>k</sup>,  with k solving Σ pⱼ<sup>k</sup> = 1</div>
+  <p class="mread">Reads as: <b>either divide the excess out evenly, or find the exponent that squeezes the set onto one.</b> The exponent is above one whenever there is margin, and it pulls small probabilities down harder than large ones.</p>
+
+  <div class="prose">
+    <p>Two and a half points does not sound like much until you notice the size of the edges people trade on. On a market where the whole opportunity is two or three points of mispricing, choosing the wrong de-vig method is not a refinement — it manufactures the edge, or hides it. The honest position is that neither method is correct: they are both models of how a book was built, and the right one is an empirical question about the specific book.</p>
+    <p>Which is the actual lesson, and it recurs for the rest of this series: <b>every number extracted from a price required an assumption, and the assumption is usually invisible.</b> Chapter 05 does the same extraction on an option chain, where the assumption has a name.</p>
+  </div>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Drag the favourite's price toward even money and watch the two methods converge. Then push it out to 1.05 — a heavy favourite — and see how far apart they get.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c4" data-patch='{"a":1.20,"b":4.50}' data-focus="cv4">The example</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"a":1.91,"b":1.91}' data-focus="cv4">An even book</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"a":1.05,"b":11.0}' data-focus="cv4">A heavy favourite</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Why does it matter which de-vig method you use, if both remove exactly the same total margin?</p>
+    <div class="opts">
+      <button>It does not — the total is what counts</button>
+      <button data-ok="1">Because they distribute it differently across outcomes, and the difference is largest exactly where the book is most lopsided, which is where longshot mispricings are supposed to live</button>
+      <button>Because the power method is more accurate</button>
+      <button>Because proportional de-vigging does not sum to one</button>
+    </div>
+    <div class="ans"><b>The distribution, not the total.</b> On an even book they agree exactly; on 1.05 against 11.00 they disagree by several points on the longshot. And the fourth answer is worth dismissing explicitly: proportional de-vigging does sum to one by construction — that is all it guarantees, and summing to one is a much weaker property than being right.</div>
+  </div>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section class="chapter" id="c5">
+  <div class="chead">
+    <div class="cnum">05</div>
+    <h2>The same arithmetic, on an option chain</h2>
+    <p class="dek">An option market quotes probabilities too. It calls them deltas and digitals, and its overround is the bid-offer spread.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">A stock is at 100. You want the market's probability that it finishes above 110 in three months. There is no line quoted for that, but there is a way to read one.</p>
+    <p>Buy the 109.5 call and sell the 110.5 call, one point apart, and hold a hundred of them. Above 110.5 that package pays a fixed amount; below 109.5 it pays nothing; in between it ramps. Squeeze the strikes together and it becomes a claim that pays one unit if the stock is above 110 — the ticket from chapter 01, built out of listed options. Its price is <b>0.2205</b>, and undoing the discounting gives <b>22.21%</b>.</p>
+    <p>That number has a name in the options world: it is <b>N(d₂)</b>, the second term of Black–Scholes. It is worth knowing that the formula's most opaque-looking piece is just an implied probability, and that you can get to it from a betting page without ever writing the formula down.</p>
+    <p>In betting notation, 22.21% is decimal <b>4.502</b>, or American <b>+350</b>.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The implied probability the option chain is quoting, strike by strike</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>P(finish above the strike)</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>The strike shown</span>
+          </span>
+        </div>
+        <canvas id="cv5" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl5"></div>
+        <div class="kv" style="margin-top:20px" id="kv5"></div>
+      </div>
+    </div>
+    <figcaption>Notice this curve is a probability of finishing above each strike, so it runs from one down to zero — it is a survival function, and the whole option chain is one.</figcaption>
+  </figure>
+
+  <div class="mline">tight call spread, scaled by 1/width  →  e<sup>−rT</sup> · N(d₂)</div>
+  <p class="mread">Reads as: <b>squeeze a call spread and you get a bet on finishing above the strike.</b> The discount factor is there because options pay at expiry and bets are settled then too — the price is today's money for tomorrow's dollar.</p>
+
+  <div class="prose">
+    <p>The overround survives the translation intact. Quote that digital two cents wide — bid 0.2105, offer 0.2305 — and buy both sides: 0.2305 for "yes" and 0.7820 for "no". You have paid <b>1.0125</b> for something that certainly returns <b>0.9925</b>, which is an overround of <b>2.02%</b>. It is a bid-offer spread rather than a bookmaker's margin, and it does exactly the same job, and it is charged the same way: on both sides, whichever wins.</p>
+  </div>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Move the strike down to 100 and predict the implied probability before you look. Most people say fifty percent.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c5" data-patch='{"K":110}' data-focus="cv5">The 110 strike</button>
+      <button class="act ghost" data-preset="c5" data-patch='{"K":100}' data-focus="cv5">At the money</button>
+      <button class="act ghost" data-preset="c5" data-patch='{"K":90}' data-focus="cv5">The 90 strike</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Why is the at-the-money implied probability not exactly 50%?</p>
+    <div class="opts">
+      <button>Rounding in the option prices</button>
+      <button data-ok="1">Because the stock is expected to drift up at the financing rate, and because the median of a lognormal sits below its mean — the −σ²/2 term in d₂</button>
+      <button>It is exactly 50%; the figure is wrong</button>
+      <button>Because of the bid-offer spread</button>
+    </div>
+    <div class="ans"><b>Drift and the shape of the distribution, pulling in opposite directions.</b> The financing rate pushes the whole distribution right, which raises the probability of finishing above the spot; the lognormal's right skew puts the median below the mean, which lowers it. Which one wins depends on the volatility and the horizon, and that competition is the σ²/2 in every option formula you will ever meet.</div>
+  </div>
+</section>
+
+<!-- ══════════ 06 ══════════ -->
+<section class="chapter" id="c6">
+  <div class="chead">
+    <div class="cnum">06</div>
+    <h2>Where a price stops being a probability</h2>
+    <p class="dek">The most important paragraph on this page, and it undoes some of the preceding five.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Everything so far has treated a price as a belief. For a coin ticket that is exactly right. For anything anyone actually trades, it is right only after a correction, and the correction is not small.</p>
+    <p>Take the same stock at 100 and ask the real question: how often does it actually finish above 110 in a year? The options market quotes the number computed with a drift equal to the financing rate — <b>34.97%</b>. But a stock is not a bank deposit; if you believe equities drift up at 8%, the honest probability is <b>42.61%</b>, and at 12% it is <b>48.95%</b>. Same volatility, same strike, same horizon. Fourteen points of difference, entirely from an assumption nobody quoted.</p>
+    <p>The market's number is not wrong. It is a <span class="term" data-t="Risk-neutral probability" data-def="The weighting under which discounted expected payoffs give the right price. It is a pricing device, not a forecast, and it differs from real-world probability by the compensation investors demand for bearing risk.">risk-neutral probability</span>: the weighting that makes prices consistent with each other and with the cost of hedging. It is the right number for pricing and the wrong number for forecasting, and the gap between the two is a risk premium — what people charge for holding something they might not want.</p>
+    <p>The same thing happens in betting, without the vocabulary. An implied 22% on a longshot is not a claim that it wins 22% of the time; it is the price at which the book is willing to take the other side, given what it costs to be wrong. Whenever you read a probability out of a price, you are reading a probability <em>plus a premium for someone's discomfort</em>, and separating those two is most of the work.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The same strike, priced under different beliefs about drift</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Real-world probability</span>
+            <span><i class="swl" style="background:var(--verm)"></i>What the market quotes</span>
+          </span>
+        </div>
+        <canvas id="cv6" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl6"></div>
+        <div class="kv" style="margin-top:20px" id="kv6"></div>
+      </div>
+    </div>
+    <figcaption>Notice the two lines meet at exactly one point — where the drift you believe equals the financing rate. Everywhere else the market is quoting a number you do not believe, and that is not a mispricing.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">The options market implies a 35% chance the stock finishes above 110. You believe it is 43%. Is that an edge?</p>
+    <div class="opts">
+      <button>Yes — buy the digital, you have eight points of value</button>
+      <button data-ok="1">Not by itself. Most of that gap is the difference between a real-world and a risk-neutral probability, and it is compensation for risk rather than free money</button>
+      <button>No — the market is always right</button>
+      <button>Yes, but only if you hedge the delta</button>
+    </div>
+    <div class="ans"><b>Not by itself, and this is the distinction that separates a trader from a punter.</b> A stock's expected return above the risk-free rate is a risk premium you can earn by owning the stock — you do not need options to collect it, and buying upside digitals is an expensive way to try. A genuine options edge is a disagreement about <em>volatility</em> or <em>shape</em>, not about drift, because those are the things the price is actually a bet on.</div>
+  </div>
+</section>
+
+<!-- ══════════ 07 ══════════ -->
+<section class="chapter" id="c7">
+  <div class="chead">
+    <div class="cnum">07</div>
+    <h2>Drill it until the conversions are free</h2>
+    <p class="dek">These four conversions need to be automatic before anything later in the series will feel easy.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Everything on this page rests on moving between a price, a probability and a set of odds without stopping to think. That is not understanding, it is fluency, and fluency only comes from repetition. Two tiers: the conversions themselves, then the margin arithmetic on top of them.</p>
+  </div>
+
+  <figure>
+    <div class="drill" id="drill">
+      <div class="dstats">
+        <div class="c"><span class="k">Correct</span><span class="v" id="dScore">0 / 0</span></div>
+        <div class="c"><span class="k">Streak</span><span class="v" id="dStreak" style="color:var(--moss)">0</span></div>
+        <div class="c"><span class="k">Best</span><span class="v" id="dBest">0</span></div>
+        <div class="c" style="flex:1;min-width:170px"><span class="k">Tier</span>
+          <div class="seg" style="margin-top:5px;max-width:240px">
+            <button id="dT1" aria-pressed="true">Conversions</button>
+            <button id="dT2" aria-pressed="false">Margin</button>
+          </div>
+        </div>
+      </div>
+      <span class="qn" id="dKind">Question</span>
+      <p class="qt" id="dText">Loading…</p>
+      <div class="ansrow">
+        <input type="text" inputmode="decimal" id="dInput" placeholder="your answer" aria-label="Your answer">
+        <span class="unit" id="dUnit"></span>
+        <button class="act" id="dSubmit">Check</button>
+        <button class="act ghost" id="dSkip">Skip</button>
+      </div>
+      <div class="verdict">
+        <div class="vd" id="dVerdict"></div>
+        <div class="work" id="dWork"></div>
+        <div class="btnrow"><button class="act" id="dNext">Next question</button></div>
+      </div>
+    </div>
+    <figcaption>Conversions are marked to a tenth of a point, because that is the precision the notations themselves support. Margin questions allow a little more.</figcaption>
+  </figure>
+
+  <div class="prose" style="margin-top:46px">
+    <p>Six questions across the page.</p>
+  </div>
+
+  <div class="score" id="scoreBox">
+    <span class="big" id="scoreNum">0 / 6</span>
+    <span class="txt" id="scoreTxt">Answered nothing yet. Questions are scored as you go.</span>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 1 · chapter 01</span>
+    <p class="q">A contract pays £1 if it rains tomorrow. It trades at 0.35. What is the market saying?</p>
+    <div class="opts">
+      <button>That rain is unlikely</button>
+      <button data-ok="1">A 35% chance. For a one-unit payoff the price and the probability are the same number</button>
+      <button>That rain is 35 times less likely than no rain</button>
+      <button>Nothing without knowing the payout</button>
+    </div>
+    <div class="ans"><b>35%.</b> The payout <em>is</em> known — one unit — which is what makes the reading immediate. When the payout is something else, divide by it first; that is the only extra step.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 2 · chapter 02</span>
+    <p class="q">Decimal odds of 4.00. What are the fractional and American equivalents?</p>
+    <div class="opts">
+      <button>4/1 and +400</button>
+      <button data-ok="1">3/1 and +300 — decimal includes your stake, the other two do not</button>
+      <button>1/3 and −300</button>
+      <button>4/1 and −400</button>
+    </div>
+    <div class="ans"><b>3/1 and +300.</b> The single most common conversion error in the subject is carrying the stake across. Decimal 4.00 returns four for one risked, of which three is profit, and profit is what the other two notations quote.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 3 · chapter 03</span>
+    <p class="q">Both sides of a market are quoted at −110. What hit rate do you need to break even?</p>
+    <div class="opts">
+      <button>50% — it is a two-way market</button>
+      <button data-ok="1">52.381%, which is also exactly what the price implies. You risk 110 to win 100, so you need 110/210 of your bets to land</button>
+      <button>55%</button>
+      <button>It depends on the size of the bets</button>
+    </div>
+    <div class="ans"><b>52.381%, and that it equals the implied probability is not a coincidence.</b> A price is a break-even hit rate seen from the other side. Winning 52% of the time at this price loses 73 cents per hundred risked, which is why "I win more than half my bets" is not a claim about profitability.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 4 · chapter 03</span>
+    <p class="q">A three-way market is quoted at 2.10, 3.40 and 3.80. What is the overround?</p>
+    <div class="opts">
+      <button>Zero — the three outcomes are exhaustive</button>
+      <button data-ok="1">3.35%. The implied probabilities are 47.62%, 29.41% and 26.32%, which sum to 103.35%</button>
+      <button>About 10%</button>
+      <button>You cannot tell without the stake sizes</button>
+    </div>
+    <div class="ans"><b>3.35%.</b> Exhaustive outcomes are exactly why the sum is diagnostic: it <em>must</em> be 100% for real probabilities, so whatever it exceeds that by is margin. Do not round the parts before adding them — the whole quantity you are after lives in the third decimal place.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 5 · chapter 04</span>
+    <p class="q">A book quotes 1.20 and 4.50. Proportional de-vigging gives 78.9% and 21.1%. What is the objection?</p>
+    <div class="opts">
+      <button>It does not sum to one</button>
+      <button data-ok="1">It assumes the margin is spread evenly, and books take more of it on longshots. The power method gives 81.5% and 18.5% — the longshot is 2.55 points lower</button>
+      <button>Nothing — it is the standard method</button>
+      <button>It should have been applied to the decimal odds, not the probabilities</button>
+    </div>
+    <div class="ans"><b>Even distribution is an assumption, and a documented-wrong one.</b> Both methods sum to one; that is all "sums to one" buys you. On a market where the whole edge is two or three points, the choice of method can manufacture the opportunity you think you found.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 6 · chapter 06</span>
+    <p class="q">Options imply a 35% chance of finishing above 110; you think it is 43%. What have you found?</p>
+    <div class="opts">
+      <button>An eight-point edge — buy the upside</button>
+      <button data-ok="1">Mostly the gap between risk-neutral and real-world probability. It is a risk premium, and owning the stock collects it more cheaply than owning options does</button>
+      <button>Evidence the option is mispriced</button>
+      <button>Nothing — the two numbers measure different things and cannot be compared</button>
+    </div>
+    <div class="ans"><b>A risk premium wearing a mispricing's clothes.</b> The market's number is computed at the financing rate by construction, so it will nearly always sit below what an equity investor believes. The fourth answer is too strong: the numbers <em>can</em> be compared, and the comparison is exactly how you measure the premium — it just is not free money.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="n">Every price on this page is a clean quote with no size attached, which is the assumption that flatters this arithmetic most. A real book moves as you hit it, a real option chain is only tradeable in the size shown, and the overround you can actually pay is wider than the one you can compute from a screen. The de-vigging in chapter 04 assumes the margin follows one of two simple shapes; both are models, neither is the truth, and the right one is an empirical question about the specific book. Chapter 05's chain is priced on a flat volatility surface, which makes the implied probabilities cleaner than any real chain's — a real skew changes them, and changes them most in the tails where the longshots live.</p>
+</footer>
+
+<script src="assets/lab.js"></script>
+<script src="assets/stats.js"></script>
+<script src="assets/pwa.js" defer></script>
+<script>
+"use strict";
+
+/* ══════════ hero ══════════
+   Odds ladders drifting: the same probability drawn as three scales, so the
+   page's subject is the first thing the eye meets. */
+(function(){
+  const cv=document.getElementById("heroCv");let w,h,g,raf,t0=0;
+  function size(){const dpr=window.devicePixelRatio||1;
+    w=cv.clientWidth;h=cv.clientHeight;cv.width=w*dpr;cv.height=h*dpr;
+    g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);}
+  function draw(ph){
+    g.fillStyle=C("--chalk");g.fillRect(0,0,w,h);
+    const padL=w*0.07,padR=w*0.07,gw=w-padL-padR;
+    for(let row=0;row<9;row++){
+      const y=h*0.16+row*(h*0.68/8);
+      const drift=Math.sin(ph*0.6+row*0.55)*0.5+0.5;
+      g.strokeStyle=row%2?C("--verm"):C("--blue");
+      g.globalAlpha=0.07+0.10*drift;
+      g.lineWidth=1.4;
+      g.beginPath();g.moveTo(padL,y);g.lineTo(padL+gw,y);g.stroke();
+      /* ticks at the probabilities a board would print */
+      g.globalAlpha=0.10+0.20*drift;
+      for(const p of [0.05,0.1,0.2,1/3,0.5,2/3,0.8,0.9,0.95]){
+        const x=padL+gw*p;
+        const t=(row%3===0)?6:(row%3===1?4:3);
+        g.beginPath();g.moveTo(x,y-t);g.lineTo(x,y+t);g.stroke();
+      }
+    }
+    g.globalAlpha=1;
+  }
+  function tick(t){if(!t0)t0=t;draw((t-t0)/2400);raf=requestAnimationFrame(tick);}
+  window.drawHero=function(){size();if(RM){draw(0);return;}
+    if(raf)cancelAnimationFrame(raf);t0=0;raf=requestAnimationFrame(tick);};
+})();
+
+/* ══════════ 01 — a price is a probability ══════════ */
+const s1={p:0.5,price:0.5,payout:1};
+(function(){
+  sliders(document.getElementById("ctl1"),[
+    {id:"a1",k:"p",lbl:"p",name:"What you think the chance is",min:0.01,max:0.99,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"b1",k:"price",lbl:"$",name:"Price offered, per unit of payoff",min:0.01,max:0.99,step:0.01,fmt:v=>v.toFixed(2)},
+    {id:"c1p",k:"payout",lbl:"×",name:"Payout if it happens",min:1,max:100,step:1,fmt:v=>"$"+v.toFixed(0)}
+  ],s1,()=>draw(),"c1");
+  window.draw1=draw;
+  function draw(){
+    const xs=[],fair=[],off=[];
+    for(let i=0;i<=200;i++){const p=i/200;xs.push(p);fair.push(p*s1.payout);off.push(s1.price*s1.payout);}
+    const o=Fig(document.getElementById("cv1"),
+      {h:310,x0:0,x1:1,y0:0,y1:s1.payout*1.06,pad:{l:58,r:14,t:14}});
+    axes(o,v=>(v*100).toFixed(0)+"%",v=>v.toFixed(s1.payout>5?0:2),5,4);
+    clip(o,()=>{line(o,xs,off,C("--verm"),1.8,[5,4]);line(o,xs,fair,C("--blue"),2.2);});
+    vline(o,s1.p,C("--ochre"),"your p");
+    const ev=s1.p*s1.payout, cost=s1.price*s1.payout;
+    document.getElementById("kv1").innerHTML=kvHTML([
+      ["Your probability",(s1.p*100).toFixed(1)+"%"],
+      ["The ticket pays","$"+s1.payout.toFixed(2)],
+      ["It is worth to you","$"+ev.toFixed(3)],
+      ["You are asked to pay","$"+cost.toFixed(3)],
+      ["Edge per ticket","$"+(ev-cost).toFixed(3)],
+      ["  as % of outlay",cost>0?((ev-cost)/cost*100).toFixed(2)+"%":"—"],
+      ["The price implies",(s1.price*100).toFixed(1)+"%"],
+      ["You disagree by",((s1.p-s1.price)*100).toFixed(1)+" pts"],
+      ["Verdict",Math.abs(s1.p-s1.price)<0.005?"fairly priced":(s1.p>s1.price?"a buy":"a sell")]
+    ]);
+  }
+})();
+
+/* ══════════ 02 — three notations ══════════ */
+const s2={p:0.25};
+(function(){
+  sliders(document.getElementById("ctl2"),[
+    {id:"a2",k:"p",lbl:"p",name:"Probability",min:0.01,max:0.99,step:0.001,fmt:v=>(v*100).toFixed(1)+"%"}
+  ],s2,()=>draw(),"c2");
+  window.draw2=draw;
+  document.getElementById("leg2").innerHTML=
+    '<span><i class="swl" style="background:var(--blue)"></i>Decimal odds</span>'+
+    '<span><i class="swl" style="background:var(--verm)"></i>American, scaled</span>';
+  function draw(){
+    const xs=[],dec=[],us=[];
+    for(let i=1;i<200;i++){const p=i/200;xs.push(p);
+      dec.push(Math.min(probToDec(p),12));
+      /* American is unbounded either side of 50%, so show it on a compressed
+         scale — the tear at the middle is the thing worth seeing */
+      const a=probToUS(p);us.push(Math.max(-12,Math.min(12,a/50)));}
+    const o=Fig(document.getElementById("cv2"),
+      {h:300,x0:0,x1:1,y0:-12,y1:12,pad:{l:58,r:14,t:14}});
+    axes(o,v=>(v*100).toFixed(0)+"%",v=>v.toFixed(0),5,4);
+    clip(o,()=>{line(o,xs,us,C("--verm"),1.9);line(o,xs,dec,C("--blue"),2.2);});
+    vline(o,s2.p,C("--ochre"),"p");
+    vline(o,0.5,C("--grey"),null,[2,4]);
+    const a=probToUS(s2.p), fr=probToFrac(s2.p);
+    document.getElementById("kv2").innerHTML=kvHTML([
+      ["Probability",(s2.p*100).toFixed(2)+"%"],
+      ["Decimal",probToDec(s2.p).toFixed(3)],
+      ["Fractional",fr.text],
+      ["American",(a>0?"+":"")+a],
+      ["Profit on 100 risked","$"+((probToDec(s2.p)-1)*100).toFixed(2)],
+      ["Back from 100 risked","$"+(probToDec(s2.p)*100).toFixed(2)],
+      ["American round-trip",(usToProb(a)*100).toFixed(3)+"%"],
+      ["  rounding cost",Math.abs(usToProb(a)-s2.p)*100 < 0.0005 ? "exact"
+        : (Math.abs(usToProb(a)-s2.p)*100).toFixed(3)+" pts"]
+    ]);
+    const rows=[[1,1],[2,1],[3,1],[5,2],[10,1],[1,2],[4,5],[100,1]];
+    document.getElementById("tab2").innerHTML=
+      "<tr><th style='text-align:left'>Fractional</th><th>Probability</th><th>Decimal</th><th>American</th><th>Back from 100</th></tr>"+
+      rows.map(([n,d])=>{const p=fracToProb(n,d),u=probToUS(p);
+        return "<tr><td style='text-align:left'>"+n+"/"+d+"</td><td>"+(p*100).toFixed(2)+"%</td><td>"+
+          probToDec(p).toFixed(2)+"</td><td>"+(u>0?"+":"")+u+"</td><td>$"+
+          (probToDec(p)*100).toFixed(2)+"</td></tr>";}).join("");
+  }
+})();
+
+/* ══════════ 03 — the overround ══════════ */
+const s3={line:-110,hit:0.55};
+(function(){
+  sliders(document.getElementById("ctl3"),[
+    {id:"a3",k:"line",lbl:"±",name:"Price on both sides (American)",min:-300,max:-101,step:1,fmt:v=>v.toFixed(0)},
+    {id:"b3",k:"hit",lbl:"w",name:"How often you are right",min:0.35,max:0.75,step:0.005,fmt:v=>(v*100).toFixed(1)+"%"}
+  ],s3,()=>draw(),"c3");
+  window.draw3=draw;
+  function draw(){
+    const imp=usToProb(s3.line), win=100/(-s3.line)*100;   /* profit per 100 risked */
+    const ev=w=>w*win-(1-w)*100;
+    const xs=[],ys=[];
+    for(let i=0;i<=200;i++){const w=0.35+0.40*i/200;xs.push(w);ys.push(ev(w));}
+    const lo=Math.min.apply(null,ys),hi=Math.max.apply(null,ys);
+    const o=Fig(document.getElementById("cv3"),
+      {h:310,x0:0.35,x1:0.75,y0:lo*1.08,y1:hi*1.08,pad:{l:60,r:14,t:14}});
+    axes(o,v=>(v*100).toFixed(0)+"%",v=>(v>=0?"+":"")+v.toFixed(0),5,4);
+    hline(o,0,C("--grey"),null,[2,4]);
+    clip(o,()=>line(o,xs,ys,C("--blue"),2.2));
+    vline(o,imp,C("--ochre"),"breakeven");
+    vline(o,s3.hit,C("--moss"),"you");
+    const edge=ev(s3.hit);
+    const sd1=Math.sqrt(s3.hit*Math.pow(win-edge,2)+(1-s3.hit)*Math.pow(-100-edge,2));
+    document.getElementById("kv3").innerHTML=kvHTML([
+      ["Price, both sides",(s3.line>0?"+":"")+s3.line],
+      ["Implied each side",(imp*100).toFixed(4)+"%"],
+      ["The two sum to",(2*imp*100).toFixed(4)+"%"],
+      ["Overround",((2*imp-1)*100).toFixed(4)+"%"],
+      ["Breakeven hit rate",(imp*100).toFixed(4)+"%"],
+      ["Win pays","$"+win.toFixed(2)+" per 100"],
+      ["Your EV per 100","$"+edge.toFixed(2)],
+      ["Backing both sides","−$"+((2*imp-1)/(2*imp)*100).toFixed(2)+" per 100 staked"],
+      ["Bets to be 2 s.e. clear",edge>0?Math.ceil(Math.pow(2*sd1/edge,2)).toLocaleString():"never"]
+    ]);
+  }
+})();
+
+/* ══════════ 04 — de-vigging ══════════ */
+const s4={a:1.20,b:4.50};
+(function(){
+  /* the exponent k solving  Σ pᵢ^k = 1 */
+  function power(ps){
+    const g=k=>ps.reduce((a,p)=>a+Math.pow(p,k),0)-1;
+    let lo=0.2,hi=6;
+    for(let i=0;i<120;i++){const m=(lo+hi)/2;if(g(m)>0)lo=m;else hi=m;}
+    const k=(lo+hi)/2;
+    return {k,ps:ps.map(p=>Math.pow(p,k))};
+  }
+  sliders(document.getElementById("ctl4"),[
+    {id:"a4",k:"a",lbl:"A",name:"Decimal odds, outcome A",min:1.02,max:5,step:0.01,fmt:v=>v.toFixed(2)},
+    {id:"b4",k:"b",lbl:"B",name:"Decimal odds, outcome B",min:1.02,max:25,step:0.05,fmt:v=>v.toFixed(2)}
+  ],s4,()=>draw(),"c4");
+  window.draw4=draw;
+  function draw(){
+    const ps=[decToProb(s4.a),decToProb(s4.b)];
+    const sum=ps[0]+ps[1];
+    const prop=devig(ps), pw=power(ps);
+    const o=Fig(document.getElementById("cv4"),
+      {h:310,x0:-0.5,x1:1.5,y0:0,y1:Math.max(ps[0],ps[1],1)*1.12,pad:{l:60,r:14,t:14}});
+    axes(o,v=>(v===0?"A":v===1?"B":""),v=>(v*100).toFixed(0)+"%",3,4);
+    /* three bars per outcome, side by side */
+    const g=o.g, bw=o.pw/2*0.16;
+    [[ps,"--grey",-1],[prop,"--blue",0],[pw.ps,"--verm",1]].forEach(([vals,col,slot])=>{
+      g.save();g.fillStyle=C(col);g.globalAlpha=col==="--grey"?0.45:0.85;
+      vals.forEach((v,i)=>{
+        const x=o.X(i)+slot*bw*1.15-bw/2;
+        g.fillRect(x,o.Y(v),bw,o.Y(0)-o.Y(v));
+      });
+      g.restore();
+    });
+    hline(o,1,C("--ochre"),"one",[3,3]);
+    document.getElementById("kv4").innerHTML=kvHTML([
+      ["Quotes",s4.a.toFixed(2)+" / "+s4.b.toFixed(2)],
+      ["Raw implied A",(ps[0]*100).toFixed(3)+"%"],
+      ["Raw implied B",(ps[1]*100).toFixed(3)+"%"],
+      ["They sum to",(sum*100).toFixed(3)+"%"],
+      ["Overround",((sum-1)*100).toFixed(3)+"%"],
+      ["Proportional",(prop[0]*100).toFixed(3)+" / "+(prop[1]*100).toFixed(3)+"%"],
+      ["Power exponent k",pw.k.toFixed(4)],
+      ["Power",(pw.ps[0]*100).toFixed(3)+" / "+(pw.ps[1]*100).toFixed(3)+"%"],
+      ["They disagree by",Math.abs((pw.ps[1]-prop[1])*100).toFixed(3)+" pts"],
+      ["  on the longshot",ps[0]<ps[1]?"A":"B"]
+    ]);
+  }
+})();
+
+/* ══════════ 05 — the same arithmetic on a chain ══════════ */
+const s5={K:110,T:0.25,v:0.25,r:0.03,wide:0.02};
+(function(){
+  sliders(document.getElementById("ctl5"),[
+    {id:"a5",k:"K",lbl:"K",name:"Strike",min:80,max:130,step:1,fmt:v=>v.toFixed(0)},
+    {id:"b5",k:"T",lbl:"T",name:"Time to expiry",min:0.02,max:2,step:0.01,fmt:v=>(v*12).toFixed(1)+" mo"},
+    {id:"c5v",k:"v",lbl:"σ",name:"Volatility",min:0.05,max:0.8,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"d5",k:"r",lbl:"r",name:"Interest rate",min:0,max:0.10,step:0.005,fmt:v=>(v*100).toFixed(1)+"%"},
+    {id:"e5",k:"wide",lbl:"↔",name:"How wide it is quoted",min:0.005,max:0.08,step:0.005,fmt:v=>(v*100).toFixed(1)+"c"}
+  ],s5,()=>draw(),"c5");
+  window.draw5=draw;
+  const d2of=(S,K,T,v,r)=>(Math.log(S/K)+(r-v*v/2)*T)/(v*Math.sqrt(T));
+  function draw(){
+    const S=100;
+    const xs=[],ys=[];
+    for(let K=70;K<=140;K+=0.5){xs.push(K);ys.push(ncdf(d2of(S,K,s5.T,s5.v,s5.r)));}
+    const o=Fig(document.getElementById("cv5"),
+      {h:310,x0:70,x1:140,y0:0,y1:1.04,pad:{l:56,r:14,t:14}});
+    axes(o,v=>v.toFixed(0),v=>(v*100).toFixed(0)+"%",5,4);
+    clip(o,()=>line(o,xs,ys,C("--blue"),2.2));
+    vline(o,s5.K,C("--ochre"),"K = "+s5.K.toFixed(0));
+    vline(o,S,C("--grey"),"spot",[2,4]);
+    const p=ncdf(d2of(S,s5.K,s5.T,s5.v,s5.r));
+    const df=Math.exp(-s5.r*s5.T), dig=df*p;
+    const w=1;
+    const cs=(bs(S,s5.K-w/2,s5.T,s5.v,s5.r,0,true).price
+             -bs(S,s5.K+w/2,s5.T,s5.v,s5.r,0,true).price)/w;
+    const bid=dig-s5.wide/2, off=dig+s5.wide/2;
+    const bothSides=off+(df-bid);
+    const us=probToUS(p);
+    document.getElementById("kv5").innerHTML=kvHTML([
+      ["P(finish above "+s5.K.toFixed(0)+")",(p*100).toFixed(3)+"%"],
+      ["  as decimal odds",probToDec(p).toFixed(3)],
+      ["  as American",(us>0?"+":"")+us],
+      ["The digital costs",dig.toFixed(5)],
+      ["A 1-wide call spread",cs.toFixed(5)],
+      ["  they agree to",Math.abs(cs-dig).toExponential(1)],
+      ["Quoted bid / offer",bid.toFixed(4)+" / "+off.toFixed(4)],
+      ["Both sides cost",bothSides.toFixed(5)],
+      ["A certain payoff of",df.toFixed(5)],
+      ["Overround",((bothSides/df-1)*100).toFixed(3)+"%"]
+    ]);
+  }
+})();
+
+/* ══════════ 06 — risk-neutral is not real-world ══════════ */
+const s6={mu:0.08,K:110,T:1,v:0.25,r:0.03};
+(function(){
+  sliders(document.getElementById("ctl6"),[
+    {id:"a6",k:"mu",lbl:"μ",name:"Drift you actually believe",min:-0.05,max:0.20,step:0.005,fmt:v=>(v*100).toFixed(1)+"%"},
+    {id:"b6",k:"K",lbl:"K",name:"Strike",min:80,max:140,step:1,fmt:v=>v.toFixed(0)},
+    {id:"c6t",k:"T",lbl:"T",name:"Horizon",min:0.1,max:5,step:0.1,fmt:v=>v.toFixed(1)+"y"},
+    {id:"d6",k:"v",lbl:"σ",name:"Volatility",min:0.05,max:0.7,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"e6",k:"r",lbl:"r",name:"Financing rate",min:0,max:0.10,step:0.005,fmt:v=>(v*100).toFixed(1)+"%"}
+  ],s6,()=>draw(),"c6");
+  window.draw6=draw;
+  const P=(mu)=>ncdf((Math.log(100/s6.K)+(mu-s6.v*s6.v/2)*s6.T)/(s6.v*Math.sqrt(s6.T)));
+  function draw(){
+    const xs=[],real=[],mkt=[];
+    for(let i=0;i<=200;i++){const mu=-0.05+0.25*i/200;xs.push(mu);real.push(P(mu));mkt.push(P(s6.r));}
+    const o=Fig(document.getElementById("cv6"),
+      {h:310,x0:-0.05,x1:0.20,y0:0,y1:Math.max.apply(null,real)*1.12,pad:{l:58,r:14,t:14}});
+    axes(o,v=>(v*100).toFixed(0)+"%",v=>(v*100).toFixed(0)+"%",5,4);
+    clip(o,()=>{line(o,xs,mkt,C("--verm"),1.8,[5,4]);line(o,xs,real,C("--blue"),2.2);});
+    vline(o,s6.r,C("--grey"),"r",[2,4]);
+    vline(o,s6.mu,C("--ochre"),"you");
+    const q=P(s6.r), rw=P(s6.mu);
+    document.getElementById("kv6").innerHTML=kvHTML([
+      ["Strike / horizon",s6.K.toFixed(0)+" in "+s6.T.toFixed(1)+"y"],
+      ["Market quotes (μ = r)",(q*100).toFixed(3)+"%"],
+      ["You believe (μ = "+(s6.mu*100).toFixed(1)+"%)",(rw*100).toFixed(3)+"%"],
+      ["The gap",((rw-q)*100).toFixed(3)+" pts"],
+      ["  as a ratio",(rw/q).toFixed(3)+"×"],
+      ["Market decimal odds",probToDec(q).toFixed(3)],
+      ["Your decimal odds",probToDec(rw).toFixed(3)],
+      ["Is that an edge?",Math.abs(s6.mu-s6.r)<0.0025?"the two agree here":"no — it is a risk premium"]
+    ]);
+  }
+})();
+
+/* ══════════ 07 — the drill ══════════ */
+(function(){
+  let tier=1,sc=0,asked=0,streak=0,best=0,cur=null;
+  const E=id=>document.getElementById(id);
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  function make(){
+    const R=Math.random;
+    if(tier===1){
+      const t=Math.floor(R()*4);
+      if(t===0){const d=pick([1.20,1.50,1.80,2.00,2.50,3.00,4.00,6.00,11.0]);
+        const a=100/d;
+        return{kind:"Decimal to probability",unit:"%",a:a,tol:0.1,
+          q:"Decimal odds of <b>"+d.toFixed(2)+"</b>. What probability is that?",
+          w:"p = 1 / decimal = 1 / "+d.toFixed(2)+" = <b>"+a.toFixed(2)+"%</b>. The reciprocal, and nothing else — decimal is the notation that makes this free."};}
+      if(t===1){const p=pick([0.10,0.20,0.25,0.3333,0.40,0.50,0.60,0.75,0.80]);
+        const a=1/p;
+        return{kind:"Probability to decimal",unit:"",a:a,tol:0.02,
+          q:"A <b>"+(p*100).toFixed(1)+"%</b> chance. What are the decimal odds?",
+          w:"decimal = 1 / p = 1 / "+p.toFixed(4)+" = <b>"+a.toFixed(3)+"</b>, which is the total returned per unit staked, your stake included."};}
+      if(t===2){const [n,d]=pick([[1,1],[2,1],[3,1],[5,2],[7,2],[10,1],[1,2],[4,5],[20,1]]);
+        const a=d/(n+d)*100;
+        return{kind:"Fractional to probability",unit:"%",a:a,tol:0.15,
+          q:"Fractional odds of <b>"+n+"/"+d+"</b>. What probability?",
+          w:"p = den / (num + den) = "+d+" / ("+n+" + "+d+") = <b>"+a.toFixed(2)+"%</b>. The denominator is your stake and it has to be added back in."};}
+      const u=pick([-110,-150,-200,-300,120,150,250,400]);
+      const a=(u>0?100/(u+100):(-u)/((-u)+100))*100;
+      return{kind:"American to probability",unit:"%",a:a,tol:0.15,
+        q:"American odds of <b>"+(u>0?"+":"")+u+"</b>. What probability?",
+        w:(u>0?"For a positive price, p = 100 / (a + 100) = 100 / "+(u+100)
+             :"For a negative price, p = |a| / (|a| + 100) = "+(-u)+" / "+((-u)+100))+
+          " = <b>"+a.toFixed(2)+"%</b>."};
+    }
+    const t=Math.floor(R()*3);
+    if(t===0){const u=pick([-105,-110,-115,-120,-130,-150]);
+      const p=(-u)/((-u)+100), a=(2*p-1)*100;
+      return{kind:"Overround on a two-way",unit:"%",a:a,tol:0.05,
+        q:"Both sides of a two-way market are quoted at <b>"+u+"</b>. What is the overround?",
+        w:"Each side implies "+(p*100).toFixed(4)+"%, so the pair sums to "+(2*p*100).toFixed(4)+
+          "% and the overround is <b>"+a.toFixed(3)+"%</b>. Do not round before adding — the answer lives in the decimals."};}
+    if(t===1){const u=pick([-105,-110,-120,-150,-200]);
+      const p=(-u)/((-u)+100)*100;
+      return{kind:"Breakeven hit rate",unit:"%",a:p,tol:0.1,
+        q:"You are laying <b>"+u+"</b>. How often must you be right to break even?",
+        w:"Risk "+(-u)+" to win 100, so you need "+(-u)+" / "+((-u)+100)+" = <b>"+p.toFixed(3)+
+          "%</b> — which is exactly the implied probability of the price you are paying."};}
+    const dec=[pick([1.30,1.50,1.80,2.10,2.40]),pick([2.60,3.20,3.80,4.50]),pick([3.00,4.20,5.50,8.00])];
+    const ps=dec.map(d=>1/d), s=ps.reduce((a,b)=>a+b,0);
+    return{kind:"Overround on a three-way",unit:"%",a:(s-1)*100,tol:0.08,
+      q:"A three-way market quotes <b>"+dec.map(d=>d.toFixed(2)).join("</b>, <b>")+"</b>. What is the overround?",
+      w:"Implied: "+ps.map(p=>(p*100).toFixed(2)+"%").join(", ")+". They sum to "+(s*100).toFixed(3)+
+        "%, so the overround is <b>"+((s-1)*100).toFixed(3)+"%</b>."};
+  }
+  function next(){
+    cur=make();
+    E("dKind").textContent=cur.kind;E("dText").innerHTML=cur.q;
+    E("dUnit").textContent=cur.unit;E("dInput").value="";
+    E("drill").classList.remove("done");
+    focusSoft(E("dInput"),E("drill"));
+  }
+  function submit(){
+    if(!cur||E("drill").classList.contains("done"))return;
+    const raw=parseFloat(String(E("dInput").value).replace(/[$,%\s]/g,""));
+    asked++;
+    const ok=isFinite(raw)&&Math.abs(raw-cur.a)<=cur.tol;
+    if(ok){sc++;streak++;if(streak>best)best=streak;}else streak=0;
+    E("dVerdict").textContent=ok?"CORRECT":("NOT QUITE — the answer is "+cur.a.toFixed(2));
+    E("dVerdict").className="vd "+(ok?"ok":"no");
+    E("dWork").innerHTML=cur.w;
+    E("dScore").textContent=sc+" / "+asked;
+    E("dStreak").textContent=String(streak);E("dBest").textContent=String(best);
+    E("drill").classList.add("done");
+  }
+  E("dSubmit").addEventListener("click",submit);
+  E("dInput").addEventListener("keydown",e=>{if(e.key==="Enter")submit();});
+  E("dNext").addEventListener("click",next);
+  E("dSkip").addEventListener("click",()=>{streak=0;E("dStreak").textContent="0";next();});
+  [1,2].forEach(k=>E("dT"+k).addEventListener("click",()=>{
+    tier=k;[1,2].forEach(j=>E("dT"+j).setAttribute("aria-pressed",j===k?"true":"false"));
+    next();}));
+  window.drawDrill=next;
+  window.__drill=()=>{const o=[];for(let i=0;i<2;i++){tier=i+1;for(let j=0;j<500;j++)o.push(make());}tier=1;return o;};
+})();
+
+function drawAll(){
+  drawHero();draw1();draw2();draw3();draw4();draw5();draw6();drawDrill();
+}
+LAB.boot(drawAll);
+
+</script>
+</body>
+</html>

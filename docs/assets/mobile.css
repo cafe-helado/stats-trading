@@ -1,0 +1,129 @@
+/* ═══════════════════════════════════════════════════════════════
+   mobile.css — phone and tablet corrections
+   Loaded after lab.css. Everything here is a media query or a
+   pointer query; nothing changes desktop rendering.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* wide tables scroll horizontally instead of blowing out the layout.
+   lab.js wraps them automatically. */
+.tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tblwrap table{min-width:440px}
+.tblwrap .ntab{min-width:0}
+
+/* equations can exceed the viewport; make the scroll obvious rather than clipped */
+.mline,.eq{scrollbar-width:thin}
+
+@media (max-width:900px){
+  /* the greek explorer and overview grids are set inline in markup;
+     these override to a single column */
+  #gExp{grid-template-columns:1fr !important}
+  #greekGrid{grid-template-columns:1fr !important}
+}
+
+@media (max-width:700px){
+  :root{--col:100%}
+  body{font-size:17px}
+  main{padding:0 16px}
+  figure.bleed{margin-inline:calc(50% - 50vw);padding:0 16px}
+  footer{padding:22px 16px 70px}
+  .heroInner{padding:0 20px}
+  .orient{padding:24px 20px;margin-top:44px}
+  .chapter{padding:64px 0 14px}
+  .panel{padding:16px 15px}
+  figure{margin:30px 0 28px}
+
+  /* stacked control rails need breathing room, not a sidebar */
+  .split,.split.wide{gap:18px}
+  .rail{margin-top:4px}
+
+  /* headings */
+  .chead h2{font-size:clamp(27px,7.4vw,36px)}
+  .mhead h3{font-size:23px}
+  .hero h1{font-size:clamp(42px,13vw,64px)}
+  .hero .sub{font-size:16px;margin-top:22px}
+
+  /* numbers wrap instead of overflowing */
+  .numrow{gap:20px}
+  .bignum .v{font-size:26px}
+  .dstats{gap:18px}
+  .dstats .c .v{font-size:21px}
+  .dollars{grid-template-columns:1fr 1fr;gap:14px}
+  .dollars .v{font-size:17px}
+  .score{padding:15px 16px;gap:11px}
+  .score .big{font-size:27px}
+
+  /* drill: full-width input */
+  .drill{padding:19px 17px}
+  .drill .qt{font-size:17px}
+  .drill input{width:100%}
+  .drill .ansrow{gap:9px}
+  .drill .ansrow .act{flex:1}
+
+  /* the worked-example and glossary columns collapse */
+  .gloss{columns:1}
+  .legs{grid-template-columns:1fr}
+  .termgrid{grid-template-columns:1fr}
+
+  /* teaching blocks lose their left indent (already at 820, restated for clarity) */
+  .try,.check,.derive,.aside,.prose,.gdef{margin-left:0}
+  .check{padding:17px 16px}
+  .btnrow{margin-left:0 !important}
+}
+
+@media (max-width:420px){
+  main{padding:0 12px}
+  figure.bleed{padding:0 12px}
+  .dollars{grid-template-columns:1fr}
+  .chips{gap:6px}
+  .chips button{font-size:10px;padding:7px 9px}
+}
+
+/* ── touch targets ──────────────────────────────────────────────
+   Coarse pointers need larger hit areas than a mouse. */
+@media (pointer:coarse){
+  input[type=range]{height:30px}
+  input[type=range]::-webkit-slider-thumb{width:20px;height:20px;margin-top:-9.5px}
+  input[type=range]::-moz-range-thumb{width:20px;height:20px}
+  .seg button{padding:12px 6px}
+  .chips button{padding:10px 13px}
+  .check .opts button{padding:13px 15px}
+  button.act{padding:13px 18px}
+  .blot input,.blot select{padding:9px 8px;font-size:16px} /* 16px stops iOS zoom-on-focus */
+  .drill input{font-size:17px;padding:12px 14px}
+  .blot .del{font-size:20px;padding:4px 8px}
+  /* tooltips are tap-to-open on touch; give the target some size */
+  .term{padding:2px 0}
+}
+
+/* respect the notch / home indicator */
+@supports (padding:max(0px)){
+  @media (max-width:700px){
+    main{padding-left:max(16px,env(safe-area-inset-left));
+         padding-right:max(16px,env(safe-area-inset-right))}
+    footer{padding-bottom:max(70px,env(safe-area-inset-bottom))}
+  }
+}
+
+/* ── series chrome (shared across pages) ──────────────────────── */
+.serieshead{
+  position:sticky;top:0;z-index:70;background:rgba(237,240,236,.93);
+  backdrop-filter:saturate(180%) blur(9px);-webkit-backdrop-filter:saturate(180%) blur(9px);
+  border-bottom:1px solid var(--hair);
+}
+.serieshead .in{
+  max-width:1180px;margin:0 auto;padding:9px 34px;display:flex;
+  align-items:center;justify-content:space-between;gap:16px;
+}
+.serieshead a.home{
+  font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--ink2);text-decoration:none;font-weight:600;display:flex;align-items:center;gap:8px;
+}
+.serieshead a.home:hover{color:var(--blue)}
+.serieshead .num{
+  font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--grey);text-transform:uppercase;
+}
+@media (max-width:700px){.serieshead .in{padding:8px 16px}.serieshead .num{display:none}}
+
+/* the sticky series bar eats into the hero; give the height back */
+.serieshead ~ .hero{height:calc(100svh - 41px)}
+@media (max-width:700px){.serieshead ~ .hero{height:calc(100svh - 38px);min-height:520px}}
