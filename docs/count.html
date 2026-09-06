@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F4F1E8">
+<title>Counting Without Listing — Chance, visually</title>
+<meta name="description" content="Every probability is a count over a count. Permutations against combinations, why twenty-three people is enough for a shared birthday, all 2,598,960 poker hands derived from scratch, and where the binomial coefficient comes from.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Counting Without Listing — Chance, visually">
+<meta property="og:description" content="Every probability is a count over a count. Permutations against combinations, why twenty-three people is enough for a shared birthday, all 2,598,960 poker hands derived from scratch, and where the binomial coefficient comes from.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F1E8'/><rect x='5' y='19' width='4' height='7' fill='%230B6E75'/><rect x='11' y='12' width='4' height='14' fill='%230B6E75'/><rect x='17' y='7' width='4' height='19' fill='%230B6E75'/><rect x='23' y='16' width='4' height='10' fill='%230B6E75'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lab.css">
+<link rel="stylesheet" href="assets/mobile.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chance">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+<header class="serieshead">
+  <div class="in">
+    <a class="home" href="index.html">← Chance, visually</a>
+    <span class="num">No. 01 · Counting</span>
+  </div>
+</header>
+
+<div class="progress" id="prog"></div>
+<nav class="chapnav" id="chapnav" aria-label="Chapters">
+  <a href="#c1"><span>Multiply the choices</span><i></i></a>
+  <a href="#c2"><span>When order stops mattering</span><i></i></a>
+  <a href="#c3"><span>The birthday problem</span><i></i></a>
+  <a href="#c4"><span>Every poker hand</span><i></i></a>
+  <a href="#c5"><span>Where the coefficient comes from</span><i></i></a>
+  <a href="#c6"><span>Drills</span><i></i></a>
+</nav>
+
+<div class="hero">
+  <canvas id="heroCv" aria-hidden="true"></canvas>
+  <div class="heroInner">
+    <div class="eyebrow">An interactive derivation · No. 01</div>
+    <h1>How many ways can this <em>happen?</em></h1>
+    <p class="sub">Every probability in this series is a count divided by a count. Before any of it means anything, you need to be able to count things you could never list — the orderings of a deck, the five-card hands, the ways a hundred coin flips can give sixty heads.</p>
+  </div>
+  <div class="scrollcue">Scroll ↓</div>
+</div>
+
+<main>
+
+<div class="orient">
+  <h2>Start here</h2>
+  <p class="lede">This is the first module and the most mechanical. A probability is favorable outcomes over total outcomes, so counting comes before everything — and the counts get large enough, fast enough, that listing stops being an option almost immediately.</p>
+  <ol>
+    <li><b>Chapter 02 holds the one distinction that matters.</b> Arrangements against selections. If order counts you are multiplying; if it does not you are multiplying and then dividing by <b>r!</b>, and that divisor is the entire difference.</li>
+    <li><b>Chapter 03 is the famous one.</b> Twenty-three people and the odds of a shared birthday pass a half — <b>50.73%</b>. It feels wrong because people count people when the thing doing the work is <em>pairs</em>, and twenty-three people make <b>253</b> of them.</li>
+    <li><b>Chapter 05 is why this module comes first.</b> The coefficient sitting in front of the binomial distribution is not a constant anyone chose. It is a count, and it is the count this whole page is about.</li>
+  </ol>
+  <details class="drop">
+    <summary>Notation — every symbol used on this page</summary>
+    <table class="ntab">
+      <tr><td>n!</td><td>Factorial — n × (n−1) × … × 1. The number of ways to arrange n distinct things. 0! is 1, which is a convention that makes everything else work.</td></tr>
+      <tr><td>P(n, r)</td><td>Permutations: ordered selections of r things from n. Equal to n! ÷ (n−r)!.</td></tr>
+      <tr><td>C(n, r)</td><td>Combinations: unordered selections. P(n, r) ÷ r!, written "n choose r".</td></tr>
+      <tr><td>n<sup>r</sup></td><td>Selections with repetition allowed — you put each one back before drawing the next.</td></tr>
+      <tr><td>Pascal's triangle</td><td>The combinations arranged in rows. Each entry is the sum of the two above it.</td></tr>
+      <tr><td>Complement</td><td>Counting the ways something does <em>not</em> happen and subtracting. Often far easier than the direct count.</td></tr>
+    </table>
+  </details>
+</div>
+
+<!-- ══════════ 01 ══════════ -->
+<section class="chapter" id="c1">
+  <div class="chead">
+    <div class="cnum">01</div>
+    <h2>Multiply the choices</h2>
+    <p class="dek">One rule generates everything else on this page: if a first choice has a ways and a second has b, the pair has a × b.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Everything starts with a rule so obvious it barely reads as mathematics. Make one choice with <b>a</b> options and a second with <b>b</b> options, and there are <b>a × b</b> ways to make both. Extend it and every counting question on this page follows.</p>
+    <p>A four-digit PIN drawn from ten digits, repeats allowed, is <code>10 × 10 × 10 × 10</code> = <b>10,000</b>. Forbid repeats and each choice shrinks the pool: <code>10 × 9 × 8 × 7</code> = <b>5,040</b>. That second pattern — the pool shrinking by one each time — is a <span class="term" data-t="Permutation" data-def="An ordered selection. P(n, r) counts the ways to pick r things from n when the order you pick them in makes a different outcome. Equal to n × (n−1) × … down to (n−r+1), which is n! divided by (n−r)!.">permutation</span>, written <b>P(10, 4)</b>.</p>
+    <p>Now watch how fast this gets away from you. Arrange a full deck of 52 cards and the count is <b>52!</b>, which is about <b>8.07 × 10<sup>67</sup></b>. There are roughly 10<sup>80</sup> atoms in the observable universe. Shuffle a deck properly and you have, with near certainty, produced an ordering that has never existed before and never will again.</p>
+    <p>That is the practical point of this module. You cannot enumerate these. You have to count them without listing them, and the way to do it is to keep asking: how many choices, and how many options at each?</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Counts, as the number of picks grows</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--verm)"></i>With repeats, n<sup>r</sup></span>
+            <span><i class="swl" style="background:var(--blue)"></i>Without, P(n, r)</span>
+            <span><i class="swl" style="background:var(--moss)"></i>Unordered, C(n, r)</span>
+          </span>
+        </div>
+        <canvas id="cv1" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl1"></div>
+        <div class="kv" style="margin-top:20px" id="kv1"></div>
+      </div>
+    </div>
+    <figcaption>The vertical axis is logarithmic, and the three curves still separate violently. Anything that looks flat here is growing by orders of magnitude.</figcaption>
+  </figure>
+
+  <div class="mline">n<sup>r</sup> ≥ P(n, r) = n × (n−1) × … × (n−r+1) = n! ÷ (n−r)! ≥ C(n, r)</div>
+  <p class="mread">Reads as: <b>allowing repeats gives the most, ordered selections without repeats gives fewer, and ignoring order gives fewest.</b> Every counting problem is deciding which of the three you are in.</p>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A padlock has four dials of ten digits. How many settings?</p>
+    <div class="opts">
+      <button>5,040, since a digit cannot repeat</button>
+      <button data-ok="1">10,000. Each dial is independent and can show any digit, so it is 10⁴ — repeats are allowed on a padlock</button>
+      <button>40</button>
+      <button>24</button>
+    </div>
+    <div class="ans"><b>10,000.</b> The first option is P(10, 4), which would be right if the dials somehow could not repeat a digit. Deciding whether repetition is allowed is the first question in every counting problem and the one people skip.</div>
+  </div>
+</section>
+
+<!-- ══════════ 02 ══════════ -->
+<section class="chapter" id="c2">
+  <div class="chead">
+    <div class="cnum">02</div>
+    <h2>When order stops mattering</h2>
+    <p class="dek">A poker hand is the same hand however it was dealt. Divide the ordered count by the number of orderings and you have the unordered one.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Most real questions do not care about order. A five-card hand is the same hand whichever sequence it arrived in; a lottery ticket does not care which number you wrote first. So the permutation count is too big — by exactly the number of ways the chosen items could have been arranged among themselves.</p>
+    <p>That number is <b>r!</b>, and dividing by it gives the <span class="term" data-t="Combination" data-def="An unordered selection: the ways to choose r things from n where order does not matter. Equal to P(n, r) divided by r!, because each unordered set was counted once for every way of arranging it.">combination</span>:</p>
+    <p>For five cards from fifty-two, the ordered count is <b>311,875,200</b>. Every hand appears in that list <code>5! = 120</code> times, once for each dealing order. So the number of distinct hands is <b>311,875,200 ÷ 120 = 2,598,960</b>.</p>
+    <p>Two facts worth carrying. A <b>6/49</b> lottery has <code>C(49, 6) = 13,983,816</code> tickets, which is where "one in fourteen million" comes from. And combinations are symmetric: <code>C(52, 5) = C(52, 47)</code>, because choosing five cards to take is identical to choosing forty-seven to leave.</p>
+    <p>The symmetry is not a curiosity — it is often the shortcut. Counting what you exclude is frequently easier than counting what you include, and chapter 03 turns entirely on that idea.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The same selection, ordered and unordered</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>P(n, r)</span>
+            <span><i class="sw" style="background:var(--moss)"></i>C(n, r)</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>The r! between them</span>
+          </span>
+        </div>
+        <canvas id="cv2" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl2"></div>
+        <div class="kv" style="margin-top:20px" id="kv2"></div>
+      </div>
+    </div>
+    <figcaption>The gap between the two bars is the factorial you are dividing out. At r = 5 it is 120; at r = 10 it is over three million.</figcaption>
+  </figure>
+
+  <div class="mline">C(n, r) = P(n, r) ÷ r! = n! ÷ ( r! · (n−r)! )          and C(n, r) = C(n, n−r)</div>
+  <p class="mread">Reads as: <b>take the ordered count and divide out the orderings you do not care about.</b> The symmetry on the right says choosing what to take and choosing what to leave are the same act.</p>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Set n to 52 and drag r from 1 to 52. Find where the combination count peaks, and predict where before you drag.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c2" data-patch='{"n":52,"r":5}' data-focus="cv2">A poker hand</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"n":49,"r":6}' data-focus="cv2">The lottery</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"n":52,"r":26}' data-focus="cv2">Half the deck</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Why divide the permutation count by r! rather than by something else?</p>
+    <div class="opts">
+      <button>Because r! is the number of items being chosen</button>
+      <button data-ok="1">Because each unordered selection appears in the ordered list once for every way its r items could be arranged, and that is r!</button>
+      <button>To make the number smaller</button>
+      <button>Because the pool shrinks by one each time</button>
+    </div>
+    <div class="ans"><b>Every unordered set is over-counted exactly r! times.</b> This is worth being able to say out loud, because it is the same argument used every time something is counted with a symmetry in it — count as if the symmetry did not exist, then divide by the size of the symmetry.</div>
+  </div>
+</section>
+
+<!-- ══════════ 03 ══════════ -->
+<section class="chapter" id="c3">
+  <div class="chead">
+    <div class="cnum">03</div>
+    <h2>Twenty-three people</h2>
+    <p class="dek">The odds of a shared birthday in a room pass a half at twenty-three. The reason it feels wrong is that people count people.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Put people in a room one at a time and ask when two of them probably share a birthday. Almost everyone guesses something near 180. The answer is <b>23</b>.</p>
+    <p>Counting it directly is a nightmare — two sharing, three sharing, two pairs sharing. Counting the <em>complement</em> is easy. For nobody to share, the second person must avoid one date, the third must avoid two, and so on:</p>
+    <p>At 23 people that product is <b>0.4927</b>, so the chance of at least one shared birthday is <b>0.5073</b>. At 22 it is <b>47.57%</b> — just under. At 57 people it passes <b>99%</b>, and at 70 it is <b>99.92%</b>.</p>
+    <p>Now the intuition, which is the real content of the chapter. You are not asking about 23 people. You are asking about every <em>pair</em> of them, and 23 people make <code>C(23, 2) = 253</code> pairs. Each pair matches with probability 1/365, so the expected number of matches is <b>253/365 = 0.693</b> — comfortably around one. Treating those pairs as roughly independent gives <code>1 − e^(−0.693)</code> = <b>0.5000</b>, against the exact <b>0.5073</b>. Close enough to show that pairs are what is doing the work.</p>
+    <p>And here is the question people confuse it with: what is the chance somebody shares a birthday <em>with you specifically</em>? That one grows the way intuition expects. Twenty-three others gives only <b>6.1%</b>, and you need <b>253</b> others before it reaches a coin flip. Which is the same 253 — one person against 253 others, or 23 people making 253 pairs. The count of pairs was always the quantity that mattered.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The chance of at least one shared birthday</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Any two people</span>
+            <span><i class="swl" style="background:var(--grey)"></i>Somebody matching you</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>One half</span>
+          </span>
+        </div>
+        <canvas id="cv3" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl3"></div>
+        <div class="kv" style="margin-top:20px" id="kv3"></div>
+      </div>
+    </div>
+    <figcaption>Two curves for two different questions. The steep one is the one people are asked; the flat one is the one they answer.</figcaption>
+  </figure>
+
+  <div class="mline">P(no shared birthday) = (365/365) × (364/365) × … × (365−n+1)/365</div>
+  <p class="mread">Reads as: <b>each new person has to dodge every birthday already in the room.</b> The dodging gets harder with every arrival, which is why the product collapses so much faster than people expect.</p>
+
+  <div class="derive">
+    <span class="lab">Where this comes from</span>
+    <p>The direct count is hopeless because "at least one shared birthday" is a union of overlapping cases. The complement is a single clean product: person 1 is free, person 2 has 364 acceptable dates out of 365, person 3 has 363, and so on down to <b>365 − n + 1</b>. Multiplying and subtracting from one gives the answer exactly.</p>
+    <p>The pair argument explains <em>why</em> it is so fast. There are <b>C(n, 2) = n(n−1)/2</b> pairs, growing with the <em>square</em> of the people. At n = 23 that is 253 pairs against only 23 people, and 253/365 is already about 0.69 expected matches. Anything counted over pairs grows quadratically while intuition tracks the linear count of people, and that gap is the whole illusion.</p>
+    <p><b>Where it breaks:</b> the calculation assumes birthdays are uniform across 365 dates and independent between people. Neither is true — real birth dates cluster by season and by day of week, and leap years add a 366th. Both effects push in the same direction: any clustering makes matches <em>more</em> likely, so 23 is a mild overestimate of what a real room needs. Twins in the room break independence outright.</p>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Why does 23 feel far too small?</p>
+    <div class="opts">
+      <button>Because people forget about leap years</button>
+      <button data-ok="1">Because intuition tracks the 23 people while the question is about the 253 pairs, and pairs grow with the square of the count</button>
+      <button>Because 365 is a large number</button>
+      <button>It does not — 23 is the intuitive answer</button>
+    </div>
+    <div class="ans"><b>Pairs, not people.</b> The count that matters grows quadratically while the one people watch grows linearly. The same substitution is behind the question this gets confused with — matching <em>you</em> specifically needs 253 others, because then there really are only 253 pairs in play.</div>
+  </div>
+</section>
+
+<!-- ══════════ 04 ══════════ -->
+<section class="chapter" id="c4">
+  <div class="chead">
+    <div class="cnum">04</div>
+    <h2>Every poker hand, counted from scratch</h2>
+    <p class="dek">The rankings are not conventions. They are a frequency table, and you can derive the whole thing with chapter 02.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Poker hand rankings look arbitrary until you count them. They are ordered by exactly one thing: how rare each is out of the <b>2,598,960</b> five-card hands. Every number below comes from multiplying choices.</p>
+    <p><b>Four of a kind.</b> Pick the rank, take all four suits, then any one of the 48 remaining cards: <code>13 × 1 × 48</code> = <b>624</b>.</p>
+    <p><b>Full house.</b> Pick a rank for the trips and three of its four suits, then a different rank for the pair and two of its suits: <code>13 × 4 × 12 × 6</code> = <b>3,744</b>.</p>
+    <p><b>Two pair.</b> Choose two ranks from thirteen, two suits from four in each, then a kicker from the 44 cards of other ranks: <code>78 × 6 × 6 × 44</code> = <b>123,552</b>.</p>
+    <p><b>Flush.</b> Any five of one suit's thirteen, across four suits, minus the forty that are also straights: <code>4 × 1,287 − 40</code> = <b>5,108</b>.</p>
+    <p>Add every category and you get <b>2,598,960</b> exactly — which is the check that the counting was right, and the reason to do it this way rather than look the numbers up.</p>
+    <p>And it settles something that looks like a convention. A <b>flush</b> has 5,108 ways and a <b>straight</b> has <b>10,200</b>. The flush is almost exactly twice as rare, so it outranks the straight. Nobody decided that; it fell out of the arithmetic.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>All 2,598,960 hands, by category</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>Ways to make it</span>
+            <span><i class="sw" style="background:var(--verm)"></i>The one you selected</span>
+          </span>
+        </div>
+        <canvas id="cv4" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl4"></div>
+        <div class="kv" style="margin-top:20px" id="kv4"></div>
+      </div>
+    </div>
+    <figcaption>A logarithmic axis again, because a royal flush and a pair differ by five orders of magnitude. The ranking is just this chart read from left to right.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Why does a flush beat a straight?</p>
+    <div class="opts">
+      <button>Tradition — the rankings are conventional</button>
+      <button data-ok="1">Because it is rarer: 5,108 ways against 10,200. The ranking is a frequency table, and the flush is almost exactly twice as hard to make</button>
+      <button>Because suits outrank sequences</button>
+      <button>Because a flush uses more high cards</button>
+    </div>
+    <div class="ans"><b>5,108 against 10,200.</b> Every ranking in the game is this comparison. It is also a good check on your counting: if you derive the categories and they do not sum to 2,598,960, you have double-counted or missed something, and the sum tells you before anyone else does.</div>
+  </div>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section class="chapter" id="c5">
+  <div class="chead">
+    <div class="cnum">05</div>
+    <h2>Where the binomial coefficient comes from</h2>
+    <p class="dek">The number in front of the binomial distribution is not a constant. It is C(n, k), counting the orders in which the successes could have arrived.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Flip a fair coin ten times. The chance of any one specific sequence is <code>(1/2)<sup>10</sup> = 1/1024</code> — every sequence is equally likely. So why is five heads so much more common than ten?</p>
+    <p>Because there is only <b>one</b> sequence with ten heads, and there are <b>252</b> with five. The probability of a <em>count</em> is the probability of one sequence multiplied by how many sequences give that count, and that multiplier is exactly <code>C(n, k)</code>.</p>
+    <p>So <code>P(5 heads in 10) = 252/1024 = 24.61%</code>, against <code>P(10 heads) = 1/1024 = 0.098%</code>. Arrange the coefficients in rows and you have <span class="term" data-t="Pascal's triangle" data-def="The binomial coefficients laid out in rows, where each entry is the sum of the two above it. Row n holds C(n,0) through C(n,n), and the row sums to 2 to the power n.">Pascal's triangle</span>, in which each entry is the sum of the two above — because a set of size k either contains the new item or does not.</p>
+    <p>Every row sums to <b>2<sup>n</sup></b>: row 10 sums to 1,024, which is every possible sequence counted once. That is the check that the binomial distribution's probabilities add to one, and it is a counting fact rather than a probabilistic one.</p>
+    <p>When <a href="dist.html">module 07</a> writes the binomial distribution, the <code>C(n, k)</code> in front of it is this and nothing else — the number of ways the successes could have been arranged. Every distribution in this series that counts things has a combinatorial argument underneath it, and this is the argument.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Pascal's triangle, and the distribution it produces</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--hair)"></i>C(n, k)</span>
+            <span><i class="sw" style="background:var(--blue)"></i>The selected row</span>
+            <span><i class="sw" style="background:var(--verm)"></i>Its largest entry</span>
+          </span>
+        </div>
+        <canvas id="cv5" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl5"></div>
+        <div class="kv" style="margin-top:20px" id="kv5"></div>
+      </div>
+    </div>
+    <figcaption>Each cell is the sum of the two above it. Read one row across and you are reading the shape of a binomial distribution — the curve of <a href="shape.html">module 06</a> arriving as a count.</figcaption>
+  </figure>
+
+  <div class="mline">P(exactly k successes in n trials) = C(n, k) · p<sup>k</sup> · (1−p)<sup>n−k</sup></div>
+  <p class="mread">Reads as: <b>the chance of one particular sequence, times how many sequences give that count.</b> The right-hand pair is the probability of a specific run; the C(n, k) is the counting this page has been about.</p>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Ten flips. Why is five heads more likely than ten heads if every sequence is equally likely?</p>
+    <div class="opts">
+      <button>Because five heads is closer to the average</button>
+      <button data-ok="1">Because 252 different sequences give five heads and only one gives ten. Each sequence has the same 1/1024 chance; there are simply far more of them</button>
+      <button>Because the coin corrects itself</button>
+      <button>Because ten heads in a row is impossible</button>
+    </div>
+    <div class="ans"><b>252 sequences against one.</b> The first answer is true but is a description rather than a reason — the reason is the count. And the third is the gambler's fallacy, which <a href="rules.html">module 02</a> takes apart: nothing corrects anything, there are just more ways to land near the middle.</div>
+  </div>
+</section>
+
+<!-- ══════════ 06 ══════════ -->
+<section class="chapter" id="c6">
+  <div class="chead">
+    <div class="cnum">06</div>
+    <h2>Drill it</h2>
+    <p class="dek">Permutations and combinations first, then the counts that need a complement or a case split.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The first tier is mechanical — recognize which count you are in and apply it. The second is the harder skill: setting a counting problem up so that it becomes mechanical.</p>
+  </div>
+
+  <figure>
+    <div class="drill" id="drill">
+      <div class="dstats">
+        <div class="c"><span class="k">Correct</span><span class="v" id="dScore">0 / 0</span></div>
+        <div class="c"><span class="k">Streak</span><span class="v" id="dStreak" style="color:var(--moss)">0</span></div>
+        <div class="c"><span class="k">Best</span><span class="v" id="dBest">0</span></div>
+        <div class="c" style="flex:1;min-width:170px"><span class="k">Tier</span>
+          <div class="seg" style="margin-top:5px;max-width:240px">
+            <button id="dT1" aria-pressed="true">Counting</button>
+            <button id="dT2" aria-pressed="false">Setting it up</button>
+          </div>
+        </div>
+      </div>
+      <span class="qn" id="dKind">Question</span>
+      <p class="qt" id="dText">Loading…</p>
+      <div class="ansrow">
+        <input type="text" inputmode="decimal" id="dInput" placeholder="your answer" aria-label="Your answer">
+        <span class="unit" id="dUnit"></span>
+        <button class="act" id="dSubmit">Check</button>
+        <button class="act ghost" id="dSkip">Skip</button>
+      </div>
+      <div class="verdict">
+        <div class="vd" id="dVerdict"></div>
+        <div class="work" id="dWork"></div>
+        <div class="btnrow"><button class="act" id="dNext">Next question</button></div>
+      </div>
+    </div>
+    <figcaption>Worth knowing cold: C(52, 5) = 2,598,960, C(49, 6) = 13,983,816, and 23 people for a shared birthday.</figcaption>
+  </figure>
+
+  <div class="prose" style="margin-top:46px">
+    <p>Six questions across the page.</p>
+  </div>
+
+  <div class="score" id="scoreBox">
+    <span class="big" id="scoreNum">0 / 6</span>
+    <span class="txt" id="scoreTxt">Answered nothing yet. Questions are scored as you go.</span>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 1 · chapter 01</span>
+    <p class="q">How many ways can a deck of 52 cards be ordered?</p>
+    <div class="opts">
+      <button>52 × 52, about 2,700</button>
+      <button data-ok="1">52!, which is about 8.07 × 10⁶⁷ — more orderings than there are atoms in a galaxy</button>
+      <button>2,598,960</button>
+      <button>52 × 51 ÷ 2</button>
+    </div>
+    <div class="ans"><b>52! ≈ 8.07 × 10⁶⁷.</b> The third option is C(52, 5), the number of five-card hands, which is chapter 02's number. A properly shuffled deck is, with near certainty, in an order no deck has ever been in.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 2 · chapter 02</span>
+    <p class="q">What separates P(n, r) from C(n, r)?</p>
+    <div class="opts">
+      <button>C is always larger</button>
+      <button data-ok="1">A factor of r!, because each unordered selection appears once for every arrangement of its r items</button>
+      <button>A factor of n</button>
+      <button>Nothing — they are two notations for one count</button>
+    </div>
+    <div class="ans"><b>Exactly r!.</b> For five cards that is 120, so 311,875,200 ordered deals collapse to 2,598,960 distinct hands. The pattern generalizes: count as if the symmetry did not exist, then divide by the size of the symmetry.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 3 · chapter 03</span>
+    <p class="q">How many people before a shared birthday is more likely than not?</p>
+    <div class="opts">
+      <button>183 — half of 365</button>
+      <button data-ok="1">23, at 50.73%. At 22 it is 47.57%, just short</button>
+      <button>57</button>
+      <button>253</button>
+    </div>
+    <div class="ans"><b>23.</b> The third option is where it passes 99% and the fourth is the number of <em>pairs</em> those 23 people make — which is what makes it work, and also the number of others you would need for a coin flip on matching you specifically.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 4 · chapter 03</span>
+    <p class="q">Why is the birthday problem solved by counting the complement?</p>
+    <div class="opts">
+      <button>Because the complement is more interesting</button>
+      <button data-ok="1">Because "at least one match" is a messy union of overlapping cases, while "no match at all" is a single clean product</button>
+      <button>Because it gives a different answer</button>
+      <button>Because you cannot count matches directly at all</button>
+    </div>
+    <div class="ans"><b>One product instead of a union.</b> Counting what you do not want and subtracting is one of the two or three most useful moves in combinatorics, and it appears again in chapter 04 — a flush is counted as all same-suit hands minus the ones that are also straights.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 5 · chapter 04</span>
+    <p class="q">There are 5,108 flushes and 10,200 straights. What does that tell you?</p>
+    <div class="opts">
+      <button>Nothing — the rankings are conventional</button>
+      <button data-ok="1">That a flush outranks a straight, because it is almost exactly twice as rare. The rankings are a frequency table</button>
+      <button>That straights are harder to make</button>
+      <button>That the counts must be wrong</button>
+    </div>
+    <div class="ans"><b>Rarity is the ranking.</b> And summing every category to exactly 2,598,960 is the check that the counting was done right — if the categories do not add up, something has been double-counted.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 6 · chapter 05</span>
+    <p class="q">What is the C(n, k) doing in front of the binomial distribution?</p>
+    <div class="opts">
+      <button>Normalizing the probabilities so they sum to one</button>
+      <button data-ok="1">Counting the orders in which the k successes could have arrived. Each sequence has the same probability; C(n, k) says how many give that count</button>
+      <button>Correcting for the coin being unfair</button>
+      <button>It is a constant chosen to fit the data</button>
+    </div>
+    <div class="ans"><b>It is a count, not a constant.</b> The normalization in the first option is a consequence rather than the purpose — the rows of Pascal's triangle sum to 2ⁿ, which is why the probabilities add to one. Everything in <a href="dist.html">module 07</a> that counts discrete events rests on this.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="n">The birthday calculation assumes birthdays are spread uniformly over 365 dates and are independent between people. Both are false: real births cluster by season and by weekday, and leap years supply a 366th date. Clustering makes matches more likely, so 23 slightly overstates what a real room needs, and twins break independence outright. The poker counts assume a single 52-card deck, five cards dealt at once, and no wild cards or jokers — adding a joker changes every category and, notably, makes a flush harder to rank cleanly against a full house. Factorials above about 170 overflow ordinary floating point, so this page computes large counts through log-gamma and rounds back, which is exact for the values shown here and drifts in the last digit far beyond them. And a count is only a probability when every outcome is equally likely — a shuffled deck qualifies, a room of people does not quite, and most real situations do not at all, which is what the rest of this series is about.</p>
+</footer>
+
+<script src="assets/lab.js"></script>
+<script src="assets/stats.js"></script>
+<script src="assets/pwa.js" defer></script>
+<script>
+"use strict";
+
+/* line() takes arrays, not a function — passing one draws nothing at all. */
+function curve(o, f, col, w, dash) {
+  const n = 260, xs = [], ys = [];
+  for (let i = 0; i <= n; i++) {
+    const x = o.x0 + (o.x1 - o.x0) * i / n;
+    xs.push(x); ys.push(f(x));
+  }
+  line(o, xs, ys, col, w, dash);
+}
+
+/* ── counting ────────────────────────────────────────────────────────────
+   Everything goes through log-gamma and rounds back. 52! is 8.07e67, which
+   is fine in a double, but 171! overflows outright — and the intermediate
+   n!/(n-r)! overflows long before the answer would. Working in logs keeps
+   every count on this page exact. */
+const lfact = n => lgamma(n + 1);
+const permute = (n, r) => (r < 0 || r > n) ? 0
+  : Math.round(Math.exp(lfact(n) - lfact(n - r)));
+const powRep = (n, r) => Math.pow(n, r);              /* with repetition */
+/* logs, for anything the axis needs rather than the readout */
+const logPermute = (n, r) => (r < 0 || r > n) ? -Infinity : (lfact(n) - lfact(n - r)) / Math.LN10;
+const logChoose = (n, r) => (r < 0 || r > n) ? -Infinity : lchoose(n, r) / Math.LN10;
+const logPowRep = (n, r) => r * Math.log10(n);
+/* a readable count, because 8.07e67 does not want a thousands separator */
+function fmtCount(x) {
+  if (!isFinite(x)) return "—";
+  if (x < 1e15) return Math.round(x).toLocaleString();
+  const e = Math.floor(Math.log10(x));
+  return (x / Math.pow(10, e)).toFixed(3) + " × 10" + sup(e);
+}
+function fmtLog10(l) {
+  if (!isFinite(l)) return "—";
+  if (l < 15) return Math.round(Math.pow(10, l)).toLocaleString();
+  const e = Math.floor(l);
+  return Math.pow(10, l - e).toFixed(3) + " × 10" + sup(e);
+}
+const SUPS = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴",
+  "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "-": "⁻" };
+const sup = e => String(e).split("").map(c => SUPS[c] || c).join("");
+
+/* ── the birthday problem ────────────────────────────────────────────────
+   The complement, as a product. Counting "at least one match" directly is a
+   union of overlapping cases; counting "no match" is one clean multiply. */
+function noShared(n, days) {
+  days = days || 365;
+  if (n > days) return 0;
+  let p = 1;
+  for (let i = 0; i < n; i++) p *= (days - i) / days;
+  return p;
+}
+const anyShared = (n, days) => 1 - noShared(n, days);
+/* the question people confuse it with: somebody matching one named person */
+const matchesYou = (n, days) => 1 - Math.pow(1 - 1 / (days || 365), n);
+/* the pair argument, which is why it is so fast */
+const pairsOf = n => n * (n - 1) / 2;
+const poissonApprox = (n, days) => 1 - Math.exp(-pairsOf(n) / (days || 365));
+function firstAbove(target, days) {
+  for (let n = 1; n <= (days || 365) + 1; n++) if (anyShared(n, days) >= target) return n;
+  return Infinity;
+}
+
+/* ── poker, counted rather than looked up ────────────────────────────────
+   Every entry is derived from the multiplication rule. They sum to exactly
+   C(52,5) = 2,598,960, which is the check that none was double-counted. */
+function pokerHands() {
+  const C = choose;
+  const h = [
+    { n: "Royal flush", v: 4, how: "4 suits, one run each" },
+    { n: "Straight flush", v: 4 * 10 - 4, how: "10 runs × 4 suits, minus the 4 royals" },
+    { n: "Four of a kind", v: 13 * 48, how: "13 ranks × 48 remaining cards" },
+    { n: "Full house", v: 13 * C(4, 3) * 12 * C(4, 2), how: "13×4 trips × 12×6 pairs" },
+    { n: "Flush", v: 4 * C(13, 5) - 40, how: "4 × C(13,5) minus 40 straight flushes" },
+    { n: "Straight", v: 10 * Math.pow(4, 5) - 40, how: "10 runs × 4⁵ suits, minus 40" },
+    { n: "Three of a kind", v: 13 * C(4, 3) * C(12, 2) * 16, how: "13×4 trips × C(12,2)×16 kickers" },
+    { n: "Two pair", v: C(13, 2) * 36 * 44, how: "C(13,2) × 6×6 suits × 44 kickers" },
+    { n: "One pair", v: 13 * C(4, 2) * C(12, 3) * 64, how: "13×6 pair × C(12,3)×64 kickers" }
+  ];
+  const named = h.reduce((a, b) => a + b.v, 0);
+  const total = C(52, 5);
+  h.push({ n: "High card", v: total - named, how: "everything left over" });
+  h.forEach(x => { x.p = x.v / total; x.oneIn = total / x.v; });
+  return { hands: h, total: total, sum: h.reduce((a, b) => a + b.v, 0) };
+}
+
+/* ── Pascal ──────────────────────────────────────────────────────────────
+   Row n sums to 2^n, because every subset of n things is counted once. */
+const pascalRow = n => { const r = []; for (let k = 0; k <= n; k++) r.push(choose(n, k)); return r; };
+const rowSum = n => pascalRow(n).reduce((a, b) => a + b, 0);
+
+/* ══════════ hero ══════════ */
+(function () {
+  const cv = document.getElementById("heroCv"); let w, h, g, raf, t0 = 0;
+  function size() {
+    const dpr = window.devicePixelRatio || 1;
+    w = cv.clientWidth; h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr;
+    g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  /* Pascal's triangle filling in, cell by cell */
+  const ROWS = 14, tri = [];
+  for (let n = 0; n < ROWS; n++) tri.push(pascalRow(n));
+  function draw(ph) {
+    g.fillStyle = C("--chalk"); g.fillRect(0, 0, w, h);
+    const cell = Math.min(w / (ROWS + 2), h / (ROWS + 1.5));
+    const x0 = w / 2, y0 = h * 0.10;
+    const shown = Math.min(ROWS, Math.max(1, ph * 3.2));
+    let biggest = 0;
+    tri.forEach(r => r.forEach(v => { if (v > biggest) biggest = v; }));
+    for (let n = 0; n < ROWS; n++) {
+      const vis = shown - n;
+      if (vis <= 0) continue;
+      const a = Math.min(1, vis);
+      for (let k = 0; k <= n; k++) {
+        const x = x0 + (k - n / 2) * cell, y = y0 + n * cell * 0.82;
+        const t = Math.log(tri[n][k] + 1) / Math.log(biggest + 1);
+        g.globalAlpha = a * (0.16 + 0.62 * t);
+        g.fillStyle = C(t > 0.72 ? "--verm" : "--blue");
+        g.beginPath();
+        g.arc(x, y, cell * 0.34, 0, 6.2832);
+        g.fill();
+      }
+    }
+    g.globalAlpha = 1;
+  }
+  function tick(t) { if (!t0) t0 = t; draw((t - t0) / 900); raf = requestAnimationFrame(tick); }
+  window.drawHero = function () {
+    size(); if (RM) { draw(6); return; }
+    if (raf) cancelAnimationFrame(raf); t0 = 0; raf = requestAnimationFrame(tick);
+  };
+})();
+
+/* ══════════ 01 — multiply the choices ══════════ */
+const s1 = { n: 52, rMax: 12 };
+(function () {
+  sliders(document.getElementById("ctl1"), [
+    { id: "a1", k: "n", lbl: "n", name: "How many to choose from", min: 4, max: 100, step: 1, fmt: v => v.toFixed(0) },
+    { id: "b1", k: "rMax", lbl: "r", name: "How many picks to show", min: 2, max: 40, step: 1, fmt: v => v.toFixed(0) }
+  ], s1, () => draw(), "c1");
+  window.draw1 = draw;
+  function draw() {
+    const n = Math.round(s1.n), rMax = Math.min(Math.round(s1.rMax), n);
+    const top = Math.max(logPowRep(n, rMax), 1) * 1.1;
+    const o = Fig(document.getElementById("cv1"),
+      { h: 320, x0: 1, x1: Math.max(rMax, 2), y0: 0, y1: top, pad: { l: 62, r: 14, t: 14 } });
+    axes(o, x => x.toFixed(0), y => y < 6 ? Math.round(Math.pow(10, y)).toLocaleString() : "10" + sup(Math.round(y)), 6, 5);
+    curve(o, r => logPowRep(n, r), C("--verm"), 2.2);
+    curve(o, r => { const k = Math.round(r); return k > n ? NaN : logPermute(n, k); }, C("--blue"), 2.2);
+    curve(o, r => { const k = Math.round(r); return k > n ? NaN : Math.max(0, logChoose(n, k)); }, C("--moss"), 2.2);
+    const r = rMax;
+    document.getElementById("kv1").innerHTML = kvHTML([
+      ["Pool size", String(n)],
+      ["Picks", String(r)],
+      ["With repeats, nʳ", fmtLog10(logPowRep(n, r)), "verm"],
+      ["Ordered, P(n, r)", fmtLog10(logPermute(n, r)), "blue"],
+      ["Unordered, C(n, r)", fmtLog10(logChoose(n, r)), "moss"],
+      ["Ordered ÷ unordered", fmtLog10(logPermute(n, r) - logChoose(n, r)) + " = r!"],
+      ["All n arranged, n!", fmtLog10(lfact(n) / Math.LN10)],
+      ["— for a 52-card deck", "8.066 × 10⁶⁷", "grey"]
+    ]);
+  }
+})();
+
+/* ══════════ 02 — when order stops mattering ══════════ */
+const s2 = { n: 52, r: 5 };
+(function () {
+  sliders(document.getElementById("ctl2"), [
+    { id: "a2", k: "n", lbl: "n", name: "Pool size", min: 2, max: 60, step: 1, fmt: v => v.toFixed(0) },
+    { id: "b2", k: "r", lbl: "r", name: "How many chosen", min: 1, max: 60, step: 1, fmt: v => v.toFixed(0) }
+  ], s2, () => draw(), "c2");
+  window.draw2 = draw;
+  function draw() {
+    const n = Math.round(s2.n), r = Math.min(Math.round(s2.r), n);
+    const lp = logPermute(n, r), lc = logChoose(n, r);
+    const top = Math.max(lp, 1) * 1.18;
+    const o = Fig(document.getElementById("cv2"),
+      { h: 320, x0: -0.7, x1: 1.7, y0: 0, y1: top, pad: { l: 66, r: 14, t: 14 } });
+    axes(o, x => ["ordered", "unordered"][Math.round(x)] || "",
+      y => y < 6 ? Math.round(Math.pow(10, y)).toLocaleString() : "10" + sup(Math.round(y)), 2, 5);
+    const g = o.g, bw = o.pw / 4;
+    [[0, lp, "--blue"], [1, lc, "--moss"]].forEach(([i, v, col]) => {
+      g.save(); g.fillStyle = C(col); g.globalAlpha = 0.85;
+      g.fillRect(o.X(i) - bw / 2, o.Y(Math.max(v, 0)), bw, o.Y(0) - o.Y(Math.max(v, 0)));
+      g.restore();
+      g.fillStyle = C("--ink2"); g.font = "10px 'IBM Plex Mono', monospace";
+      g.textAlign = "center"; g.textBaseline = "bottom";
+      g.fillText(fmtLog10(v), o.X(i), o.Y(Math.max(v, 0)) - 5);
+    });
+    /* the r! gap, drawn as the bracket it is */
+    if (lp > lc) {
+      g.save(); g.strokeStyle = C("--ochre"); g.lineWidth = 1.5; g.setLineDash([4, 3]);
+      const y1 = o.Y(lp), y2 = o.Y(lc), xm = o.X(0.5);
+      g.beginPath(); g.moveTo(o.X(0) + bw / 2, y1); g.lineTo(xm, y1);
+      g.lineTo(xm, y2); g.lineTo(o.X(1) - bw / 2, y2); g.stroke();
+      g.setLineDash([]); g.fillStyle = C("--ochre");
+      g.textAlign = "center"; g.textBaseline = "bottom";
+      g.font = "10px 'IBM Plex Mono', monospace";
+      g.fillText("÷ " + r + "! = " + fmtLog10(lfact(r) / Math.LN10), xm, (y1 + y2) / 2 - 4);
+      g.restore();
+    }
+    document.getElementById("kv2").innerHTML = kvHTML([
+      ["Pool", String(n)],
+      ["Chosen", String(r)],
+      ["Ordered, P(n, r)", fmtLog10(lp), "blue"],
+      ["Unordered, C(n, r)", fmtLog10(lc), "moss"],
+      ["The divisor, r!", fmtLog10(lfact(r) / Math.LN10), "ochre"],
+      ["C(n, r) = C(n, n−r)", fmtLog10(logChoose(n, n - r)), "grey"],
+      ["— the same number?", Math.abs(logChoose(n, r) - logChoose(n, n - r)) < 1e-9 ? "yes" : "no", "moss"],
+      ["C(52, 5)", (2598960).toLocaleString()],
+      ["C(49, 6)", (13983816).toLocaleString()]
+    ]);
+  }
+})();
+
+/* ══════════ 03 — the birthday problem ══════════ */
+const s3 = { n: 23, days: 365 };
+(function () {
+  sliders(document.getElementById("ctl3"), [
+    { id: "a3", k: "n", lbl: "n", name: "People in the room", min: 2, max: 100, step: 1, fmt: v => v.toFixed(0) },
+    { id: "b3", k: "days", lbl: "d", name: "Days in the year", min: 20, max: 500, step: 5, fmt: v => v.toFixed(0) }
+  ], s3, () => draw(), "c3");
+  window.draw3 = draw;
+  function draw() {
+    const days = Math.round(s3.days);
+    const o = Fig(document.getElementById("cv3"),
+      { h: 320, x0: 1, x1: 100, y0: 0, y1: 1.04, pad: { l: 58, r: 14, t: 14 } });
+    axes(o, x => x.toFixed(0), y => (y * 100).toFixed(0) + "%", 6, 5);
+    curve(o, n => anyShared(Math.round(n), days), C("--blue"), 2.4);
+    curve(o, n => matchesYou(Math.round(n), days), C("--grey"), 1.8);
+    hline(o, 0.5, C("--ochre"), "one half");
+    const n = Math.round(s3.n);
+    vline(o, n, C("--ink"), n + " people");
+    const half = firstAbove(0.5, days), p99 = firstAbove(0.99, days);
+    document.getElementById("kv3").innerHTML = kvHTML([
+      ["People", String(n)],
+      ["Pairs among them", pairsOf(n).toLocaleString()],
+      ["P(some pair shares)", (anyShared(n, days) * 100).toFixed(4) + "%", "blue"],
+      ["P(nobody does)", (noShared(n, days) * 100).toFixed(4) + "%"],
+      ["P(somebody matches you)", (matchesYou(n, days) * 100).toFixed(4) + "%", "grey"],
+      ["Expected matching pairs", (pairsOf(n) / days).toFixed(4)],
+      ["Poisson approximation", (poissonApprox(n, days) * 100).toFixed(4) + "%", "grey"],
+      ["First n above one half", String(half), "ochre"],
+      ["First n above 99%", String(p99)]
+    ]);
+  }
+})();
+
+/* ══════════ 04 — every poker hand ══════════ */
+const s4 = { pick: 5 };
+(function () {
+  const P = pokerHands();
+  sliders(document.getElementById("ctl4"), [
+    { id: "a4", k: "pick", lbl: "#", name: "Highlight a category", min: 0, max: 9, step: 1,
+      fmt: v => P.hands[Math.round(v)].n }
+  ], s4, () => draw(), "c4");
+  window.draw4 = draw;
+  window.__poker = pokerHands;
+  function draw() {
+    const idx = Math.max(0, Math.min(9, Math.round(s4.pick)));
+    const top = Math.log10(Math.max.apply(null, P.hands.map(h => h.v))) * 1.15;
+    const o = Fig(document.getElementById("cv4"),
+      { h: 320, x0: -0.7, x1: 9.7, y0: 0, y1: top, pad: { l: 62, r: 14, t: 14 } });
+    axes(o, x => { const i = Math.round(x); return P.hands[i] ? String(i + 1) : ""; },
+      y => y < 6 ? Math.round(Math.pow(10, y)).toLocaleString() : "10" + sup(Math.round(y)), 10, 5);
+    const g = o.g, bw = o.pw / 14;
+    P.hands.forEach((h, i) => {
+      const v = Math.log10(h.v);
+      g.save(); g.fillStyle = C(i === idx ? "--verm" : "--blue");
+      g.globalAlpha = i === idx ? 0.95 : 0.6;
+      g.fillRect(o.X(i) - bw / 2, o.Y(v), bw, o.Y(0) - o.Y(v));
+      g.restore();
+      g.fillStyle = C("--ink2"); g.font = "9px 'IBM Plex Mono', monospace";
+      g.textAlign = "center"; g.textBaseline = "bottom";
+      g.fillText(h.v.toLocaleString(), o.X(i), o.Y(v) - 4);
+    });
+    const h = P.hands[idx];
+    document.getElementById("kv4").innerHTML = kvHTML([
+      ["Category", h.n, "verm"],
+      ["Ways to make it", h.v.toLocaleString()],
+      ["How", h.how, "grey"],
+      ["Probability", (h.p * 100).toFixed(6) + "%"],
+      ["One in", h.oneIn.toFixed(1)],
+      ["All five-card hands", P.total.toLocaleString()],
+      ["Every category summed", P.sum.toLocaleString(), P.sum === P.total ? "moss" : "verm"],
+      ["— do they match?", P.sum === P.total ? "yes, exactly" : "NO", P.sum === P.total ? "moss" : "verm"],
+      ["Flush vs straight", "5,108 vs 10,200", "grey"]
+    ]);
+  }
+})();
+
+/* ══════════ 05 — where the coefficient comes from ══════════ */
+const s5 = { row: 10 };
+(function () {
+  sliders(document.getElementById("ctl5"), [
+    { id: "a5", k: "row", lbl: "n", name: "Which row", min: 1, max: 16, step: 1, fmt: v => "n = " + v.toFixed(0) }
+  ], s5, () => draw(), "c5");
+  window.draw5 = draw;
+  window.__pascal = { row: pascalRow, sum: rowSum };
+  function draw() {
+    const N = 16, sel = Math.max(1, Math.min(N, Math.round(s5.row)));
+    const o = Fig(document.getElementById("cv5"),
+      { h: 320, x0: -N / 2 - 1, x1: N / 2 + 1, y0: 0, y1: N + 1, pad: { l: 20, r: 14, t: 14 } });
+    axes(o, () => "", () => "", 0, 0);
+    const g = o.g;
+    const cw = o.pw / (N + 2), ch = o.ph / (N + 1.2);
+    const rad = Math.min(cw, ch) * 0.42;
+    let biggest = 0;
+    for (let k = 0; k <= sel; k++) biggest = Math.max(biggest, choose(sel, k));
+    for (let n = 0; n <= N; n++) {
+      const row = pascalRow(n);
+      const isSel = n === sel;
+      for (let k = 0; k <= n; k++) {
+        const px = o.P.l + o.pw / 2 + (k - n / 2) * cw;
+        const py = o.P.t + 8 + n * ch;
+        const isMax = isSel && row[k] === biggest;
+        g.save();
+        g.globalAlpha = isSel ? 0.95 : 0.30;
+        g.fillStyle = C(isMax ? "--verm" : isSel ? "--blue" : "--hair");
+        g.beginPath(); g.arc(px, py, rad, 0, 6.2832); g.fill();
+        g.restore();
+        if (isSel && n <= 12) {
+          g.fillStyle = C(isMax ? "--chalk" : "--chalk");
+          g.font = Math.round(rad) + "px 'IBM Plex Mono', monospace";
+          g.textAlign = "center"; g.textBaseline = "middle";
+          g.fillText(String(row[k]), px, py);
+        }
+      }
+    }
+    const row = pascalRow(sel);
+    const mx = Math.max.apply(null, row);
+    const kMax = row.indexOf(mx);
+    document.getElementById("kv5").innerHTML = kvHTML([
+      ["Row", "n = " + sel],
+      ["Entries", (sel + 1) + " of them"],
+      ["Largest, C(" + sel + "," + kMax + ")", mx.toLocaleString(), "verm"],
+      ["Row sum", rowSum(sel).toLocaleString(), "blue"],
+      ["— which is 2ⁿ", Math.pow(2, sel).toLocaleString()],
+      ["— do they match?", rowSum(sel) === Math.pow(2, sel) ? "yes" : "NO",
+        rowSum(sel) === Math.pow(2, sel) ? "moss" : "verm"],
+      ["P(exactly " + kMax + " of " + sel + ")", (mx / Math.pow(2, sel) * 100).toFixed(3) + "%"],
+      ["P(all " + sel + ")", (1 / Math.pow(2, sel) * 100).toFixed(4) + "%"],
+      ["— ratio", mx.toLocaleString() + " to 1", "grey"]
+    ]);
+  }
+})();
+
+/* ══════════ 06 — the drill ══════════ */
+(function () {
+  const E = id => document.getElementById(id);
+  let cur = null, sc = 0, asked = 0, streak = 0, best = 0, tier = 1;
+  const R = Math.random;
+  const pick = a => a[Math.floor(R() * a.length)];
+  function make() {
+    if (tier === 1) {
+      const t = Math.floor(R() * 4);
+      if (t === 0) {
+        const n = pick([5, 6, 8, 10, 12]), r = pick([2, 3, 4]);
+        const a = permute(n, r);
+        return { kind: "Permutations", unit: "", a: a, tol: 0.5,
+          q: "How many <b>ordered</b> ways to pick <b>" + r + "</b> from <b>" + n + "</b>?",
+          w: n + " × " + (n - 1) + (r > 2 ? " × " + (n - 2) : "") +
+            (r > 3 ? " × " + (n - 3) : "") + " = <b>" + a.toLocaleString() + "</b>." };
+      }
+      if (t === 1) {
+        const n = pick([5, 6, 8, 10, 12, 13]), r = pick([2, 3, 4, 5]);
+        const a = choose(n, Math.min(r, n));
+        return { kind: "Combinations", unit: "", a: a, tol: 0.5,
+          q: "How many <b>unordered</b> ways to pick <b>" + Math.min(r, n) +
+            "</b> from <b>" + n + "</b>?",
+          w: "P(" + n + "," + Math.min(r, n) + ") ÷ " + Math.min(r, n) + "! = " +
+            permute(n, Math.min(r, n)).toLocaleString() + " ÷ " +
+            Math.round(Math.exp(lfact(Math.min(r, n)))) + " = <b>" + a.toLocaleString() + "</b>." };
+      }
+      if (t === 2) {
+        const n = pick([3, 4, 5, 6]), d = pick([6, 10, 26]);
+        const a = Math.pow(d, n);
+        return { kind: "With repetition", unit: "", a: a, tol: 0.5,
+          q: "A code of <b>" + n + "</b> symbols drawn from <b>" + d +
+            "</b>, repeats allowed. How many codes?",
+          w: d + "<sup>" + n + "</sup> = <b>" + a.toLocaleString() +
+            "</b>. Forbidding repeats would give " + permute(d, n).toLocaleString() + "." };
+      }
+      const n = pick([4, 5, 6, 7, 8]);
+      const a = Math.round(Math.exp(lfact(n)));
+      return { kind: "Factorials", unit: "", a: a, tol: 0.5,
+        q: "In how many orders can <b>" + n + "</b> distinct things be arranged?",
+        w: n + "! = <b>" + a.toLocaleString() + "</b>. For 52 things it is about 8.07 × 10⁶⁷." };
+    }
+    const t = Math.floor(R() * 3);
+    if (t === 0) {
+      const n = pick([10, 15, 20, 23, 30, 40]);
+      const a = anyShared(n, 365) * 100;
+      return { kind: "Shared birthday", unit: "%", a: a, tol: Math.max(0.05, a * 0.01),
+        q: "<b>" + n + "</b> people in a room. What is the chance at least two share a birthday?",
+        w: "1 − (365/365)(364/365)… = <b>" + a.toFixed(3) + "%</b>, with " +
+          pairsOf(n) + " pairs in play. It crosses one half at 23 people." };
+    }
+    if (t === 1) {
+      const n = pick([6, 8, 10, 12]);
+      const a = rowSum(n);
+      return { kind: "Row of Pascal's triangle", unit: "", a: a, tol: 0.5,
+        q: "What do the binomial coefficients C(<b>" + n + "</b>, k) sum to across all k?",
+        w: "2<sup>" + n + "</sup> = <b>" + a.toLocaleString() +
+          "</b> — every subset counted once, which is why the binomial probabilities add to one." };
+    }
+    const n = pick([8, 10, 12]), k = Math.floor(n / 2);
+    const a = choose(n, k) / Math.pow(2, n) * 100;
+    return { kind: "The most likely count", unit: "%", a: a, tol: Math.max(0.05, a * 0.01),
+      q: "<b>" + n + "</b> fair coin flips. What is the chance of exactly <b>" + k + "</b> heads?",
+      w: "C(" + n + "," + k + ")/2<sup>" + n + "</sup> = " + choose(n, k) + "/" +
+        Math.pow(2, n).toLocaleString() + " = <b>" + a.toFixed(3) +
+        "%</b> — the single most likely count, and still well under a half." };
+  }
+  function next() {
+    cur = make();
+    E("dKind").textContent = cur.kind; E("dText").innerHTML = cur.q;
+    E("dUnit").textContent = cur.unit; E("dInput").value = "";
+    E("drill").classList.remove("done");
+    focusSoft(E("dInput"), E("drill"));
+  }
+  function submit() {
+    if (!cur || E("drill").classList.contains("done")) return;
+    const raw = parseFloat(String(E("dInput").value).replace(/[$,%\s]/g, ""));
+    asked++;
+    const ok = isFinite(raw) && Math.abs(raw - cur.a) <= cur.tol;
+    if (ok) { sc++; streak++; if (streak > best) best = streak; } else streak = 0;
+    E("dVerdict").textContent = ok ? "CORRECT"
+      : ("NOT QUITE — the answer is " +
+        (cur.a >= 1000 ? Math.round(cur.a).toLocaleString() : cur.a.toFixed(3)));
+    E("dVerdict").className = "vd " + (ok ? "ok" : "no");
+    E("dWork").innerHTML = cur.w;
+    E("dScore").textContent = sc + " / " + asked;
+    E("dStreak").textContent = String(streak); E("dBest").textContent = String(best);
+    E("drill").classList.add("done");
+  }
+  E("dSubmit").addEventListener("click", submit);
+  E("dInput").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+  E("dNext").addEventListener("click", next);
+  E("dSkip").addEventListener("click", () => { streak = 0; E("dStreak").textContent = "0"; next(); });
+  [1, 2].forEach(k => E("dT" + k).addEventListener("click", () => {
+    tier = k;
+    [1, 2].forEach(j => E("dT" + j).setAttribute("aria-pressed", j === k ? "true" : "false"));
+    next();
+  }));
+  window.drawDrill = next;
+  window.__drill = () => {
+    const o = [];
+    for (let i = 0; i < 2; i++) { tier = i + 1; for (let j = 0; j < 400; j++) o.push(make()); }
+    tier = 1; return o;
+  };
+})();
+
+function drawAll() {
+  drawHero(); draw1(); draw2(); draw3(); draw4(); draw5(); drawDrill();
+}
+LAB.boot(drawAll);
+
+</script>
+</body>
+</html>

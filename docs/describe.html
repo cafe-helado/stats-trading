@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F4F1E8">
+<title>Describing a Pile of Numbers — Chance, visually</title>
+<meta name="description" content="Center, spread and position — and which of them survives one bad observation. Mean against median, the IQR and MAD conversions, z-scores and percentiles, and why the standard outlier rule flags one clean point in every 143.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Describing a Pile of Numbers — Chance, visually">
+<meta property="og:description" content="Center, spread and position — and which of them survives one bad observation. Mean against median, the IQR and MAD conversions, z-scores and percentiles, and why the standard outlier rule flags one clean point in every 143.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F1E8'/><rect x='5' y='19' width='4' height='7' fill='%230B6E75'/><rect x='11' y='12' width='4' height='14' fill='%230B6E75'/><rect x='17' y='7' width='4' height='19' fill='%230B6E75'/><rect x='23' y='16' width='4' height='10' fill='%230B6E75'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lab.css">
+<link rel="stylesheet" href="assets/mobile.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chance">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+<header class="serieshead">
+  <div class="in">
+    <a class="home" href="index.html">← Chance, visually</a>
+    <span class="num">No. 04 · Describing</span>
+  </div>
+</header>
+
+<div class="progress" id="prog"></div>
+<nav class="chapnav" id="chapnav" aria-label="Chapters">
+  <a href="#c1"><span>Center</span><i></i></a>
+  <a href="#c2"><span>Spread</span><i></i></a>
+  <a href="#c3"><span>Position</span><i></i></a>
+  <a href="#c4"><span>Five numbers</span><i></i></a>
+  <a href="#c5"><span>Shifting and scaling</span><i></i></a>
+  <a href="#c6"><span>Drills</span><i></i></a>
+</nav>
+
+<div class="hero">
+  <canvas id="heroCv" aria-hidden="true"></canvas>
+  <div class="heroInner">
+    <div class="eyebrow">An interactive derivation · No. 04</div>
+    <h1>One number to stand for <em>all</em> of them</h1>
+    <p class="sub">Summarizing a pile of numbers means throwing almost all of them away. Which summary you pick decides what survives — and whether a single bad observation can drag the answer anywhere it likes.</p>
+  </div>
+  <div class="scrollcue">Scroll ↓</div>
+</div>
+
+<main>
+
+<div class="orient">
+  <h2>Start here</h2>
+  <p class="lede">Three questions get asked of every dataset: where is it, how spread out is it, and where does one particular value sit inside it. There is more than one answer to each, and the answers disagree exactly when it matters.</p>
+  <ol>
+    <li><b>Chapter 01 is the one to feel in your hands.</b> Ten salaries with one founder in them have a mean of <b>167.9</b> and a median of <b>54.0</b>. Push the founder's pay to 120,000 and the mean goes to <b>12,048</b> while the median does not move at all.</li>
+    <li><b>Chapter 02 gives the conversions.</b> For a normal distribution the three spread measures are locked together: the interquartile range is <b>1.349σ</b> and the median absolute deviation is <b>0.6745σ</b>. Outside a normal they come apart, and the gap is informative.</li>
+    <li><b>Chapter 04 has the fact nobody mentions.</b> The standard outlier rule flags <b>0.70%</b> of perfectly well-behaved normal points — about one in every 143. It is a prompt to look, not a verdict.</li>
+  </ol>
+  <details class="drop">
+    <summary>Notation — every symbol used on this page</summary>
+    <table class="ntab">
+      <tr><td>Mean</td><td>The arithmetic average. Uses every value, and is moved by every value.</td></tr>
+      <tr><td>Median</td><td>The middle value once sorted. Uses only the rank, so distant values cannot pull it.</td></tr>
+      <tr><td>σ</td><td>Standard deviation — the root of the mean squared deviation.</td></tr>
+      <tr><td>IQR</td><td>Interquartile range: the third quartile minus the first, holding the middle half.</td></tr>
+      <tr><td>MAD</td><td>Median absolute deviation — the median of the distances from the median. The most stubbornly robust measure of spread there is.</td></tr>
+      <tr><td>Percentile</td><td>The fraction of the data at or below a value.</td></tr>
+      <tr><td>z-score</td><td>(value − mean) ÷ σ. How many standard deviations from the middle, and unitless.</td></tr>
+      <tr><td>Breakdown point</td><td>The fraction of the data that can be arbitrarily corrupted before a statistic becomes meaningless.</td></tr>
+    </table>
+  </details>
+</div>
+
+<!-- ══════════ 01 ══════════ -->
+<section class="chapter" id="c1">
+  <div class="chead">
+    <div class="cnum">01</div>
+    <h2>Where is it?</h2>
+    <p class="dek">The mean uses every value, which is its strength and its whole vulnerability.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Ten salaries at a small company, in thousands: <b>42, 45, 48, 51, 53, 55, 58, 62, 65</b> — and the founder on <b>1,200</b>.</p>
+    <p>The <b>mean</b> is <b>167.9</b>. The <b>median</b> is <b>54.0</b>. Nine of the ten people earn less than a third of the mean, so the mean describes nobody in the room. The median describes almost everyone.</p>
+    <p>Remove the founder and the mean falls to <b>53.2</b> — a move of <b>114.7</b>. The median moves from 54.0 to 53.0, a move of <b>1.0</b>. One observation out of ten controlled the mean and barely touched the median.</p>
+    <p>The formal version of that is the <span class="term" data-t="Breakdown point" data-def="The fraction of a dataset that can be replaced with arbitrarily extreme values before a statistic can be made to take any value at all. Zero for the mean, one half for the median — the highest any statistic can achieve.">breakdown point</span>: the share of the data that can be arbitrary garbage before the statistic becomes meaningless. For the mean it is <b>0%</b>. Change a single value and I can move the mean anywhere I want. For the median it is <b>50%</b> — you must corrupt half the dataset before it can be forced anywhere, and no statistic can do better than that.</p>
+    <p>Watch it happen: push the founder to 12,000 and the mean becomes <b>1,247.9</b>; push to 120,000 and it becomes <b>12,047.9</b>. The median reads <b>54.0</b> throughout, unmoved.</p>
+    <p>None of which makes the mean wrong. It is the right summary when you care about the <em>total</em> — a payroll department needs the mean, because the mean times headcount is the bill. It is the wrong summary when you want to describe a typical member, and the two get quoted interchangeably.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The same data, and what one value does to each summary</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>The values</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Mean</span>
+            <span><i class="swl" style="background:var(--moss)"></i>Median</span>
+          </span>
+        </div>
+        <canvas id="cv1" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl1"></div>
+        <div class="kv" style="margin-top:20px" id="kv1"></div>
+      </div>
+    </div>
+    <figcaption>Drag the outlier and watch the red line chase it off the chart while the green one stays with the data. That is a breakdown point of zero against one of a half.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A report says average household wealth in a town is $2.4m and median wealth is $180k. What does that tell you?</p>
+    <div class="opts">
+      <button>The numbers are inconsistent — one must be wrong</button>
+      <button data-ok="1">That wealth is heavily right-skewed. A small number of very large fortunes lift the mean while leaving the median where most households actually are</button>
+      <button>That half the town has over $2.4m</button>
+      <button>That the town is uniformly wealthy</button>
+    </div>
+    <div class="ans"><b>A mean far above a median means a long right tail.</b> The gap between the two is itself a measurement — it is the crudest skew detector there is, and it is free. When a summary quotes only one of them, which one was chosen is usually the most informative thing about the report.</div>
+  </div>
+</section>
+
+<!-- ══════════ 02 ══════════ -->
+<section class="chapter" id="c2">
+  <div class="chead">
+    <div class="cnum">02</div>
+    <h2>How spread out is it?</h2>
+    <p class="dek">Three answers, locked together under a normal and pulling apart everywhere else.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Spread has the same problem as center, and worse. The <b>standard deviation</b> squares every deviation before averaging, so a distant point counts for its distance <em>squared</em> — the vulnerability of the mean, amplified.</p>
+    <p>On those ten salaries the standard deviation is <b>362.7</b>. Drop the founder and it is <b>7.6</b>, smaller by a factor of <b>47</b>. The <b>interquartile range</b> — the third quartile minus the first, covering the middle half — goes from <b>12.25</b> to <b>10.00</b>, a factor of <b>1.2</b>. The <b>median absolute deviation</b> goes from 7.0 to 5.0.</p>
+    <p>Under a normal distribution these are all the same quantity in different clothes, and the conversions are worth having:</p>
+    <p>The IQR is <b>1.349σ</b> — exactly twice the 0.6745 that marks the quartiles. The median absolute deviation is <b>0.6745σ</b>. And the mean absolute deviation is <b>0.7979σ</b>, which is the constant an option straddle prices and a story for elsewhere.</p>
+    <p>So a robust volatility estimate is <code>IQR × 0.7413</code> or <code>MAD × 1.4826</code>, and those constants exist purely to make the robust measures comparable with a standard deviation.</p>
+    <p>Here is the part worth internalizing. When those conversions <em>disagree</em> on real data, that is not an error — it is a measurement. A sample whose IQR-implied sigma is far below its actual standard deviation has fat tails, and the size of the gap is roughly how fat. You get a distributional diagnosis for free, from two numbers you were computing anyway.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Three measures of spread, as contamination arrives</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--verm)"></i>Standard deviation</span>
+            <span><i class="swl" style="background:var(--blue)"></i>IQR ÷ 1.349</span>
+            <span><i class="swl" style="background:var(--moss)"></i>MAD ÷ 0.6745</span>
+          </span>
+        </div>
+        <canvas id="cv2" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl2"></div>
+        <div class="kv" style="margin-top:20px" id="kv2"></div>
+      </div>
+    </div>
+    <figcaption>All three agree at zero contamination — that is what the constants are for. Add a few wild points and only the red line notices, which is either the feature or the bug depending on what you needed.</figcaption>
+  </figure>
+
+  <div class="mline">IQR = 1.349 σ          median abs deviation = 0.6745 σ          mean abs deviation = 0.7979 σ</div>
+  <p class="mread">Reads as: <b>for a normal, every measure of spread is the standard deviation times a fixed constant.</b> The constants hold only for a normal, so when two of them disagree on real data you have learned the data is not normal.</p>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A return series has a standard deviation of 2.0% but its IQR implies only 1.2%. What have you found?</p>
+    <div class="opts">
+      <button>An arithmetic error — they should agree</button>
+      <button data-ok="1">Fat tails. The conversion assumes a normal, so a standard deviation well above the IQR-implied one means a few extreme days are inflating it</button>
+      <button>That the data is normally distributed</button>
+      <button>That the sample is too small</button>
+    </div>
+    <div class="ans"><b>The disagreement is the finding.</b> Both statistics are computed correctly; the constant that relates them is what assumed normality. This is one of the cheapest fat-tail diagnostics available, and it needs nothing beyond two numbers you already have.</div>
+  </div>
+</section>
+
+<!-- ══════════ 03 ══════════ -->
+<section class="chapter" id="c3">
+  <div class="chead">
+    <div class="cnum">03</div>
+    <h2>Where does this one sit?</h2>
+    <p class="dek">A percentile counts what is below. A z-score measures in standard deviations. One is distribution-free and one is not.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Two ways to place a single value inside a distribution, and they answer subtly different questions.</p>
+    <p>A <b>percentile</b> is a rank: the 88th percentile means 88% of the data sits at or below you. It needs no assumptions at all — it is a count — and it is bounded between 0 and 100 whatever the shape.</p>
+    <p>A <b>z-score</b> is a distance: <code>(value − mean) ÷ σ</code>, measured in standard deviations. It carries more information when the distribution is well behaved and it is unbounded, which matters for the tails.</p>
+    <p>Under a normal they convert exactly. A z of <b>1.00</b> is the <b>84.13th</b> percentile; <b>2.00</b> is the <b>97.72nd</b>; <b>3.00</b> is the <b>99.87th</b>. Read symmetrically, that is the empirical rule with its true values rather than its rounded ones: <b>68.27%</b> within one sigma, <b>95.45%</b> within two, <b>99.73%</b> within three.</p>
+    <p>The z-score's real power is comparing things that are not otherwise comparable. A <b>620</b> on a test with mean 500 and σ 100 is z = 1.20, the <b>88.49th</b> percentile. A <b>31</b> on a test with mean 21 and σ 5 is z = 2.00, the <b>97.72nd</b>. The second is much the better result, and no amount of staring at 620 against 31 will tell you that.</p>
+    <p>But the conversion runs on the normal assumption and nothing else. On a fat-tailed distribution a z of 3 is nowhere near the 99.87th percentile — it is far more common than that — which is the whole subject of <a href="tails.html">module 12</a>. The percentile keeps meaning what it says; the z-score's <em>translation</em> into a probability is what breaks.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>A value, its z-score, and the fraction below it</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>The distribution</span>
+            <span><i class="sw" style="background:var(--moss)"></i>Below your value</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>Your value</span>
+          </span>
+        </div>
+        <canvas id="cv3" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl3"></div>
+        <div class="kv" style="margin-top:20px" id="kv3"></div>
+      </div>
+    </div>
+    <figcaption>The green area is the percentile and the gold line is the z-score. They are the same fact stated two ways — but only while the curve behind them is the right shape.</figcaption>
+  </figure>
+
+  <div class="mline">z = (value − mean) ÷ σ          percentile = Φ(z), for a normal only</div>
+  <p class="mread">Reads as: <b>subtract the middle and divide by the spread; then, if the distribution is normal, convert that to a fraction.</b> The first step always works. The second is an assumption.</p>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Set the value to three sigma and read the percentile. Then imagine the tail is twice as heavy and ask what that number would really be.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c3" data-patch='{"mu":500,"sig":100,"x":620}' data-focus="cv3">620 on a 500/100 test</button>
+      <button class="act ghost" data-preset="c3" data-patch='{"mu":21,"sig":5,"x":31}' data-focus="cv3">31 on a 21/5 test</button>
+      <button class="act ghost" data-preset="c3" data-patch='{"mu":500,"sig":100,"x":800}' data-focus="cv3">Three sigma</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Which is more impressive: 620 on a test with mean 500 and σ 100, or 31 on one with mean 21 and σ 5?</p>
+    <div class="opts">
+      <button>The 620, obviously — it is a much bigger number</button>
+      <button data-ok="1">The 31. It is z = 2.00 and the 97.72nd percentile, against z = 1.20 and the 88.49th</button>
+      <button>They are equivalent</button>
+      <button>You cannot compare scores from different tests</button>
+    </div>
+    <div class="ans"><b>The 31, by a wide margin.</b> Standardizing is exactly what makes the fourth option wrong — different tests become comparable the moment you measure in standard deviations instead of raw points. That is most of what a z-score is for.</div>
+  </div>
+</section>
+
+<!-- ══════════ 04 ══════════ -->
+<section class="chapter" id="c4">
+  <div class="chead">
+    <div class="cnum">04</div>
+    <h2>Five numbers, and a fence that cries wolf</h2>
+    <p class="dek">The box plot is the five-number summary drawn. Its outlier rule flags one in every 143 perfectly good points.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The <b>five-number summary</b> is minimum, first quartile, median, third quartile, maximum. For the salaries that is <b>42, 48.75, 54.0, 61.0, 1200</b>. Drawn as a box from Q1 to Q3 with a line at the median and whiskers reaching out, it is a box plot, and it shows center, spread and skew at once.</p>
+    <p>The whiskers stop at the <b>1.5 × IQR</b> fences. Here the IQR is 12.25, so the fences sit at <b>30.4</b> and <b>79.4</b>, and the 1,200 is plotted as a lone point outside — flagged.</p>
+    <p>Now the part that rarely gets said. That fence is not a test, and it has a false positive rate you can compute. For a normal distribution the quartiles sit at ±0.6745σ, so the upper fence sits at <code>0.6745 + 1.5 × 1.349</code> = <b>2.698σ</b>. The chance a normal point lands outside is <b>0.6977%</b>.</p>
+    <p>So in a hundred perfectly clean normal observations you should expect <b>0.70</b> points flagged as outliers, and in a thousand you should expect <b>seven</b>. The rule flags about <b>one in every 143</b> good points. It was designed as a prompt to go and look, not as a verdict that something is wrong, and treating flagged points as errors to delete is how a dataset quietly loses its tails — which is precisely the part <a href="tails.html">module 12</a> says carries the risk.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The five-number summary, drawn</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>The middle half</span>
+            <span><i class="swl" style="background:var(--moss)"></i>Median</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>The 1.5×IQR fences</span>
+            <span><i class="sw" style="background:var(--verm)"></i>Flagged</span>
+          </span>
+        </div>
+        <canvas id="cv4" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl4"></div>
+        <div class="kv" style="margin-top:20px" id="kv4"></div>
+      </div>
+    </div>
+    <figcaption>Raise the sample size on clean normal data and watch the flagged count climb in proportion. Nothing is wrong with those points; the rule simply fires at a fixed rate.</figcaption>
+  </figure>
+
+  <div class="derive">
+    <span class="lab">Where this comes from</span>
+    <p>For a normal, the quartiles are at <b>±0.67449σ</b> — the points with 25% and 75% of the mass below them. So the IQR is <b>2 × 0.67449 = 1.34898σ</b>, which is where the 1.349 conversion comes from.</p>
+    <p>The upper fence is <b>Q3 + 1.5 × IQR</b>, which in sigmas is <b>0.67449 + 1.5 × 1.34898 = 2.69796σ</b>. The probability of a normal point beyond that on either side is <b>2 × (1 − Φ(2.698)) = 0.6977%</b>, or roughly one point in 143.</p>
+    <p><b>Where it breaks:</b> everything above assumes normality, and the rule is most often reached for precisely when the data is not normal. On a genuinely fat-tailed sample the fence fires far more often than 0.7% — not because anything is wrong, but because the distribution has more mass out there than a normal does. The 1.5 is also pure convention with no derivation behind it; Tukey chose it because it worked, and 3.0 is the conventional threshold for "far out." Reading either as a significance test imports a rigor that was never claimed.</p>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A box plot of 1,000 clean, normally distributed observations. How many points fall outside the whiskers?</p>
+    <div class="opts">
+      <button>None — the data is clean</button>
+      <button data-ok="1">About seven. The fence sits at 2.698σ and catches 0.6977% of normal points, so roughly one in 143</button>
+      <button>About fifty, being 5%</button>
+      <button>It is impossible to say</button>
+    </div>
+    <div class="ans"><b>About seven, and none of them is an error.</b> The rule fires at a fixed rate on well-behaved data, which is why flagged points are a prompt to look rather than a license to delete. Deleting them systematically trims exactly the tail that carries the risk.</div>
+  </div>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section class="chapter" id="c5">
+  <div class="chead">
+    <div class="cnum">05</div>
+    <h2>What happens when you change the units</h2>
+    <p class="dek">Adding a constant moves the center and leaves the spread alone. Multiplying moves both. That asymmetry is why z-scores work.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Take the nine salaries without the founder — mean <b>53.22</b>, median <b>53.00</b>, standard deviation <b>7.645</b>, IQR <b>10.00</b>.</p>
+    <p><b>Add 10 to everyone.</b> The mean becomes 63.22 and the median 63.00, both shifted by exactly 10. The standard deviation is still <b>7.645</b> and the IQR still <b>10.00</b> — completely unmoved. Sliding a distribution sideways does not change how spread out it is.</p>
+    <p><b>Double everyone instead.</b> The mean becomes 106.44 and the median 106.00, both doubled. But now the standard deviation doubles to <b>15.29</b> and the IQR to <b>20.00</b> as well. Stretching a distribution stretches its spread.</p>
+    <p>That asymmetry is the whole reason the z-score is built the way it is. Subtracting the mean removes the shift; dividing by σ removes the scale. What is left cannot depend on either.</p>
+    <p>Compute the z-scores of the original, of the shifted data, and of the doubled data, and all three come out <b>identical to the last decimal place</b>. The standardized data always has mean exactly <b>0</b> and standard deviation exactly <b>1</b>, whatever units you started in — dollars, degrees, basis points. That is why chapter 03 could compare two different tests, and why every distribution in this series gets discussed in sigmas.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The same data, shifted and scaled, standardized</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>Original</span>
+            <span><i class="sw" style="background:var(--ochre)"></i>Transformed</span>
+            <span><i class="sw" style="background:var(--moss)"></i>Both, standardized</span>
+          </span>
+        </div>
+        <canvas id="cv5" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl5"></div>
+        <div class="kv" style="margin-top:20px" id="kv5"></div>
+      </div>
+    </div>
+    <figcaption>Shift and scale the gold copy however you like. The green row never moves, because standardizing removes exactly the two things you are changing.</figcaption>
+  </figure>
+
+  <div class="mline">mean(aX + b) = a·mean(X) + b          sd(aX + b) = |a|·sd(X)</div>
+  <p class="mread">Reads as: <b>the center follows both the stretch and the shift; the spread follows only the stretch.</b> The absolute value is there because flipping the sign reverses the data without making it less spread out.</p>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Every salary in a company rises by exactly $5,000. What happens to the standard deviation?</p>
+    <div class="opts">
+      <button>It rises by $5,000</button>
+      <button data-ok="1">Nothing. Adding a constant shifts every value equally, so no distance between any two of them changes</button>
+      <button>It rises, but by less than $5,000</button>
+      <button>It falls, since everyone is closer to the top</button>
+    </div>
+    <div class="ans"><b>Unchanged.</b> Spread measures distances, and a uniform shift changes no distance. A 10% raise for everyone is a different story — that is a multiplication, and it scales the standard deviation by 1.10 along with the mean.</div>
+  </div>
+</section>
+
+<!-- ══════════ 06 ══════════ -->
+<section class="chapter" id="c6">
+  <div class="chead">
+    <div class="cnum">06</div>
+    <h2>Drill it</h2>
+    <p class="dek">Computing the summaries, then converting between them.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The first tier computes a summary from a handful of numbers. The second converts between the measures and between z-scores and percentiles.</p>
+  </div>
+
+  <figure>
+    <div class="drill" id="drill">
+      <div class="dstats">
+        <div class="c"><span class="k">Correct</span><span class="v" id="dScore">0 / 0</span></div>
+        <div class="c"><span class="k">Streak</span><span class="v" id="dStreak" style="color:var(--moss)">0</span></div>
+        <div class="c"><span class="k">Best</span><span class="v" id="dBest">0</span></div>
+        <div class="c" style="flex:1;min-width:170px"><span class="k">Tier</span>
+          <div class="seg" style="margin-top:5px;max-width:240px">
+            <button id="dT1" aria-pressed="true">Computing</button>
+            <button id="dT2" aria-pressed="false">Converting</button>
+          </div>
+        </div>
+      </div>
+      <span class="qn" id="dKind">Question</span>
+      <p class="qt" id="dText">Loading…</p>
+      <div class="ansrow">
+        <input type="text" inputmode="decimal" id="dInput" placeholder="your answer" aria-label="Your answer">
+        <span class="unit" id="dUnit"></span>
+        <button class="act" id="dSubmit">Check</button>
+        <button class="act ghost" id="dSkip">Skip</button>
+      </div>
+      <div class="verdict">
+        <div class="vd" id="dVerdict"></div>
+        <div class="work" id="dWork"></div>
+        <div class="btnrow"><button class="act" id="dNext">Next question</button></div>
+      </div>
+    </div>
+    <figcaption>The constants worth knowing: IQR = 1.349σ, MAD = 0.6745σ, and the empirical rule at 68.27 / 95.45 / 99.73.</figcaption>
+  </figure>
+
+  <div class="prose" style="margin-top:46px">
+    <p>Six questions across the page.</p>
+  </div>
+
+  <div class="score" id="scoreBox">
+    <span class="big" id="scoreNum">0 / 6</span>
+    <span class="txt" id="scoreTxt">Answered nothing yet. Questions are scored as you go.</span>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 1 · chapter 01</span>
+    <p class="q">Nine salaries around 50, plus a founder on 1,200. Mean and median?</p>
+    <div class="opts">
+      <button>Both around 54 — one outlier cannot matter much</button>
+      <button data-ok="1">Mean 167.9, median 54.0. The single outlier controls the mean and barely touches the median</button>
+      <button>Mean 54.0, median 167.9</button>
+      <button>Both around 168</button>
+    </div>
+    <div class="ans"><b>167.9 and 54.0.</b> Nine of the ten people earn under a third of the mean. Push the founder to 120,000 and the mean goes to 12,048 while the median stays at 54.0 — a breakdown point of zero against one of a half.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 2 · chapter 01</span>
+    <p class="q">What is the breakdown point of the median?</p>
+    <div class="opts">
+      <button>0% — any bad value affects it</button>
+      <button data-ok="1">50%. You must corrupt half the data before it can be forced anywhere, and no statistic can beat that</button>
+      <button>25%</button>
+      <button>100% — it is completely robust</button>
+    </div>
+    <div class="ans"><b>Half, which is the theoretical maximum.</b> The first option is the mean's breakdown point. And the fourth is not achievable by anything: once more than half the data is arbitrary, the "middle" is whatever the corrupted majority says it is.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 3 · chapter 02</span>
+    <p class="q">For a normal distribution, what is the interquartile range in standard deviations?</p>
+    <div class="opts">
+      <button>1.0σ, by definition</button>
+      <button data-ok="1">1.349σ — twice the 0.6745 that marks each quartile</button>
+      <button>2.0σ</button>
+      <button>0.6745σ</button>
+    </div>
+    <div class="ans"><b>1.349σ.</b> The fourth option is the median absolute deviation, which is a quartile's distance rather than the range between two. Dividing an IQR by 1.349 gives a robust sigma estimate, and when that disagrees with the actual sigma you have found fat tails.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 4 · chapter 03</span>
+    <p class="q">A value sits two standard deviations above the mean of a normal distribution. What percentile?</p>
+    <div class="opts">
+      <button>95th — that is the empirical rule</button>
+      <button data-ok="1">The 97.72nd. 95.45% lies within two sigma, so 4.55% is outside and half of that is above</button>
+      <button>98th</button>
+      <button>68th</button>
+    </div>
+    <div class="ans"><b>97.72nd.</b> The 95 in the empirical rule is the fraction within ±2σ, not the fraction below +2σ — a one-tail versus two-tail slip that costs about three percentage points and shows up constantly.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 5 · chapter 04</span>
+    <p class="q">How often does the 1.5 × IQR rule flag a perfectly normal observation?</p>
+    <div class="opts">
+      <button>Never, if the data is clean</button>
+      <button data-ok="1">About 0.70% of the time — the fence sits at 2.698σ, so roughly one point in 143</button>
+      <button>5% of the time</button>
+      <button>It depends entirely on the sample size</button>
+    </div>
+    <div class="ans"><b>Roughly one in 143.</b> So a thousand clean points produce about seven flags, none of them errors. The rule is a prompt to go and look; treating flagged points as bad data trims exactly the tail that carries the risk.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 6 · chapter 05</span>
+    <p class="q">You add 10 to every value in a dataset. What happens to the mean and the standard deviation?</p>
+    <div class="opts">
+      <button>Both rise by 10</button>
+      <button data-ok="1">The mean rises by 10; the standard deviation does not move, because no distance between any two values changed</button>
+      <button>Neither changes</button>
+      <button>The mean rises by 10 and the standard deviation falls</button>
+    </div>
+    <div class="ans"><b>Center shifts, spread does not.</b> Multiplying is the other case — it scales both. Standardizing subtracts the mean and divides by σ precisely to remove both effects, which is why z-scores come out identical whatever units you started in.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="n">Quartiles have no single agreed definition and different software gives slightly different answers on small samples; this page uses linear interpolation between order statistics, which is the most common convention and matches R's default type 7, but a spreadsheet may disagree in the second decimal on ten data points. The 1.349 and 0.6745 constants are exact for a normal distribution and for nothing else — applying them to visibly skewed data produces a number with no clear meaning, which is why chapter 02 treats their disagreement as a diagnostic rather than a nuisance. The standard deviation here divides by n − 1, the sample convention, which matters at these sample sizes and is invisible by a few hundred points. And the 1.5 in the outlier fence is a convention with no derivation behind it: Tukey picked it because it behaved well, and reading it as a significance test imports a rigor that was never claimed for it.</p>
+</footer>
+
+<script src="assets/lab.js"></script>
+<script src="assets/stats.js"></script>
+<script src="assets/pwa.js" defer></script>
+<script>
+"use strict";
+
+/* line() takes arrays, not a function — passing one draws nothing at all. */
+function curve(o, f, col, w, dash) {
+  const n = 260, xs = [], ys = [];
+  for (let i = 0; i <= n; i++) {
+    const x = o.x0 + (o.x1 - o.x0) * i / n;
+    xs.push(x); ys.push(f(x));
+  }
+  line(o, xs, ys, col, w, dash);
+}
+
+/* ── the summaries ───────────────────────────────────────────────────────
+   quantile() and sd() come from the engine; the robust pair does not, and
+   the constants that make them comparable are the point of chapter 02. */
+const Z75 = 0.6744897501960817;      /* the normal's third quartile, in sigmas */
+const IQR_SIGMA = 2 * Z75;           /* 1.348980 */
+const MAD_SIGMA = Z75;               /* 0.674490 */
+const IQR_TO_SIGMA = 1 / IQR_SIGMA;  /* 0.741301 */
+const MAD_TO_SIGMA = 1 / Z75;        /* 1.482602 */
+
+const iqrOf = a => quantile(a, 0.75) - quantile(a, 0.25);
+function madOf(a) {                  /* median absolute deviation */
+  const m = median(a);
+  return median(a.map(x => Math.abs(x - m)));
+}
+/* the same spread, three ways, all scaled to be comparable with a sigma */
+const spreads = a => ({
+  sd: sd(a),
+  iqr: iqrOf(a),
+  mad: madOf(a),
+  iqrSigma: iqrOf(a) * IQR_TO_SIGMA,
+  madSigma: madOf(a) * MAD_TO_SIGMA
+});
+
+/* the five-number summary, and the fence that decorates it */
+function fiveNumber(a) {
+  const q1 = quantile(a, 0.25), q3 = quantile(a, 0.75), iqr = q3 - q1;
+  const lo = q1 - 1.5 * iqr, hi = q3 + 1.5 * iqr;
+  const out = a.filter(x => x < lo || x > hi);
+  return { min: Math.min.apply(null, a), q1: q1, med: median(a), q3: q3,
+    max: Math.max.apply(null, a), iqr: iqr, loFence: lo, hiFence: hi,
+    outliers: out, nOut: out.length };
+}
+/* where that fence sits on a normal, and how often it fires on clean data */
+const FENCE_SIGMA = Z75 + 1.5 * IQR_SIGMA;          /* 2.697959 */
+const fenceFalseRate = () => 2 * (1 - pnorm(FENCE_SIGMA));
+
+/* ── position ────────────────────────────────────────────────────────── */
+const zOf = (x, mu, sig) => (x - mu) / sig;
+const pctOf = z => pnorm(z) * 100;
+const withinK = k => 2 * pnorm(k) - 1;
+
+/* ── shifting and scaling ────────────────────────────────────────────── */
+const affine = (a, mul, add) => a.map(x => x * mul + add);
+const standardize = a => { const m = mean(a), s = sd(a); return a.map(x => (x - m) / s); };
+
+/* the salaries the page is built on — nine ordinary and one founder */
+const BASE = [42, 45, 48, 51, 53, 55, 58, 62, 65];
+const withOutlier = v => BASE.concat([v]);
+
+/* ══════════ hero ══════════ */
+(function () {
+  const cv = document.getElementById("heroCv"); let w, h, g, raf, t0 = 0;
+  function size() {
+    const dpr = window.devicePixelRatio || 1;
+    w = cv.clientWidth; h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr;
+    g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  const r = rng(77), pts = [];
+  for (let i = 0; i < 160; i++) pts.push(r.normal(0, 1));
+  function draw(ph) {
+    g.fillStyle = C("--chalk"); g.fillRect(0, 0, w, h);
+    /* one outlier walks out to the right; the mean follows and the median does not */
+    const drift = 3 + 14 * (0.5 + 0.5 * Math.sin(ph * 0.45));
+    const all = pts.concat([drift]);
+    const lo = -4, hi = 18;
+    const X = v => w * 0.06 + (v - lo) / (hi - lo) * w * 0.88;
+    const cy = h * 0.58;
+    g.globalAlpha = 0.5; g.fillStyle = C("--blue");
+    all.forEach((v, i) => {
+      const jitter = ((i * 37) % 23 - 11) / 11 * h * 0.16;
+      g.beginPath(); g.arc(X(v), cy + jitter, 2.6, 0, 6.2832); g.fill();
+    });
+    g.globalAlpha = 1;
+    const m = all.reduce((a, b) => a + b, 0) / all.length;
+    const s = all.slice().sort((a, b) => a - b);
+    const md = s[Math.floor(s.length / 2)];
+    [[m, "--verm"], [md, "--moss"]].forEach(([v, col]) => {
+      g.strokeStyle = C(col); g.lineWidth = 2.4;
+      g.beginPath(); g.moveTo(X(v), cy - h * 0.30); g.lineTo(X(v), cy + h * 0.30); g.stroke();
+    });
+  }
+  function tick(t) { if (!t0) t0 = t; draw((t - t0) / 900); raf = requestAnimationFrame(tick); }
+  window.drawHero = function () {
+    size(); if (RM) { draw(2.2); return; }
+    if (raf) cancelAnimationFrame(raf); t0 = 0; raf = requestAnimationFrame(tick);
+  };
+})();
+
+/* ══════════ 01 — center ══════════ */
+const s1 = { out: 1200 };
+(function () {
+  sliders(document.getElementById("ctl1"), [
+    { id: "a1", k: "out", lbl: "!", name: "The tenth salary", min: 40, max: 4000, step: 10,
+      fmt: v => v.toFixed(0) }
+  ], s1, () => draw(), "c1");
+  window.draw1 = draw;
+  window.__salaries = withOutlier;
+  function draw() {
+    const a = withOutlier(s1.out);
+    const m = mean(a), md = median(a);
+    const hi = Math.max(m, s1.out) * 1.1;
+    const o = Fig(document.getElementById("cv1"),
+      { h: 320, x0: 0, x1: hi, y0: 0, y1: 1, pad: { l: 20, r: 14, t: 14 } });
+    axes(o, x => x >= 1000 ? (x / 1000).toFixed(1) + "k" : x.toFixed(0), () => "", 6, 0);
+    const g = o.g;
+    a.forEach((v, i) => {
+      const y = 0.30 + 0.42 * ((i * 7) % 9) / 8;
+      g.save(); g.fillStyle = C("--blue"); g.globalAlpha = 0.8;
+      g.beginPath(); g.arc(o.X(v), o.Y(y), 5, 0, 6.2832); g.fill(); g.restore();
+    });
+    vline(o, m, C("--verm"), "mean " + m.toFixed(1));
+    vline(o, md, C("--moss"), "median " + md.toFixed(1));
+    const clean = mean(BASE), cleanMed = median(BASE);
+    document.getElementById("kv1").innerHTML = kvHTML([
+      ["Nine salaries", "42 … 65"],
+      ["The tenth", s1.out.toFixed(0), "verm"],
+      ["Mean", m.toFixed(2), "verm"],
+      ["Median", md.toFixed(2), "moss"],
+      ["Mean without the tenth", clean.toFixed(2)],
+      ["— it moved by", (m - clean).toFixed(2), "verm"],
+      ["Median without it", cleanMed.toFixed(2)],
+      ["— it moved by", (md - cleanMed).toFixed(2), "moss"],
+      ["Breakdown point", "mean 0%, median 50%", "grey"]
+    ]);
+  }
+})();
+
+/* ══════════ 02 — spread ══════════ */
+const s2 = { contam: 0, mult: 6, n: 400 };
+(function () {
+  sliders(document.getElementById("ctl2"), [
+    { id: "a2", k: "contam", lbl: "c", name: "Share of wild points", min: 0, max: 20, step: 1,
+      fmt: v => v.toFixed(0) + "%" },
+    { id: "b2", k: "mult", lbl: "×", name: "How much wilder", min: 2, max: 15, step: 0.5,
+      fmt: v => v.toFixed(1) + "×" },
+    { id: "c2", k: "n", lbl: "n", name: "Sample size", min: 60, max: 900, step: 20, fmt: v => v.toFixed(0) }
+  ], s2, () => draw(), "c2");
+  window.draw2 = draw;
+  window.__spreadRun = (contam, mult, n, seed) => {
+    const r = rng(seed || 909), a = [];
+    for (let i = 0; i < n; i++) a.push(r() < contam ? r.normal(0, mult) : r.normal(0, 1));
+    return spreads(a);
+  };
+  function draw() {
+    const n = Math.round(s2.n);
+    const o = Fig(document.getElementById("cv2"),
+      { h: 320, x0: 0, x1: 20, y0: 0, y1: 4.2, pad: { l: 58, r: 14, t: 14 } });
+    axes(o, x => x.toFixed(0) + "%", y => y.toFixed(1), 6, 5);
+    const at = c => window.__spreadRun(c / 100, s2.mult, n, 909);
+    curve(o, c => at(c).sd, C("--verm"), 2.4);
+    curve(o, c => at(c).iqrSigma, C("--blue"), 2.2);
+    curve(o, c => at(c).madSigma, C("--moss"), 2.2);
+    vline(o, s2.contam, C("--ink"), s2.contam.toFixed(0) + "% wild");
+    const S = at(s2.contam);
+    document.getElementById("kv2").innerHTML = kvHTML([
+      ["Sample", n + " points"],
+      ["Wild share", s2.contam.toFixed(0) + "% at " + s2.mult.toFixed(1) + "×"],
+      ["Standard deviation", S.sd.toFixed(4), "verm"],
+      ["IQR", S.iqr.toFixed(4)],
+      ["— as a sigma, ÷1.349", S.iqrSigma.toFixed(4), "blue"],
+      ["Median abs deviation", S.mad.toFixed(4)],
+      ["— as a sigma, ÷0.6745", S.madSigma.toFixed(4), "moss"],
+      ["sd ÷ IQR-sigma", (S.sd / S.iqrSigma).toFixed(4),
+        S.sd / S.iqrSigma > 1.15 ? "verm" : "grey"],
+      ["Verdict", S.sd / S.iqrSigma > 1.15 ? "fat tails" : "consistent with normal",
+        S.sd / S.iqrSigma > 1.15 ? "verm" : "moss"]
+    ]);
+  }
+})();
+
+/* ══════════ 03 — position ══════════ */
+const s3 = { mu: 500, sig: 100, x: 620 };
+(function () {
+  sliders(document.getElementById("ctl3"), [
+    { id: "a3", k: "mu", lbl: "μ", name: "Mean", min: 0, max: 800, step: 1, fmt: v => v.toFixed(0) },
+    { id: "b3", k: "sig", lbl: "σ", name: "Standard deviation", min: 1, max: 200, step: 1, fmt: v => v.toFixed(0) },
+    { id: "c3", k: "x", lbl: "x", name: "The value", min: 0, max: 1000, step: 1, fmt: v => v.toFixed(0) }
+  ], s3, () => draw(), "c3");
+  window.draw3 = draw;
+  function draw() {
+    const mu = s3.mu, sig = Math.max(1, s3.sig);
+    const lo = mu - 4 * sig, hi = mu + 4 * sig;
+    const pdf = x => dnorm(x, mu, sig);
+    const o = Fig(document.getElementById("cv3"),
+      { h: 320, x0: lo, x1: hi, y0: 0, y1: pdf(mu) * 1.16, pad: { l: 66, r: 14, t: 14 } });
+    axes(o, x => x.toFixed(0), y => y.toExponential(0), 6, 4);
+    shade(o, pdf, lo, Math.max(lo, Math.min(hi, s3.x)), C("--moss"), 0.32);
+    curve(o, pdf, C("--blue"), 2.2);
+    vline(o, s3.x, C("--ochre"), "x = " + s3.x.toFixed(0));
+    const z = zOf(s3.x, mu, sig);
+    document.getElementById("kv3").innerHTML = kvHTML([
+      ["Mean", mu.toFixed(0)],
+      ["Standard deviation", sig.toFixed(0)],
+      ["The value", s3.x.toFixed(0), "ochre"],
+      ["z-score", z.toFixed(4), "ochre"],
+      ["Percentile", pctOf(z).toFixed(3) + "%", "moss"],
+      ["Fraction above", (100 - pctOf(z)).toFixed(3) + "%"],
+      ["Within 1σ", (withinK(1) * 100).toFixed(2) + "%", "grey"],
+      ["Within 2σ", (withinK(2) * 100).toFixed(2) + "%", "grey"],
+      ["Within 3σ", (withinK(3) * 100).toFixed(2) + "%", "grey"]
+    ]);
+  }
+})();
+
+/* ══════════ 04 — five numbers ══════════ */
+const s4 = { n: 200, seed: 5 };
+(function () {
+  sliders(document.getElementById("ctl4"), [
+    { id: "a4", k: "n", lbl: "n", name: "Clean normal points", min: 40, max: 2000, step: 20, fmt: v => v.toFixed(0) },
+    { id: "b4", k: "seed", lbl: "#", name: "Which sample", min: 1, max: 40, step: 1, fmt: v => "#" + v.toFixed(0) }
+  ], s4, () => draw(), "c4");
+  window.draw4 = draw;
+  window.__five = fiveNumber;
+  window.__fence = { sigma: FENCE_SIGMA, rate: fenceFalseRate };
+  function draw() {
+    const n = Math.round(s4.n);
+    const r = rng(Math.round(s4.seed) * 101 + 7), a = [];
+    for (let i = 0; i < n; i++) a.push(r.normal(0, 1));
+    const F = fiveNumber(a);
+    const lo = Math.min(F.loFence, F.min) - 0.4, hi = Math.max(F.hiFence, F.max) + 0.4;
+    const o = Fig(document.getElementById("cv4"),
+      { h: 320, x0: lo, x1: hi, y0: 0, y1: 1, pad: { l: 20, r: 14, t: 14 } });
+    axes(o, x => x.toFixed(1), () => "", 6, 0);
+    const g = o.g;
+    const yTop = o.Y(0.68), yBot = o.Y(0.34), yMid = o.Y(0.51);
+    /* the box */
+    g.save(); g.fillStyle = C("--blue"); g.globalAlpha = 0.55;
+    g.fillRect(o.X(F.q1), yTop, o.X(F.q3) - o.X(F.q1), yBot - yTop);
+    g.restore();
+    g.strokeStyle = C("--ink2"); g.lineWidth = 1.4;
+    g.strokeRect(o.X(F.q1), yTop, o.X(F.q3) - o.X(F.q1), yBot - yTop);
+    /* median */
+    g.strokeStyle = C("--moss"); g.lineWidth = 2.6;
+    g.beginPath(); g.moveTo(o.X(F.med), yTop); g.lineTo(o.X(F.med), yBot); g.stroke();
+    /* whiskers, out to the furthest point inside the fences */
+    const inside = a.filter(x => x >= F.loFence && x <= F.hiFence);
+    const wLo = Math.min.apply(null, inside), wHi = Math.max.apply(null, inside);
+    g.strokeStyle = C("--ink2"); g.lineWidth = 1.4;
+    [[F.q1, wLo], [F.q3, wHi]].forEach(([from, to]) => {
+      g.beginPath(); g.moveTo(o.X(from), yMid); g.lineTo(o.X(to), yMid); g.stroke();
+      g.beginPath(); g.moveTo(o.X(to), yTop + 6); g.lineTo(o.X(to), yBot - 6); g.stroke();
+    });
+    /* the fences, and every point beyond them */
+    [F.loFence, F.hiFence].forEach(v => vline(o, v, C("--ochre"), ""));
+    g.save(); g.fillStyle = C("--verm"); g.globalAlpha = 0.9;
+    F.outliers.forEach((v, i) => {
+      g.beginPath(); g.arc(o.X(v), o.Y(0.51 + ((i % 5) - 2) * 0.035), 4, 0, 6.2832); g.fill();
+    });
+    g.restore();
+    const expected = n * fenceFalseRate();
+    document.getElementById("kv4").innerHTML = kvHTML([
+      ["Clean normal points", String(n)],
+      ["Min / Q1", F.min.toFixed(3) + " / " + F.q1.toFixed(3)],
+      ["Median", F.med.toFixed(3), "moss"],
+      ["Q3 / Max", F.q3.toFixed(3) + " / " + F.max.toFixed(3)],
+      ["IQR", F.iqr.toFixed(4)],
+      ["Fences", F.loFence.toFixed(3) + " and " + F.hiFence.toFixed(3), "ochre"],
+      ["Flagged as outliers", String(F.nOut), "verm"],
+      ["Expected on clean data", expected.toFixed(2), "grey"],
+      ["The fence sits at", FENCE_SIGMA.toFixed(4) + "σ"],
+      ["— firing on", (fenceFalseRate() * 100).toFixed(4) + "% of good points", "verm"]
+    ]);
+  }
+})();
+
+/* ══════════ 05 — shifting and scaling ══════════ */
+const s5 = { mul: 2, add: 10 };
+(function () {
+  sliders(document.getElementById("ctl5"), [
+    { id: "a5", k: "mul", lbl: "×", name: "Multiply by", min: 0.25, max: 4, step: 0.25, fmt: v => v.toFixed(2) + "×" },
+    { id: "b5", k: "add", lbl: "+", name: "Then add", min: -40, max: 80, step: 5, fmt: v => (v >= 0 ? "+" : "") + v.toFixed(0) }
+  ], s5, () => draw(), "c5");
+  window.draw5 = draw;
+  window.__affine = affine;
+  window.__standardize = standardize;
+  function draw() {
+    const a = BASE.slice();
+    const b = affine(a, s5.mul, s5.add);
+    const za = standardize(a), zb = standardize(b);
+    const all = a.concat(b);
+    const lo = Math.min.apply(null, all) - 8, hi = Math.max.apply(null, all) + 8;
+    const o = Fig(document.getElementById("cv5"),
+      { h: 320, x0: lo, x1: hi, y0: 0, y1: 1, pad: { l: 20, r: 14, t: 14 } });
+    axes(o, x => x.toFixed(0), () => "", 6, 0);
+    const g = o.g;
+    const row = (vals, y, col) => {
+      g.save(); g.fillStyle = C(col); g.globalAlpha = 0.85;
+      vals.forEach(v => { g.beginPath(); g.arc(o.X(v), o.Y(y), 5, 0, 6.2832); g.fill(); });
+      g.restore();
+    };
+    row(a, 0.78, "--blue");
+    row(b, 0.52, "--ochre");
+    /* the standardized rows, mapped onto the same axis so they can be compared */
+    const zx = z => lo + (z + 2.2) / 4.4 * (hi - lo);
+    row(za.map(zx), 0.24, "--moss");
+    g.save(); g.globalAlpha = 0.55; g.fillStyle = C("--verm");
+    zb.map(zx).forEach(v => { g.beginPath(); g.arc(o.X(v), o.Y(0.24), 2.4, 0, 6.2832); g.fill(); });
+    g.restore();
+    g.fillStyle = C("--ink2"); g.font = "10px 'IBM Plex Mono', monospace";
+    g.textAlign = "left"; g.textBaseline = "middle";
+    g.fillText("original", o.P.l + 4, o.Y(0.90));
+    g.fillText("transformed", o.P.l + 4, o.Y(0.64));
+    g.fillText("both, standardized", o.P.l + 4, o.Y(0.36));
+    const same = za.every((v, i) => Math.abs(v - zb[i]) < 1e-12);
+    document.getElementById("kv5").innerHTML = kvHTML([
+      ["Original mean", mean(a).toFixed(4), "blue"],
+      ["— sd", sd(a).toFixed(4)],
+      ["— IQR", iqrOf(a).toFixed(4)],
+      ["Transformed mean", mean(b).toFixed(4), "ochre"],
+      ["— sd", sd(b).toFixed(4)],
+      ["— IQR", iqrOf(b).toFixed(4)],
+      ["sd scaled by", (sd(b) / sd(a)).toFixed(4) + " = |a|", "grey"],
+      ["Standardized: mean", mean(za).toFixed(12), "moss"],
+      ["— sd", sd(za).toFixed(12), "moss"],
+      ["Both z-sets identical?", same ? "yes, exactly" : "no", same ? "moss" : "verm"]
+    ]);
+  }
+})();
+
+/* ══════════ 06 — the drill ══════════ */
+(function () {
+  const E = id => document.getElementById(id);
+  let cur = null, sc = 0, asked = 0, streak = 0, best = 0, tier = 1;
+  const R = Math.random;
+  const pick = a => a[Math.floor(R() * a.length)];
+  const sampleOf = () => {
+    const n = pick([5, 7, 9]), a = [];
+    for (let i = 0; i < n; i++) a.push(Math.round(10 + R() * 80));
+    return a.sort((x, y) => x - y);
+  };
+  function make() {
+    if (tier === 1) {
+      const t = Math.floor(R() * 4);
+      const a = sampleOf();
+      if (t === 0) {
+        const v = mean(a);
+        return { kind: "Mean", unit: "", a: v, tol: 0.02,
+          q: "Find the mean of <b>" + a.join(", ") + "</b>.",
+          w: "Sum " + a.reduce((x, y) => x + y, 0) + " over " + a.length + " values = <b>" +
+            v.toFixed(3) + "</b>." };
+      }
+      if (t === 1) {
+        const v = median(a);
+        return { kind: "Median", unit: "", a: v, tol: 0.02,
+          q: "Find the median of <b>" + a.join(", ") + "</b>.",
+          w: "Already sorted, " + a.length + " values, so the middle one is <b>" +
+            v.toFixed(1) + "</b>." };
+      }
+      if (t === 2) {
+        const v = iqrOf(a);
+        return { kind: "Interquartile range", unit: "", a: v, tol: 0.06,
+          q: "Find the IQR of <b>" + a.join(", ") + "</b>.",
+          w: "Q3 " + quantile(a, 0.75).toFixed(2) + " − Q1 " + quantile(a, 0.25).toFixed(2) +
+            " = <b>" + v.toFixed(2) + "</b>, covering the middle half." };
+      }
+      const mu = pick([50, 100, 500]), sig = pick([5, 10, 20, 100]);
+      const x = mu + pick([-2, -1, 1, 1.5, 2]) * sig;
+      const v = zOf(x, mu, sig);
+      return { kind: "z-score", unit: "σ", a: v, tol: 0.02,
+        q: "A value of <b>" + x + "</b> in a distribution with mean <b>" + mu +
+          "</b> and σ <b>" + sig + "</b>. What is its z-score?",
+        w: "(" + x + " − " + mu + ") ÷ " + sig + " = <b>" + v.toFixed(2) + "σ</b>." };
+    }
+    const t = Math.floor(R() * 3);
+    if (t === 0) {
+      const z = pick([-2, -1, -0.5, 0.5, 1, 1.5, 2, 2.5]);
+      const v = pctOf(z);
+      return { kind: "z to percentile", unit: "%", a: v, tol: 0.1,
+        q: "Under a normal, what percentile is <b>z = " + z + "</b>?",
+        w: "Φ(" + z + ") = <b>" + v.toFixed(2) +
+          "%</b>. Note z = 2 is the 97.72nd, not the 95th — that 95 is the fraction within ±2σ." };
+    }
+    if (t === 1) {
+      const sig = pick([1, 2, 5, 10, 20]);
+      const which = pick(["IQR", "MAD"]);
+      const v = which === "IQR" ? sig * IQR_SIGMA : sig * MAD_SIGMA;
+      return { kind: which + " from sigma", unit: "", a: v, tol: 0.02,
+        q: "A normal distribution has σ = <b>" + sig + "</b>. What is its " +
+          (which === "IQR" ? "interquartile range" : "median absolute deviation") + "?",
+        w: sig + " × " + (which === "IQR" ? "1.349" : "0.6745") + " = <b>" + v.toFixed(3) +
+          "</b>. The constants hold for a normal and nothing else." };
+    }
+    const k = pick([1, 2, 3]);
+    const v = withinK(k) * 100;
+    return { kind: "The empirical rule", unit: "%", a: v, tol: 0.06,
+      q: "What fraction of a normal distribution lies within <b>" + k +
+        "</b> standard deviation" + (k > 1 ? "s" : "") + " of the mean?",
+      w: "<b>" + v.toFixed(2) + "%</b> — the rounded 68-95-99.7 is really " +
+        (withinK(1) * 100).toFixed(2) + ", " + (withinK(2) * 100).toFixed(2) + ", " +
+        (withinK(3) * 100).toFixed(2) + "." };
+  }
+  function next() {
+    cur = make();
+    E("dKind").textContent = cur.kind; E("dText").innerHTML = cur.q;
+    E("dUnit").textContent = cur.unit; E("dInput").value = "";
+    E("drill").classList.remove("done");
+    focusSoft(E("dInput"), E("drill"));
+  }
+  function submit() {
+    if (!cur || E("drill").classList.contains("done")) return;
+    const raw = parseFloat(String(E("dInput").value).replace(/[$,%\s]/g, ""));
+    asked++;
+    const ok = isFinite(raw) && Math.abs(raw - cur.a) <= cur.tol;
+    if (ok) { sc++; streak++; if (streak > best) best = streak; } else streak = 0;
+    E("dVerdict").textContent = ok ? "CORRECT" : ("NOT QUITE — the answer is " + cur.a.toFixed(3));
+    E("dVerdict").className = "vd " + (ok ? "ok" : "no");
+    E("dWork").innerHTML = cur.w;
+    E("dScore").textContent = sc + " / " + asked;
+    E("dStreak").textContent = String(streak); E("dBest").textContent = String(best);
+    E("drill").classList.add("done");
+  }
+  E("dSubmit").addEventListener("click", submit);
+  E("dInput").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+  E("dNext").addEventListener("click", next);
+  E("dSkip").addEventListener("click", () => { streak = 0; E("dStreak").textContent = "0"; next(); });
+  [1, 2].forEach(k => E("dT" + k).addEventListener("click", () => {
+    tier = k;
+    [1, 2].forEach(j => E("dT" + j).setAttribute("aria-pressed", j === k ? "true" : "false"));
+    next();
+  }));
+  window.drawDrill = next;
+  window.__drill = () => {
+    const o = [];
+    for (let i = 0; i < 2; i++) { tier = i + 1; for (let j = 0; j < 400; j++) o.push(make()); }
+    tier = 1; return o;
+  };
+})();
+
+function drawAll() {
+  drawHero(); draw1(); draw2(); draw3(); draw4(); draw5(); drawDrill();
+}
+LAB.boot(drawAll);
+
+</script>
+</body>
+</html>

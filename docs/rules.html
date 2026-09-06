@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F4F1E8">
+<title>The Rules of Probability — Chance, visually</title>
+<meta name="description" content="Complement, addition, multiplication and conditioning — the complete rule set. Plus the two confusions that survive every course: mutually exclusive is not independent, and a coin has no memory while a deck does.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The Rules of Probability — Chance, visually">
+<meta property="og:description" content="Complement, addition, multiplication and conditioning — the complete rule set. Plus the two confusions that survive every course: mutually exclusive is not independent, and a coin has no memory while a deck does.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F1E8'/><rect x='5' y='19' width='4' height='7' fill='%230B6E75'/><rect x='11' y='12' width='4' height='14' fill='%230B6E75'/><rect x='17' y='7' width='4' height='19' fill='%230B6E75'/><rect x='23' y='16' width='4' height='10' fill='%230B6E75'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lab.css">
+<link rel="stylesheet" href="assets/mobile.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chance">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+<header class="serieshead">
+  <div class="in">
+    <a class="home" href="index.html">← Chance, visually</a>
+    <span class="num">No. 02 · The Rules</span>
+  </div>
+</header>
+
+<div class="progress" id="prog"></div>
+<nav class="chapnav" id="chapnav" aria-label="Chapters">
+  <a href="#c1"><span>Count what you don't want</span><i></i></a>
+  <a href="#c2"><span>Adding, and the overlap</span><i></i></a>
+  <a href="#c3"><span>Multiplying</span><i></i></a>
+  <a href="#c4"><span>A coin has no memory</span><i></i></a>
+  <a href="#c5"><span>Conditioning</span><i></i></a>
+  <a href="#c6"><span>Drills</span><i></i></a>
+</nav>
+
+<div class="hero">
+  <canvas id="heroCv" aria-hidden="true"></canvas>
+  <div class="heroInner">
+    <div class="eyebrow">An interactive derivation · No. 02</div>
+    <h1>Four rules, and the two places <em>everyone</em> slips</h1>
+    <p class="sub">The complete rule set fits on one page: complement, addition, multiplication, and conditioning. The rules are easy. Knowing which one you are in is not, and two specific confusions survive every course anyone takes.</p>
+  </div>
+  <div class="scrollcue">Scroll ↓</div>
+</div>
+
+<main>
+
+<div class="orient">
+  <h2>Start here</h2>
+  <p class="lede"><a href="count.html">Module 01</a> counted outcomes. This one combines them. Everything here is arithmetic you already know — the work is entirely in deciding which rule applies, and the page is built around the places that decision goes wrong.</p>
+  <ol>
+    <li><b>Chapter 01 is the most useful habit in the subject.</b> When "at least one" appears, stop and count the opposite. A messy union of overlapping cases becomes a single product.</li>
+    <li><b>Chapter 02 holds the first trap.</b> Mutually exclusive is not independent — it is close to the opposite. Two events that cannot both happen are maximally informative about each other.</li>
+    <li><b>Chapter 04 holds the second.</b> A coin has no memory and a shrinking deck does. The gambler's fallacy is not simply wrong; it is right about decks and wrong about coins, and knowing which you are looking at is the whole skill.</li>
+  </ol>
+  <details class="drop">
+    <summary>Notation — every symbol used on this page</summary>
+    <table class="ntab">
+      <tr><td>P(A)</td><td>The probability of A. Between 0 and 1.</td></tr>
+      <tr><td>not A</td><td>A fails to happen. P(not A) = 1 − P(A).</td></tr>
+      <tr><td>A or B</td><td>At least one happens — inclusive, so both counts as "or".</td></tr>
+      <tr><td>A and B</td><td>Both happen.</td></tr>
+      <tr><td>P(B | A)</td><td>The probability of B once you know A happened. Read "B given A".</td></tr>
+      <tr><td>Mutually exclusive</td><td>They cannot both happen. P(A and B) = 0.</td></tr>
+      <tr><td>Independent</td><td>Knowing one tells you nothing about the other. P(B | A) = P(B).</td></tr>
+      <tr><td>Sample space</td><td>Every outcome that could occur, each listed once.</td></tr>
+    </table>
+  </details>
+</div>
+
+<!-- ══════════ 01 ══════════ -->
+<section class="chapter" id="c1">
+  <div class="chead">
+    <div class="cnum">01</div>
+    <h2>Count what you don't want</h2>
+    <p class="dek">"At least one" is a union of overlapping cases and a nightmare to count directly. Its opposite is a single product.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The first rule is the one that sounds too simple to be worth naming: <b>P(not A) = 1 − P(A)</b>. It earns its place because of when to reach for it.</p>
+    <p>Roll a die four times. What is the chance of at least one six? Counted directly it is a mess — a six on the first roll, or the second, or both, and the overlaps have to be stripped out so nothing is double-counted. Counted the other way it is one line: every roll must miss, which is <code>(5/6)<sup>4</sup></code>, so the answer is <b>1 − (5/6)<sup>4</sup> = 51.77%</b>.</p>
+    <p>Any time you see <em>at least one</em>, that is the move. It converts a union into a product, and products are easy.</p>
+    <p>This exact question is where probability theory started. The Chevalier de Méré made money betting on at least one six in four rolls of one die, then reasoned that at least one double-six in twenty-four rolls of two dice should be the same bet — twenty-four is to thirty-six as four is to six. It is not. The first is <b>51.77%</b> and the second is <b>49.14%</b>, and he lost steadily until he asked Pascal why.</p>
+    <p>The two sit on opposite sides of a half by about two and a half points. That is a small enough gap to be invisible to intuition and large enough to bankrupt someone who bets on it repeatedly, which is as good a summary of this whole series as anything.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The chance of at least one, as the attempts pile up</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>At least one success</span>
+            <span><i class="swl" style="background:var(--verm)"></i>None at all</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>One half</span>
+          </span>
+        </div>
+        <canvas id="cv1" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl1"></div>
+        <div class="kv" style="margin-top:20px" id="kv1"></div>
+      </div>
+    </div>
+    <figcaption>Set the chance to 1/6 and read off four rolls, then set it to 1/36 and read off twenty-four. Those are de Méré's two bets, and the gap between them is the whole story.</figcaption>
+  </figure>
+
+  <div class="mline">P(at least one in n) = 1 − (1 − p)<sup>n</sup></div>
+  <p class="mread">Reads as: <b>the chance everything misses, subtracted from one.</b> The right-hand side is a product because the misses are independent; the left-hand side would be a union, and unions need every overlap accounted for.</p>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Find the number of attempts at which a one-in-a-hundred event becomes more likely than not. Guess before you drag.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c1" data-patch='{"p":0.16667,"n":4}' data-focus="cv1">A six in four rolls</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"p":0.02778,"n":24}' data-focus="cv1">A double six in 24</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"p":0.01,"n":69}' data-focus="cv1">One in a hundred</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Why compute "at least one six" through its complement?</p>
+    <div class="opts">
+      <button>Because the complement is more likely</button>
+      <button data-ok="1">Because "at least one" is a union of overlapping cases needing every overlap stripped out, while "none" is one clean product</button>
+      <button>Because the direct calculation gives a different answer</button>
+      <button>Because dice are independent</button>
+    </div>
+    <div class="ans"><b>A union becomes a product.</b> Both routes give the same answer; one of them is four lines of inclusion-exclusion and the other is a single power. The fourth option is what makes the complement a <em>product</em> rather than something worse, but it is not the reason to prefer the complement.</div>
+  </div>
+</section>
+
+<!-- ══════════ 02 ══════════ -->
+<section class="chapter" id="c2">
+  <div class="chead">
+    <div class="cnum">02</div>
+    <h2>Adding, and the overlap you counted twice</h2>
+    <p class="dek">P(A or B) is not P(A) + P(B) unless they cannot both happen. And "cannot both happen" is not what independent means.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Draw one card. What is the chance it is a heart <em>or</em> a face card? Thirteen hearts, twelve face cards, so twenty-five out of fifty-two? No — because three cards are both, and you just counted each of them twice.</p>
+    <p>The rule corrects for exactly that: <b>P(A or B) = P(A) + P(B) − P(A and B)</b>. Here that is <code>13 + 12 − 3 = 22</code> cards, or <b>42.31%</b>, against the naive <b>48.08%</b>. The gap is the three cards, 5.77%.</p>
+    <p>When the two cannot happen together the correction is zero and the rule collapses to plain addition. A card cannot be a heart and a spade, so <code>P(heart or spade) = 13/52 + 13/52 = 50%</code> with nothing to subtract. Events like that are <span class="term" data-t="Mutually exclusive" data-def="Two events that cannot both occur — their overlap is empty, so P(A and B) = 0. Not the same as independent, and in a strong sense the opposite of it.">mutually exclusive</span>.</p>
+    <p>Now the trap, and it is worth slowing down for. <b>Mutually exclusive is not independent.</b> People treat the two words as near-synonyms and they are closer to opposites.</p>
+    <p>Heart and spade are mutually exclusive: <code>P(both) = 0</code>. If they were independent, <code>P(both)</code> would be <code>0.25 × 0.25 = 6.25%</code>. Independence would mean knowing it is a heart tells you nothing about whether it is a spade. In fact it tells you everything — it rules a spade out completely. Mutually exclusive events are about as <em>dependent</em> as two events can be.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Two events, their overlap, and what "or" covers</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>A only</span>
+            <span><i class="sw" style="background:var(--verm)"></i>B only</span>
+            <span><i class="sw" style="background:var(--ochre)"></i>Both</span>
+            <span><i class="sw" style="background:var(--hair)"></i>Neither</span>
+          </span>
+        </div>
+        <canvas id="cv2" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl2"></div>
+        <div class="kv" style="margin-top:20px" id="kv2"></div>
+      </div>
+    </div>
+    <figcaption>Drag the overlap to zero and the events become mutually exclusive. Notice the panel's independence check goes from "yes" to "no" as you do — losing the overlap is losing independence.</figcaption>
+  </figure>
+
+  <div class="mline">P(A or B) = P(A) + P(B) − P(A and B)</div>
+  <p class="mread">Reads as: <b>add both, then remove the part you counted twice.</b> If nothing was counted twice the last term is zero, and that is the only case where plain addition is correct.</p>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Two events are mutually exclusive. Are they independent?</p>
+    <div class="opts">
+      <button>Yes — mutually exclusive events are independent by definition</button>
+      <button data-ok="1">No, and close to the opposite. P(A and B) = 0 while independence would need P(A)·P(B), so knowing one occurred rules the other out entirely</button>
+      <button>Only if they have equal probability</button>
+      <button>It depends on the sample space</button>
+    </div>
+    <div class="ans"><b>They are maximally dependent.</b> The only way to be both mutually exclusive and independent is for one of them to have probability zero. Two events with real probabilities that cannot co-occur are as informative about each other as events get — which is why the two terms should never be used interchangeably.</div>
+  </div>
+</section>
+
+<!-- ══════════ 03 ══════════ -->
+<section class="chapter" id="c3">
+  <div class="chead">
+    <div class="cnum">03</div>
+    <h2>Multiplying, and what the second term is doing</h2>
+    <p class="dek">P(A and B) = P(A) × P(B given A). Independence is the special case where the second term stops caring about the first.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Two aces from a shuffled deck. The first card is an ace with probability <code>4/52</code>. The second is an ace with probability <code>3/51</code> — <em>given</em> the first one was, because the deck has changed.</p>
+    <p>So <code>P(both) = (4/52) × (3/51) = 0.4525%</code>, about <b>1 in 221</b>. And it agrees with <a href="count.html">module 01</a>'s counting: <code>C(4,2)/C(52,2) = 6/1326</code>, the same number by a different route.</p>
+    <p>Had you replaced and reshuffled between draws, the events would be <b>independent</b> and the answer would be <code>(4/52)<sup>2</sup> = 0.5917%</code> — larger, because the deck never shrank. Independence is not a separate rule; it is the case where <code>P(B | A) = P(B)</code> and the general rule simplifies.</p>
+    <p>One consequence is worth stating on its own because it is violated constantly in ordinary reasoning: <b>P(A and B) can never exceed P(A) or P(B)</b>. Adding detail to a story can only make it less probable, never more. Six independent conditions of 90% each leave <b>53.1%</b>, and a forecast with a dozen specific parts is almost certainly wrong even when every part is individually likely.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Drawing with and without replacement</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Without replacement</span>
+            <span><i class="swl" style="background:var(--verm)"></i>With replacement</span>
+            <span><i class="swl" style="background:var(--grey)"></i>Each added condition</span>
+          </span>
+        </div>
+        <canvas id="cv3" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl3"></div>
+        <div class="kv" style="margin-top:20px" id="kv3"></div>
+      </div>
+    </div>
+    <figcaption>The two curves separate as the draws pile up, because a shrinking deck makes every subsequent success harder. Both fall — that is the conjunction rule, and nothing you add can lift them.</figcaption>
+  </figure>
+
+  <div class="mline">P(A and B) = P(A) · P(B | A)          and if independent, = P(A) · P(B)</div>
+  <p class="mread">Reads as: <b>the chance of the first, times the chance of the second once the first has happened.</b> Independence is not an extra rule — it is what makes the second factor stop depending on the first.</p>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Which is more probable: that a company beats earnings, or that it beats earnings and the stock rallies?</p>
+    <div class="opts">
+      <button>The second — it is more specific and therefore more informative</button>
+      <button data-ok="1">The first, always. Adding a condition can only shrink a probability, never raise it, however plausible the extra detail sounds</button>
+      <button>They are equally likely</button>
+      <button>The second, if the two are positively correlated</button>
+    </div>
+    <div class="ans"><b>The first, with no exceptions.</b> P(A and B) ≤ P(A) is arithmetic, not a tendency, and correlation does not rescue the fourth option — it can push P(B given A) close to one, but never above it. A detailed story feeling more likely than a vague one is the best-documented failure in the whole field.</div>
+  </div>
+</section>
+
+<!-- ══════════ 04 ══════════ -->
+<section class="chapter" id="c4">
+  <div class="chead">
+    <div class="cnum">04</div>
+    <h2>A coin has no memory. A deck does.</h2>
+    <p class="dek">The gambler's fallacy is not simply an error. It is correct about one of these and wrong about the other.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Five heads in a row. Is the next flip more likely to be tails? No. The coin has no mechanism for remembering, and <code>P(head | five heads) = 0.5</code> exactly as before.</p>
+    <p>What makes this genuinely confusing is that a true statement sits right next to the false one. <b>Before</b> any flips, six heads in a row has probability <code>(1/2)<sup>6</sup> = 1.56%</code> — genuinely unlikely. <b>After</b> five heads have landed, the sixth is a coin flip. Both are correct. They are different questions asked at different moments, and the fallacy is answering the first when you are standing at the second.</p>
+    <p>Now the part usually left out. The intuition behind the fallacy — that things even out — is <em>right</em> about a great many real situations. It is right about anything drawn without replacement.</p>
+    <p>Deal cards from a deck. After twenty-six black cards have gone, the next card is red with probability <b>100%</b>. Ten black cards in gives <b>61.90%</b>; twenty gives <b>81.25%</b>. The deck really does even out, because every card removed changes what is left. That is what card counting is, and it is why it works.</p>
+    <p>So the skill is not "never expect things to even out." It is asking whether the thing you are watching has a memory. A deck does. A roulette wheel does not. A market is somewhere in between and the answer depends entirely on the mechanism, which is why <a href="test.html">module 09</a> is careful about the difference between a pattern and a reason.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The chance the next one is red, after a run of black</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--verm)"></i>A coin — no memory</span>
+            <span><i class="swl" style="background:var(--blue)"></i>A deck — memory</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>Even odds</span>
+          </span>
+        </div>
+        <canvas id="cv4" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl4"></div>
+        <div class="kv" style="margin-top:20px" id="kv4"></div>
+      </div>
+    </div>
+    <figcaption>One line is flat and one climbs to certainty. Everything about whether "due" is a real concept is contained in which of these you are looking at.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A roulette wheel has come up red eight times. Is black now more likely?</p>
+    <div class="opts">
+      <button>Yes — eight reds in a row is unlikely, so black is due</button>
+      <button data-ok="1">No. The wheel has no memory, and the eight reds are already banked. Unlike a deck, nothing was removed</button>
+      <button>Yes, if the wheel is fair</button>
+      <button>No, and it means the wheel is biased toward red</button>
+    </div>
+    <div class="ans"><b>Nothing changed.</b> Eight reds in a row is unlikely <em>in advance</em>; conditional on having happened, the next spin is what it always was. The fourth option is the opposite error — one run is far too little evidence for bias, which is what <a href="test.html">module 09</a> is about. And the intuition is not worthless: apply it to a deck instead of a wheel and it is exactly right.</div>
+  </div>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section class="chapter" id="c5">
+  <div class="chead">
+    <div class="cnum">05</div>
+    <h2>Conditioning is just restricting the world</h2>
+    <p class="dek">P(B | A) means: throw away every outcome where A did not happen, then ask about B in what remains.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Conditional probability has a formula — <code>P(B | A) = P(A and B) ÷ P(A)</code> — but the formula is easier to use than to trust. The picture is better: cross out every outcome where A failed, then measure B against the survivors.</p>
+    <p>A family has two children and at least one is a boy. What is the chance both are? Four equally likely families: <b>BB, BG, GB, GG</b>. "At least one boy" removes GG, leaving three. One of those three is BB, so the answer is <b>1/3</b> — not the 1/2 nearly everyone says.</p>
+    <p>Change one word and the answer changes. "The <em>elder</em> is a boy" removes both GG and GB, leaving BB and BG, so the answer is <b>1/2</b>. The two conditions sound almost identical and select different sets. That is the entire content of conditioning, and it is why the wording of a condition matters more than the arithmetic.</p>
+    <p>The same idea settles Monty Hall. Three doors, you pick one, the host — who knows where the car is — opens a different door showing a goat. Switching wins <b>2/3</b> of the time and staying wins <b>1/3</b>.</p>
+    <p>It feels like two doors should be even money, but the host's move is not independent of where the car is. He is constrained to avoid it, so the door he leaves closed carries the two-thirds that was never yours. Condition on what the host <em>could</em> have done, not just on the door count, and the answer follows.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The sample space, before and after conditioning</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>Still possible</span>
+            <span><i class="sw" style="background:var(--moss)"></i>Possible and a win</span>
+            <span><i class="sw" style="background:var(--hair)"></i>Ruled out</span>
+          </span>
+        </div>
+        <canvas id="cv5" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl5"></div>
+        <div class="kv" style="margin-top:20px" id="kv5"></div>
+      </div>
+    </div>
+    <figcaption>Conditioning greys out cells and renormalizes over what is left. The answer is always green cells over non-grey cells, which is the formula and the picture at once.</figcaption>
+  </figure>
+
+  <div class="mline">P(B | A) = P(A and B) ÷ P(A)</div>
+  <p class="mread">Reads as: <b>of the world where A happened, what fraction also has B?</b> The denominator is the shrunken world, which is why conditioning can move a probability in either direction.</p>
+
+  <div class="derive">
+    <span class="lab">Where this comes from</span>
+    <p>Monty Hall is the cleanest case to do properly. Your first pick is right with probability <b>1/3</b> and wrong with probability <b>2/3</b>. If you picked right, the host may open either remaining door and switching loses. If you picked wrong — two times in three — the host has <em>no choice</em>: one remaining door hides the car and he must open the other. So in every one of those cases the closed door is the car, and switching wins.</p>
+    <p>Switching wins exactly when your first pick was wrong, which is <b>2/3</b>. Simulating four hundred thousand games gives <b>0.3339</b> for staying and <b>0.6661</b> for switching, against the exact 1/3 and 2/3.</p>
+    <p><b>Where it breaks:</b> the whole result rests on the host knowing where the car is and being obliged to open a goat. If he opens a door at random and it happens to show a goat, switching wins only <b>1/2</b> — the conditioning is different because a random host could have revealed the car and did not, which is information the constrained host never supplies. Change the host's rule and you change the answer, which is exactly the point: the condition is not "a door was opened", it is "a door was opened <em>by someone following this rule</em>."</p>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Two children, at least one is a boy. Chance both are boys?</p>
+    <div class="opts">
+      <button>1/2 — the other child is independent</button>
+      <button data-ok="1">1/3. Of BB, BG, GB, GG the condition removes only GG, and one of the three survivors is BB</button>
+      <button>1/4</button>
+      <button>2/3</button>
+    </div>
+    <div class="ans"><b>1/3, and 1/2 is the answer to a different question.</b> "The elder is a boy" removes GG and GB, leaving two outcomes and giving 1/2. Two conditions that sound the same select different sets — which is why conditioning goes wrong at the wording rather than at the arithmetic.</div>
+  </div>
+</section>
+
+<!-- ══════════ 06 ══════════ -->
+<section class="chapter" id="c6">
+  <div class="chead">
+    <div class="cnum">06</div>
+    <h2>Drill it</h2>
+    <p class="dek">Applying the rules, then choosing between them.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The first tier applies a named rule. The second gives you a situation and makes you decide which rule it is, which is the part that actually takes practice.</p>
+  </div>
+
+  <figure>
+    <div class="drill" id="drill">
+      <div class="dstats">
+        <div class="c"><span class="k">Correct</span><span class="v" id="dScore">0 / 0</span></div>
+        <div class="c"><span class="k">Streak</span><span class="v" id="dStreak" style="color:var(--moss)">0</span></div>
+        <div class="c"><span class="k">Best</span><span class="v" id="dBest">0</span></div>
+        <div class="c" style="flex:1;min-width:170px"><span class="k">Tier</span>
+          <div class="seg" style="margin-top:5px;max-width:240px">
+            <button id="dT1" aria-pressed="true">Applying</button>
+            <button id="dT2" aria-pressed="false">Choosing</button>
+          </div>
+        </div>
+      </div>
+      <span class="qn" id="dKind">Question</span>
+      <p class="qt" id="dText">Loading…</p>
+      <div class="ansrow">
+        <input type="text" inputmode="decimal" id="dInput" placeholder="your answer" aria-label="Your answer">
+        <span class="unit" id="dUnit"></span>
+        <button class="act" id="dSubmit">Check</button>
+        <button class="act ghost" id="dSkip">Skip</button>
+      </div>
+      <div class="verdict">
+        <div class="vd" id="dVerdict"></div>
+        <div class="work" id="dWork"></div>
+        <div class="btnrow"><button class="act" id="dNext">Next question</button></div>
+      </div>
+    </div>
+    <figcaption>The habit worth building: whenever "at least one" appears, compute the opposite and subtract from one.</figcaption>
+  </figure>
+
+  <div class="prose" style="margin-top:46px">
+    <p>Six questions across the page.</p>
+  </div>
+
+  <div class="score" id="scoreBox">
+    <span class="big" id="scoreNum">0 / 6</span>
+    <span class="txt" id="scoreTxt">Answered nothing yet. Questions are scored as you go.</span>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 1 · chapter 01</span>
+    <p class="q">Four rolls of a die. Chance of at least one six?</p>
+    <div class="opts">
+      <button>4/6 = 66.7%, one chance per roll</button>
+      <button data-ok="1">51.77%, being 1 − (5/6)⁴. Adding one chance per roll would pass 100% by the seventh roll</button>
+      <button>1/6 = 16.7%</button>
+      <button>49.14%</button>
+    </div>
+    <div class="ans"><b>51.77%.</b> The fourth option is de Méré's other bet — at least one double-six in 24 rolls of two dice, at 49.14%. He assumed the two were the same and lost money on the difference, which is how Pascal came to work on any of this.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 2 · chapter 02</span>
+    <p class="q">One card. P(heart or face card)?</p>
+    <div class="opts">
+      <button>25/52, being 13 + 12</button>
+      <button data-ok="1">22/52 = 42.31%. Three cards are both, and adding counts each of them twice</button>
+      <button>3/52</button>
+      <button>13/52</button>
+    </div>
+    <div class="ans"><b>22/52.</b> The first option is the naive sum at 48.08% — wrong by exactly the three cards that are both, 5.77%. Plain addition is correct only when the overlap is empty.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 3 · chapter 02</span>
+    <p class="q">Two events cannot both happen. What does that make them?</p>
+    <div class="opts">
+      <button>Independent</button>
+      <button data-ok="1">Mutually exclusive, and strongly dependent — knowing one happened rules the other out completely</button>
+      <button>Both mutually exclusive and independent</button>
+      <button>Uncorrelated</button>
+    </div>
+    <div class="ans"><b>As dependent as events get.</b> Heart and spade have P(both) = 0 where independence would require 6.25%. The only way to be both mutually exclusive and independent is for one of them to be impossible.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 4 · chapter 03</span>
+    <p class="q">Two cards from a deck. P(both aces)?</p>
+    <div class="opts">
+      <button>(4/52)² = 0.59%</button>
+      <button data-ok="1">(4/52) × (3/51) = 0.4525%, about 1 in 221 — the deck shrinks between draws</button>
+      <button>4/52 = 7.7%</button>
+      <button>2/52</button>
+    </div>
+    <div class="ans"><b>1 in 221.</b> The first option assumes replacement and comes out too high, because it lets the deck keep all four aces. Counting instead of multiplying gives the same answer: C(4,2)/C(52,2) = 6/1326.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 5 · chapter 04</span>
+    <p class="q">Five heads in a row on a fair coin. P(the sixth is a head)?</p>
+    <div class="opts">
+      <button>Less than 1/2 — tails is due</button>
+      <button data-ok="1">Exactly 1/2. Six in a row was unlikely in advance, at 1.56%, but five are already banked and the coin has no memory</button>
+      <button>1.56%</button>
+      <button>More than 1/2 — the coin looks biased</button>
+    </div>
+    <div class="ans"><b>1/2, unchanged.</b> The third option answers the different question — the chance of six in a row from a standing start. And the intuition behind the first is not worthless: apply it to a deck, where cards are removed, and evening out is exactly what happens.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 6 · chapter 05</span>
+    <p class="q">Monty Hall. You pick a door, the host opens a goat, you switch. P(win)?</p>
+    <div class="opts">
+      <button>1/2 — two doors are left</button>
+      <button data-ok="1">2/3. Switching wins exactly when your first pick was wrong, which is two times in three</button>
+      <button>1/3</button>
+      <button>It makes no difference</button>
+    </div>
+    <div class="ans"><b>2/3, and it is the host's constraint that does it.</b> He knows where the car is and must open a goat, so when your first pick was wrong — two thirds of the time — he has no choice and the closed door is the car. If he opened a door at random and it happened to show a goat, switching would win only 1/2.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="n">The two-children puzzle depends on how the family was selected, and the version here assumes you sampled families uniformly and then learned that at least one child is a boy. Learning it a different way — meeting one child at random and seeing a boy — gives 1/2 rather than 1/3, and neither answer is wrong; they answer different questions about different sampling procedures. The same caveat runs through Monty Hall, where the host's rule is the whole problem: knowing the car's location and being obliged to reveal a goat gives 2/3, while a host opening at random gives 1/2. Both puzzles are famous because the English sentence describing them is ambiguous in a way the mathematics is not. The card examples assume a fair shuffle and a standard 52-card deck, and the coin examples assume a genuinely fair coin — a real coin flipped by a real person is very slightly biased toward the face it started on, by about half a percentage point, which is far too small to matter here and far too small to detect without the sample sizes of <a href="test.html">module 09</a>.</p>
+</footer>
+
+<script src="assets/lab.js"></script>
+<script src="assets/stats.js"></script>
+<script src="assets/pwa.js" defer></script>
+<script>
+"use strict";
+
+/* line() takes arrays, not a function — passing one draws nothing at all. */
+function curve(o, f, col, w, dash) {
+  const n = 260, xs = [], ys = [];
+  for (let i = 0; i <= n; i++) {
+    const x = o.x0 + (o.x1 - o.x0) * i / n;
+    xs.push(x); ys.push(f(x));
+  }
+  line(o, xs, ys, col, w, dash);
+}
+
+/* ── the four rules ──────────────────────────────────────────────────────
+   Small enough to read in one screen, which is the point of the page. */
+const complement = p => 1 - p;
+const atLeastOne = (p, n) => 1 - Math.pow(1 - p, n);
+const orOf = (pa, pb, pab) => pa + pb - pab;
+const andOf = (pa, pGivenA) => pa * pGivenA;
+const given = (pab, pa) => pa > 0 ? pab / pa : NaN;
+/* independence is a test, not a separate rule */
+const independent = (pa, pb, pab) => Math.abs(pab - pa * pb) < 1e-12;
+const mutuallyExclusive = pab => pab === 0;
+
+/* de Mere's two bets, which are why any of this was written down */
+const DEMERE = {
+  one: { p: 1 / 6, n: 4, label: "a six in four rolls of one die" },
+  two: { p: 1 / 36, n: 24, label: "a double six in 24 rolls of two" }
+};
+/* the number of attempts before "at least one" passes a half */
+function attemptsForHalf(p) {
+  if (!(p > 0 && p < 1)) return Infinity;
+  return Math.ceil(Math.log(0.5) / Math.log(1 - p));
+}
+
+/* ── with and without replacement ────────────────────────────────────────
+   The same k successes, drawn two ways. The gap between them is the whole
+   content of "the deck shrinks". */
+function withoutRepl(k, good, total) {
+  let p = 1;
+  for (let i = 0; i < k; i++) {
+    if (good - i <= 0) return 0;
+    p *= (good - i) / (total - i);
+  }
+  return p;
+}
+const withRepl = (k, good, total) => Math.pow(good / total, k);
+
+/* ── memory, or the lack of it ───────────────────────────────────────────
+   A coin after a run of heads, and a deck after a run of black. One line is
+   flat and one climbs to certainty, which is the whole chapter. */
+const coinNext = () => 0.5;
+function deckNextRed(seenBlack, halfDeck) {
+  halfDeck = halfDeck || 26;
+  const blacksLeft = Math.max(0, halfDeck - seenBlack);
+  const left = 2 * halfDeck - seenBlack;
+  if (left <= 0) return NaN;
+  return halfDeck / left;                      /* reds are all still in there */
+}
+
+/* ── conditioning: restrict the world, then count ────────────────────────
+   Both classic puzzles are the same operation on a different sample space. */
+const TWO_CHILDREN = [
+  { id: "BB", elder: "B", younger: "B" },
+  { id: "BG", elder: "B", younger: "G" },
+  { id: "GB", elder: "G", younger: "B" },
+  { id: "GG", elder: "G", younger: "G" }
+];
+function twoChildren(mode) {
+  /* mode 0: at least one boy.  mode 1: the elder is a boy. */
+  const keep = TWO_CHILDREN.map(c => mode < 0.5
+    ? (c.elder === "B" || c.younger === "B")
+    : c.elder === "B");
+  const win = TWO_CHILDREN.map(c => c.id === "BB");
+  const nKeep = keep.filter(Boolean).length;
+  const nWin = keep.map((k, i) => k && win[i]).filter(Boolean).length;
+  return { keep: keep, win: win, nKeep: nKeep, nWin: nWin,
+    p: nKeep ? nWin / nKeep : NaN };
+}
+/* Monty Hall, exactly: switching wins precisely when the first pick was wrong */
+const monty = doors => ({ stick: 1 / doors, swap: (doors - 1) / doors });
+/* and the variant where the host opens at random and happens to miss the car */
+const montyRandomHost = () => ({ stick: 0.5, swap: 0.5 });
+
+/* ══════════ hero ══════════ */
+(function () {
+  const cv = document.getElementById("heroCv"); let w, h, g, raf, t0 = 0;
+  function size() {
+    const dpr = window.devicePixelRatio || 1;
+    w = cv.clientWidth; h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr;
+    g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  /* two circles drifting through each other — the overlap is the whole page */
+  function draw(ph) {
+    g.fillStyle = C("--chalk"); g.fillRect(0, 0, w, h);
+    const r = Math.min(w, h) * 0.26;
+    const sep = r * (0.35 + 1.15 * (0.5 + 0.5 * Math.sin(ph * 0.5)));
+    const cy = h * 0.52;
+    const cx1 = w / 2 - sep / 2, cx2 = w / 2 + sep / 2;
+    g.globalAlpha = 0.42;
+    g.fillStyle = C("--blue");
+    g.beginPath(); g.arc(cx1, cy, r, 0, 6.2832); g.fill();
+    g.fillStyle = C("--verm");
+    g.beginPath(); g.arc(cx2, cy, r, 0, 6.2832); g.fill();
+    /* the lens where they meet */
+    g.save();
+    g.beginPath(); g.arc(cx1, cy, r, 0, 6.2832); g.clip();
+    g.globalAlpha = 0.95; g.fillStyle = C("--ochre");
+    g.beginPath(); g.arc(cx2, cy, r, 0, 6.2832); g.fill();
+    g.restore();
+    g.globalAlpha = 1;
+  }
+  function tick(t) { if (!t0) t0 = t; draw((t - t0) / 900); raf = requestAnimationFrame(tick); }
+  window.drawHero = function () {
+    size(); if (RM) { draw(1.4); return; }
+    if (raf) cancelAnimationFrame(raf); t0 = 0; raf = requestAnimationFrame(tick);
+  };
+})();
+
+/* ══════════ 01 — count what you don't want ══════════ */
+const s1 = { p: 1 / 6, n: 4 };
+(function () {
+  sliders(document.getElementById("ctl1"), [
+    { id: "a1", k: "p", lbl: "p", name: "Chance on one attempt", min: 0.005, max: 0.5, step: 0.001,
+      fmt: v => (v * 100).toFixed(1) + "%" },
+    { id: "b1", k: "n", lbl: "n", name: "How many attempts", min: 1, max: 120, step: 1, fmt: v => v.toFixed(0) }
+  ], s1, () => draw(), "c1");
+  window.draw1 = draw;
+  function draw() {
+    const o = Fig(document.getElementById("cv1"),
+      { h: 320, x0: 1, x1: 120, y0: 0, y1: 1.04, pad: { l: 58, r: 14, t: 14 } });
+    axes(o, x => x.toFixed(0), y => (y * 100).toFixed(0) + "%", 6, 5);
+    curve(o, n => atLeastOne(s1.p, n), C("--blue"), 2.4);
+    curve(o, n => Math.pow(1 - s1.p, n), C("--verm"), 1.8);
+    hline(o, 0.5, C("--ochre"), "one half");
+    const n = Math.round(s1.n);
+    vline(o, n, C("--ink"), n + " tries");
+    const half = attemptsForHalf(s1.p);
+    document.getElementById("kv1").innerHTML = kvHTML([
+      ["Chance per attempt", (s1.p * 100).toFixed(2) + "%"],
+      ["Attempts", String(n)],
+      ["P(none at all)", (Math.pow(1 - s1.p, n) * 100).toFixed(4) + "%", "verm"],
+      ["P(at least one)", (atLeastOne(s1.p, n) * 100).toFixed(4) + "%", "blue"],
+      ["— they sum to", ((Math.pow(1 - s1.p, n) + atLeastOne(s1.p, n)) * 100).toFixed(1) + "%", "grey"],
+      ["Attempts to pass a half", String(half), "ochre"],
+      ["de Méré, one die × 4", (atLeastOne(1 / 6, 4) * 100).toFixed(2) + "%"],
+      ["de Méré, two dice × 24", (atLeastOne(1 / 36, 24) * 100).toFixed(2) + "%"],
+      ["— the gap he lost on", ((atLeastOne(1 / 6, 4) - atLeastOne(1 / 36, 24)) * 100).toFixed(2) + " pts", "verm"]
+    ]);
+  }
+})();
+
+/* ══════════ 02 — adding, and the overlap ══════════ */
+const s2 = { pa: 0.25, pb: 0.2308, pab: 0.0577 };
+(function () {
+  sliders(document.getElementById("ctl2"), [
+    { id: "a2", k: "pa", lbl: "A", name: "P(A)", min: 0.02, max: 0.9, step: 0.005, fmt: v => (v * 100).toFixed(1) + "%" },
+    { id: "b2", k: "pb", lbl: "B", name: "P(B)", min: 0.02, max: 0.9, step: 0.005, fmt: v => (v * 100).toFixed(1) + "%" },
+    { id: "c2", k: "pab", lbl: "∩", name: "P(A and B)", min: 0, max: 0.5, step: 0.002, fmt: v => (v * 100).toFixed(1) + "%" }
+  ], s2, () => draw(), "c2");
+  window.draw2 = draw;
+  function draw() {
+    const pab = Math.min(s2.pab, s2.pa, s2.pb);
+    const aOnly = s2.pa - pab, bOnly = s2.pb - pab;
+    const neither = Math.max(0, 1 - aOnly - bOnly - pab);
+    const o = Fig(document.getElementById("cv2"),
+      { h: 320, x0: 0, x1: 1, y0: 0, y1: 1, pad: { l: 16, r: 14, t: 14 } });
+    axes(o, x => (x * 100).toFixed(0) + "%", () => "", 6, 0);
+    const g = o.g;
+    /* one unit bar, split into the four regions — an area picture without
+       the ambiguity of two overlapping circles */
+    const segs = [[aOnly, "--blue"], [pab, "--ochre"], [bOnly, "--verm"], [neither, "--hair"]];
+    let x = 0;
+    const top = o.Y(0.78), bot = o.Y(0.22);
+    segs.forEach(([v, col]) => {
+      if (v <= 0) return;
+      g.save(); g.fillStyle = C(col); g.globalAlpha = 0.85;
+      g.fillRect(o.X(x), top, o.X(x + v) - o.X(x), bot - top);
+      g.restore();
+      if (v > 0.05) {
+        g.fillStyle = C("--chalk"); g.font = "10px 'IBM Plex Mono', monospace";
+        g.textAlign = "center"; g.textBaseline = "middle";
+        g.fillText((v * 100).toFixed(1) + "%", o.X(x + v / 2), (top + bot) / 2);
+      }
+      x += v;
+    });
+    /* the bracket showing what "A or B" covers */
+    g.save(); g.strokeStyle = C("--ink"); g.lineWidth = 1.5;
+    const oy = top - 14, xEnd = o.X(aOnly + pab + bOnly);
+    g.beginPath(); g.moveTo(o.X(0), oy + 5); g.lineTo(o.X(0), oy);
+    g.lineTo(xEnd, oy); g.lineTo(xEnd, oy + 5); g.stroke();
+    g.fillStyle = C("--ink"); g.font = "10px 'IBM Plex Mono', monospace";
+    g.textAlign = "center"; g.textBaseline = "bottom";
+    g.fillText("A or B = " + ((aOnly + pab + bOnly) * 100).toFixed(1) + "%", xEnd / 2 + o.X(0) / 2, oy - 3);
+    g.restore();
+    const indep = Math.abs(pab - s2.pa * s2.pb) < 0.004;
+    document.getElementById("kv2").innerHTML = kvHTML([
+      ["P(A)", (s2.pa * 100).toFixed(2) + "%", "blue"],
+      ["P(B)", (s2.pb * 100).toFixed(2) + "%", "verm"],
+      ["P(A and B)", (pab * 100).toFixed(2) + "%", "ochre"],
+      ["Naive sum", ((s2.pa + s2.pb) * 100).toFixed(2) + "%", "grey"],
+      ["P(A or B), correct", (orOf(s2.pa, s2.pb, pab) * 100).toFixed(2) + "%"],
+      ["— overcounted by", (pab * 100).toFixed(2) + " pts", "ochre"],
+      ["Mutually exclusive?", pab === 0 ? "yes" : "no", pab === 0 ? "moss" : "grey"],
+      ["If independent, P(and)", (s2.pa * s2.pb * 100).toFixed(2) + "%"],
+      ["Independent?", indep ? "yes" : "no", indep ? "moss" : "verm"]
+    ]);
+  }
+})();
+
+/* ══════════ 03 — multiplying ══════════ */
+const s3 = { k: 2, good: 4, total: 52 };
+(function () {
+  sliders(document.getElementById("ctl3"), [
+    { id: "a3", k: "k", lbl: "k", name: "How many drawn", min: 1, max: 10, step: 1, fmt: v => v.toFixed(0) },
+    { id: "b3", k: "good", lbl: "g", name: "Favorable cards", min: 1, max: 26, step: 1, fmt: v => v.toFixed(0) },
+    { id: "c3", k: "total", lbl: "N", name: "Cards in the deck", min: 10, max: 200, step: 2, fmt: v => v.toFixed(0) }
+  ], s3, () => draw(), "c3");
+  window.draw3 = draw;
+  function draw() {
+    const good = Math.round(s3.good), total = Math.round(s3.total);
+    const kMax = 10;
+    const o = Fig(document.getElementById("cv3"),
+      { h: 320, x0: 1, x1: kMax, y0: 0,
+        y1: Math.max(withRepl(1, good, total), 0.02) * 1.15, pad: { l: 66, r: 14, t: 14 } });
+    axes(o, x => x.toFixed(0), y => (y * 100).toFixed(2) + "%", 6, 5);
+    curve(o, k => withoutRepl(Math.round(k), good, total), C("--blue"), 2.4);
+    curve(o, k => withRepl(Math.round(k), good, total), C("--verm"), 2.0);
+    const k = Math.round(s3.k);
+    vline(o, k, C("--ink"), k + " drawn");
+    const wo = withoutRepl(k, good, total), wr = withRepl(k, good, total);
+    document.getElementById("kv3").innerHTML = kvHTML([
+      ["Deck", good + " favorable of " + total],
+      ["Drawn", String(k)],
+      ["First draw", (good / total * 100).toFixed(4) + "%"],
+      ["Second, given the first", k > 1 ? ((good - 1) / (total - 1) * 100).toFixed(4) + "%" : "—"],
+      ["Without replacement", (wo * 100).toFixed(5) + "%", "blue"],
+      ["— one in", wo > 0 ? (1 / wo).toFixed(1) : "—"],
+      ["With replacement", (wr * 100).toFixed(5) + "%", "verm"],
+      ["— larger by", wo > 0 ? ((wr / wo - 1) * 100).toFixed(2) + "%" : "—", "verm"],
+      ["Every added draw", "can only shrink it", "grey"]
+    ]);
+  }
+})();
+
+/* ══════════ 04 — a coin has no memory ══════════ */
+const s4 = { seen: 10, half: 26 };
+(function () {
+  sliders(document.getElementById("ctl4"), [
+    { id: "a4", k: "seen", lbl: "k", name: "Blacks already seen", min: 0, max: 26, step: 1, fmt: v => v.toFixed(0) },
+    { id: "b4", k: "half", lbl: "N", name: "Cards of each color", min: 5, max: 60, step: 1, fmt: v => v.toFixed(0) }
+  ], s4, () => draw(), "c4");
+  window.draw4 = draw;
+  function draw() {
+    const half = Math.round(s4.half);
+    const o = Fig(document.getElementById("cv4"),
+      { h: 320, x0: 0, x1: half, y0: 0.4, y1: 1.04, pad: { l: 58, r: 14, t: 14 } });
+    axes(o, x => x.toFixed(0), y => (y * 100).toFixed(0) + "%", 6, 5);
+    curve(o, k => deckNextRed(Math.round(k), half), C("--blue"), 2.4);
+    curve(o, () => coinNext(), C("--verm"), 2.2);
+    hline(o, 0.5, C("--ochre"), "even odds");
+    const seen = Math.min(Math.round(s4.seen), half);
+    vline(o, seen, C("--ink"), seen + " seen");
+    document.getElementById("kv4").innerHTML = kvHTML([
+      ["Blacks seen", String(seen)],
+      ["Cards remaining", String(2 * half - seen)],
+      ["P(next is red) — deck", (deckNextRed(seen, half) * 100).toFixed(3) + "%", "blue"],
+      ["P(next is head) — coin", "50.000%", "verm"],
+      ["P(" + seen + " heads in a row)", seen > 0 ? (Math.pow(0.5, seen) * 100).toFixed(5) + "%" : "100%"],
+      ["— but the next flip is", "50.000%", "grey"],
+      ["The deck evens out", seen >= half ? "completely" : "partly", "moss"],
+      ["The coin never does", "no mechanism", "verm"],
+      ["Which are you watching?", "that is the skill", "ochre"]
+    ]);
+  }
+})();
+
+/* ══════════ 05 — conditioning ══════════ */
+const s5 = { puzzle: 0, mode: 0, doors: 3 };
+(function () {
+  sliders(document.getElementById("ctl5"), [
+    { id: "a5", k: "puzzle", lbl: "?", name: "Which puzzle", min: 0, max: 1, step: 1,
+      fmt: v => v < 0.5 ? "two children" : "Monty Hall" },
+    { id: "b5", k: "mode", lbl: "|", name: "The condition", min: 0, max: 1, step: 1,
+      fmt: v => v < 0.5 ? "at least one boy" : "the elder is a boy" },
+    { id: "c5", k: "doors", lbl: "d", name: "Doors (Monty Hall)", min: 3, max: 12, step: 1, fmt: v => v.toFixed(0) }
+  ], s5, () => draw(), "c5");
+  window.draw5 = draw;
+  window.__puzzles = { twoChildren: twoChildren, monty: monty, montyRandomHost: montyRandomHost };
+  function draw() {
+    const o = Fig(document.getElementById("cv5"),
+      { h: 320, x0: 0, x1: 1, y0: 0, y1: 1, pad: { l: 16, r: 14, t: 14 } });
+    axes(o, () => "", () => "", 0, 0);
+    const g = o.g;
+    if (s5.puzzle < 0.5) {
+      const T = twoChildren(s5.mode);
+      const cw = o.pw / 4.6, cy = o.P.t + o.ph / 2, r = Math.min(cw, o.ph) * 0.34;
+      TWO_CHILDREN.forEach((c, i) => {
+        const cx = o.P.l + o.pw / 2 + (i - 1.5) * cw;
+        const kept = T.keep[i], won = kept && T.win[i];
+        g.save();
+        g.fillStyle = C(won ? "--moss" : kept ? "--blue" : "--hair");
+        g.globalAlpha = kept ? 0.9 : 0.35;
+        g.beginPath(); g.arc(cx, cy, r, 0, 6.2832); g.fill();
+        g.restore();
+        g.fillStyle = C(kept ? "--chalk" : "--grey");
+        g.font = Math.round(r * 0.62) + "px 'IBM Plex Mono', monospace";
+        g.textAlign = "center"; g.textBaseline = "middle";
+        g.fillText(c.id, cx, cy);
+        if (!kept) {
+          g.save(); g.strokeStyle = C("--verm"); g.lineWidth = 2; g.globalAlpha = 0.8;
+          g.beginPath(); g.moveTo(cx - r * 0.7, cy - r * 0.7);
+          g.lineTo(cx + r * 0.7, cy + r * 0.7); g.stroke(); g.restore();
+        }
+      });
+      document.getElementById("kv5").innerHTML = kvHTML([
+        ["Puzzle", "two children"],
+        ["Condition", s5.mode < 0.5 ? "at least one boy" : "the elder is a boy"],
+        ["Outcomes to start", "4"],
+        ["Still possible", String(T.nKeep), "blue"],
+        ["— of those, both boys", String(T.nWin), "moss"],
+        ["P(both boys | condition)", (T.p * 100).toFixed(4) + "%", "moss"],
+        ["— as a fraction", T.nWin + "/" + T.nKeep],
+        ["The other condition gives", (twoChildren(s5.mode < 0.5 ? 1 : 0).p * 100).toFixed(2) + "%", "grey"],
+        ["Same words, different set", "that is conditioning", "ochre"]
+      ]);
+    } else {
+      const d = Math.round(s5.doors), M = monty(d);
+      const bw = o.pw / 3.2;
+      [["stick", M.stick, "--verm"], ["switch", M.swap, "--moss"]].forEach(([nm, v, col], i) => {
+        const cx = o.P.l + o.pw / 2 + (i - 0.5) * bw * 1.25;
+        const bh = v * o.ph * 0.82;
+        g.save(); g.fillStyle = C(col); g.globalAlpha = 0.85;
+        g.fillRect(cx - bw / 2, o.P.t + o.ph - bh, bw, bh);
+        g.restore();
+        g.fillStyle = C("--ink2"); g.font = "11px 'IBM Plex Mono', monospace";
+        g.textAlign = "center"; g.textBaseline = "bottom";
+        g.fillText(nm + "  " + (v * 100).toFixed(1) + "%", cx, o.P.t + o.ph - bh - 6);
+      });
+      const RH = montyRandomHost();
+      document.getElementById("kv5").innerHTML = kvHTML([
+        ["Puzzle", "Monty Hall"],
+        ["Doors", String(d)],
+        ["P(win by staying)", (M.stick * 100).toFixed(4) + "%", "verm"],
+        ["P(win by switching)", (M.swap * 100).toFixed(4) + "%", "moss"],
+        ["— as fractions", "1/" + d + " and " + (d - 1) + "/" + d],
+        ["Switching is better by", (M.swap / M.stick).toFixed(2) + "×", "moss"],
+        ["Why", "you switch into being wrong", "grey"],
+        ["If the host chose at random", (RH.swap * 100).toFixed(1) + "%", "ochre"],
+        ["— the rule is the problem", "not the door count", "ochre"]
+      ]);
+    }
+  }
+})();
+
+/* ══════════ 06 — the drill ══════════ */
+(function () {
+  const E = id => document.getElementById(id);
+  let cur = null, sc = 0, asked = 0, streak = 0, best = 0, tier = 1;
+  const R = Math.random;
+  const pick = a => a[Math.floor(R() * a.length)];
+  function make() {
+    if (tier === 1) {
+      const t = Math.floor(R() * 4);
+      if (t === 0) {
+        const n = pick([2, 3, 4, 5, 6]);
+        const a = atLeastOne(1 / 6, n) * 100;
+        return { kind: "At least one", unit: "%", a: a, tol: Math.max(0.05, a * 0.01),
+          q: "<b>" + n + "</b> rolls of a die. What is the chance of at least one six?",
+          w: "1 − (5/6)<sup>" + n + "</sup> = <b>" + a.toFixed(3) +
+            "%</b>. Counting the misses turns a union into a product." };
+      }
+      if (t === 1) {
+        const pa = pick([0.3, 0.4, 0.5, 0.6]), pb = pick([0.2, 0.3, 0.4]);
+        const pab = pick([0, 0.1, 0.15]);
+        const a = orOf(pa, pb, Math.min(pab, pa, pb)) * 100;
+        return { kind: "P(A or B)", unit: "%", a: a, tol: 0.05,
+          q: "P(A) = <b>" + (pa * 100).toFixed(0) + "%</b>, P(B) = <b>" + (pb * 100).toFixed(0) +
+            "%</b>, P(A and B) = <b>" + (pab * 100).toFixed(0) + "%</b>. What is P(A or B)?",
+          w: (pa * 100).toFixed(0) + " + " + (pb * 100).toFixed(0) + " − " +
+            (pab * 100).toFixed(0) + " = <b>" + a.toFixed(1) +
+            "%</b>. The subtraction removes what was counted twice." };
+      }
+      if (t === 2) {
+        const good = pick([4, 13, 26]), k = pick([2, 3]);
+        const a = withoutRepl(k, good, 52) * 100;
+        return { kind: "Without replacement", unit: "%", a: a, tol: Math.max(0.005, a * 0.01),
+          q: "A deck has <b>" + good + "</b> favorable cards. Drawing <b>" + k +
+            "</b> without replacement, what is the chance all are favorable?",
+          w: "(" + good + "/52)" + (k > 1 ? " × (" + (good - 1) + "/51)" : "") +
+            (k > 2 ? " × (" + (good - 2) + "/50)" : "") + " = <b>" + a.toFixed(4) +
+            "%</b>. With replacement it would be " + (withRepl(k, good, 52) * 100).toFixed(4) + "%." };
+      }
+      const pa = pick([0.5, 0.6, 0.7, 0.8, 0.9]);
+      const n = pick([2, 3, 4, 5]);
+      const a = Math.pow(pa, n) * 100;
+      return { kind: "Independent and", unit: "%", a: a, tol: Math.max(0.05, a * 0.01),
+        q: "<b>" + n + "</b> independent events, each with probability <b>" +
+          (pa * 100).toFixed(0) + "%</b>. What is the chance all of them happen?",
+        w: (pa).toFixed(1) + "<sup>" + n + "</sup> = <b>" + a.toFixed(2) +
+          "%</b> — every condition added can only shrink it." };
+    }
+    const t = Math.floor(R() * 3);
+    if (t === 0) {
+      const p = pick([0.01, 0.02, 0.05, 0.1]);
+      const a = attemptsForHalf(p);
+      return { kind: "Attempts to pass a half", unit: "tries", a: a, tol: 0.5,
+        q: "An event has probability <b>" + (p * 100).toFixed(0) +
+          "%</b> per attempt. How many attempts before at least one is more likely than not?",
+        w: "Solve (1−p)<sup>n</sup> = 0.5, so n = ln(0.5)/ln(1−" + p + ") rounded up = <b>" +
+          a + "</b> attempts." };
+    }
+    if (t === 1) {
+      const mode = pick([0, 1]);
+      const T = twoChildren(mode);
+      const a = T.p * 100;
+      return { kind: "Two children", unit: "%", a: a, tol: 0.05,
+        q: "A family has two children and <b>" +
+          (mode ? "the elder is a boy" : "at least one is a boy") +
+          "</b>. What is the chance both are boys?",
+        w: "Of BB BG GB GG the condition leaves <b>" + T.nKeep +
+          "</b>, of which " + T.nWin + " is BB, so <b>" + a.toFixed(1) +
+          "%</b>. The other wording gives " + (twoChildren(mode ? 0 : 1).p * 100).toFixed(1) + "%." };
+    }
+    const d = pick([3, 4, 5, 10]);
+    const a = monty(d).swap * 100;
+    return { kind: "Monty Hall", unit: "%", a: a, tol: 0.05,
+      q: "<b>" + d + "</b> doors, one car. You pick one, the host opens all but one of the rest " +
+        "showing goats. What is the chance of winning by switching?",
+      w: "You win by switching exactly when your first pick was wrong: (" + (d - 1) + "/" + d +
+        ") = <b>" + a.toFixed(2) + "%</b>, against " + (100 / d).toFixed(2) + "% for staying." };
+  }
+  function next() {
+    cur = make();
+    E("dKind").textContent = cur.kind; E("dText").innerHTML = cur.q;
+    E("dUnit").textContent = cur.unit; E("dInput").value = "";
+    E("drill").classList.remove("done");
+    focusSoft(E("dInput"), E("drill"));
+  }
+  function submit() {
+    if (!cur || E("drill").classList.contains("done")) return;
+    const raw = parseFloat(String(E("dInput").value).replace(/[$,%\s]/g, ""));
+    asked++;
+    const ok = isFinite(raw) && Math.abs(raw - cur.a) <= cur.tol;
+    if (ok) { sc++; streak++; if (streak > best) best = streak; } else streak = 0;
+    E("dVerdict").textContent = ok ? "CORRECT" : ("NOT QUITE — the answer is " + cur.a.toFixed(3));
+    E("dVerdict").className = "vd " + (ok ? "ok" : "no");
+    E("dWork").innerHTML = cur.w;
+    E("dScore").textContent = sc + " / " + asked;
+    E("dStreak").textContent = String(streak); E("dBest").textContent = String(best);
+    E("drill").classList.add("done");
+  }
+  E("dSubmit").addEventListener("click", submit);
+  E("dInput").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+  E("dNext").addEventListener("click", next);
+  E("dSkip").addEventListener("click", () => { streak = 0; E("dStreak").textContent = "0"; next(); });
+  [1, 2].forEach(k => E("dT" + k).addEventListener("click", () => {
+    tier = k;
+    [1, 2].forEach(j => E("dT" + j).setAttribute("aria-pressed", j === k ? "true" : "false"));
+    next();
+  }));
+  window.drawDrill = next;
+  window.__drill = () => {
+    const o = [];
+    for (let i = 0; i < 2; i++) { tier = i + 1; for (let j = 0; j < 400; j++) o.push(make()); }
+    tier = 1; return o;
+  };
+})();
+
+function drawAll() {
+  drawHero(); draw1(); draw2(); draw3(); draw4(); draw5(); drawDrill();
+}
+LAB.boot(drawAll);
+
+</script>
+</body>
+</html>

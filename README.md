@@ -1,7 +1,7 @@
 # Chance, visually
 
 Probability and statistics built from simulation rather than asserted, for
-people who price risk. Nine modules, each one earning its ideas on the way to
+people who price risk. Thirteen modules, each one earning its ideas on the way to
 something a trading desk actually does — ending with the arithmetic pointed at
 bookmaking, bet sizing, poker, blackjack and options trading.
 
@@ -37,6 +37,19 @@ figure computes 42%; that has happened, on the companion series, twice.
 The Jupyter notebooks and `app.py` at the root are the earlier version of this
 project. `CONTEXT.md` holds personal curriculum notes and is deliberately
 gitignored — it stays on disk and out of the published repo.
+
+## The syllabus, and what was deliberately left out
+
+The series was mapped against a full statistics and probability syllabus. Four
+missing units earned their own modules — counting, the probability rules,
+descriptive statistics and hypothesis testing. The rest were folded in as
+chapters: two-sample tests and chi-square sit inside module 09, and inference
+for regression stays in module 11, which already does correlation intervals.
+
+Stem-and-leaf plots, dot plots, two-way tables as their own unit, ANOVA, and
+observational-versus-experimental study design were skipped on purpose. They
+are school-curriculum filler for a reader who prices risk, and adding them
+would have cost pages without adding capability.
 
 ## Two traps, both already paid for
 

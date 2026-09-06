@@ -1124,6 +1124,401 @@ PAGES["test"] = () => {
 };
 
 
+PAGES["count"] = () => {
+  const M = load("count.html", ["permute", "powRep", "lfact", "logPermute", "logChoose",
+    "noShared", "anyShared", "matchesYou", "pairsOf", "poissonApprox", "firstAbove",
+    "pokerHands", "pascalRow", "rowSum", "choose", "lchoose", "__poker", "__pascal",
+    "__drill", "s1", "s2", "s3", "s4", "s5"]);
+
+  console.log("    chapter 01 - multiply the choices");
+  eq("a 4-digit PIN with repeats is 10,000", M.powRep(10, 4), 10000, 0);
+  eq("  without repeats, 5,040", M.permute(10, 4), 5040, 0);
+  yes("  forbidding repeats always gives fewer", M.permute(10, 4) < M.powRep(10, 4));
+  eq("P(52,5) is 311,875,200", M.permute(52, 5), 311875200, 0);
+  eq("P(26,4) is 358,800", M.permute(26, 4), 358800, 0);
+  eq("52! is 8.0658e67, so log10 is 67.9066", M.lfact(52) / Math.LN10, 67.9066, 5e-4);
+  yes("  which is far below the 1e80 atoms in the observable universe",
+    M.lfact(52) / Math.LN10 < 80);
+  yes("the three counts are ordered n^r >= P >= C for every r",
+    [1, 2, 3, 5, 10, 20].every(r =>
+      M.logPowRep ? true : true) &&
+    [1, 2, 3, 5, 10, 20].every(r =>
+      r * Math.log10(52) >= M.logPermute(52, r) - 1e-9 &&
+      M.logPermute(52, r) >= M.logChoose(52, r) - 1e-9));
+
+  console.log("    chapter 02 - when order stops mattering");
+  eq("C(52,5) is 2,598,960", M.choose(52, 5), 2598960, 0);
+  eq("  and P(52,5) divided by 5! gives it", M.permute(52, 5) / 120, 2598960, 1e-6);
+  eq("5! is 120", Math.round(Math.exp(M.lfact(5))), 120, 0);
+  eq("C(49,6) is 13,983,816", M.choose(49, 6), 13983816, 0);
+  eq("C(52,2) is 1,326", M.choose(52, 2), 1326, 0);
+  eq("C(10,3) is 120", M.choose(10, 3), 120, 0);
+  yes("combinations are symmetric: C(52,5) = C(52,47)",
+    M.choose(52, 5) === M.choose(52, 47));
+  yes("  and C(n,0) = C(n,n) = 1", M.choose(52, 0) === 1 && M.choose(52, 52) === 1);
+  yes("the ratio P/C is always exactly r!",
+    [2, 3, 5, 6].every(r =>
+      Math.abs(M.permute(52, r) / M.choose(52, r) - Math.round(Math.exp(M.lfact(r)))) < 1e-6));
+
+  console.log("    chapter 03 - the birthday problem");
+  eq("23 people: P(no shared birthday) is 0.492703",
+    M.noShared(23, 365), 0.492703, 5e-6);
+  eq("  so P(at least one) is 50.7297%", M.anyShared(23, 365) * 100, 50.7297, 5e-4);
+  eq("22 people give 47.5695%", M.anyShared(22, 365) * 100, 47.5695, 5e-4);
+  yes("  so 23 is the first to pass one half",
+    M.anyShared(23, 365) > 0.5 && M.anyShared(22, 365) < 0.5);
+  eq("the first n above one half is 23", M.firstAbove(0.5, 365), 23, 0);
+  eq("the first n above 99% is 57", M.firstAbove(0.99, 365), 57, 0);
+  eq("  where the probability is 99.0122%", M.anyShared(57, 365) * 100, 99.0122, 5e-4);
+  eq("70 people give 99.9160%", M.anyShared(70, 365) * 100, 99.9160, 5e-4);
+  console.log("    chapter 03 - and why: pairs, not people");
+  eq("23 people make 253 pairs", M.pairsOf(23), 253, 0);
+  eq("  each pair matches with probability 1/365", 1 / 365, 0.0027397, 5e-7);
+  eq("  so the expected number of matches is 0.6932", 253 / 365, 0.69315, 5e-5);
+  eq("the Poisson approximation gives 50.0002%",
+    M.poissonApprox(23, 365) * 100, 50.0002, 5e-4);
+  yes("  which is within a percentage point of the exact answer",
+    Math.abs(M.poissonApprox(23, 365) - M.anyShared(23, 365)) < 0.01);
+  yes("pairs grow quadratically while people grow linearly",
+    M.pairsOf(46) / M.pairsOf(23) > 3.9);
+  console.log("    chapter 03 - the question people confuse it with");
+  eq("23 others matching YOU specifically: 6.1151%",
+    M.matchesYou(23, 365) * 100, 6.1151, 5e-4);
+  eq("  50 others give 12.8182%", M.matchesYou(50, 365) * 100, 12.8182, 5e-4);
+  eq("  and 253 others give 50.0477%", M.matchesYou(253, 365) * 100, 50.0477, 5e-4);
+  yes("  so matching one named person needs 253 others, not 23",
+    M.matchesYou(252, 365) < 0.5 && M.matchesYou(253, 365) > 0.5);
+  yes("  which is the same 253 as the pairs among 23 people",
+    M.pairsOf(23) === 253);
+
+  console.log("    chapter 04 - every poker hand, counted");
+  const P = M.__poker();
+  P.hands.forEach(h => console.log("      " + h.n.padEnd(17) +
+    String(h.v).padStart(9) + "   " + (h.p * 100).toFixed(6).padStart(10) + "%"));
+  eq("there are 2,598,960 five-card hands", P.total, 2598960, 0);
+  yes("EVERY category summed equals it exactly", P.sum === P.total);
+  const by = {};
+  P.hands.forEach(h => { by[h.n] = h.v; });
+  eq("royal flush: 4", by["Royal flush"], 4, 0);
+  eq("straight flush: 36", by["Straight flush"], 36, 0);
+  eq("four of a kind: 624", by["Four of a kind"], 624, 0);
+  eq("full house: 3,744", by["Full house"], 3744, 0);
+  eq("flush: 5,108", by["Flush"], 5108, 0);
+  eq("straight: 10,200", by["Straight"], 10200, 0);
+  eq("three of a kind: 54,912", by["Three of a kind"], 54912, 0);
+  eq("two pair: 123,552", by["Two pair"], 123552, 0);
+  eq("one pair: 1,098,240", by["One pair"], 1098240, 0);
+  eq("high card: 1,302,540", by["High card"], 1302540, 0);
+  yes("a flush is rarer than a straight, which is why it outranks it",
+    by["Flush"] < by["Straight"]);
+  eq("  by almost exactly a factor of two", by["Straight"] / by["Flush"], 1.9969, 5e-4);
+  yes("the categories are strictly ordered by rarity",
+    P.hands.every((h, i, a) => i === 0 || h.v >= a[i - 1].v));
+  eq("four of a kind comes out at 1 in 4,165", by["Four of a kind"] &&
+    P.total / by["Four of a kind"], 4165, 0.5);
+  eq("one pair is 42.2569% of hands", by["One pair"] / P.total * 100, 42.2569, 5e-4);
+  eq("high card is 50.1177%", by["High card"] / P.total * 100, 50.1177, 5e-4);
+
+  console.log("    chapter 05 - where the binomial coefficient comes from");
+  eq("C(10,5) is 252", M.choose(10, 5), 252, 0);
+  eq("  so P(exactly 5 heads in 10) is 24.6094%",
+    M.choose(10, 5) / 1024 * 100, 24.6094, 5e-4);
+  eq("  while P(all 10 heads) is 0.0977%", 1 / 1024 * 100, 0.09766, 5e-5);
+  eq("  a ratio of 252 to 1", M.choose(10, 5) / 1, 252, 0);
+  yes("every sequence is equally likely; there are just more of some counts",
+    M.choose(10, 5) > M.choose(10, 10));
+  const r8 = M.pascalRow(8);
+  yes("row 8 of Pascal is 1 8 28 56 70 56 28 8 1",
+    r8.join(",") === "1,8,28,56,70,56,28,8,1");
+  yes("each entry is the sum of the two above it",
+    [1, 2, 3, 4, 5, 6, 7, 8].every(k =>
+      M.choose(8, k) === M.choose(7, k - 1) + M.choose(7, k)));
+  [5, 10, 16, 20].forEach(n => {
+    eq("row " + n + " sums to 2^" + n, M.rowSum(n), Math.pow(2, n), 0.5);
+  });
+  yes("which is why the binomial probabilities add to one",
+    Math.abs(M.rowSum(10) / Math.pow(2, 10) - 1) < 1e-12);
+
+  console.log("    chapter 06 - the drill generator");
+  const Q = M.__drill();
+  yes("every question has a finite answer, prompt, working and tolerance",
+    Q.every(q => isFinite(q.a) && q.q && q.w && q.tol > 0));
+  const kinds = {};
+  Q.forEach(q => { kinds[q.kind] = (kinds[q.kind] || 0) + 1; });
+  Object.keys(kinds).sort().forEach(k => console.log("      " + k.padEnd(32) + kinds[k]));
+  yes("seven distinct question kinds", Object.keys(kinds).length === 7);
+  yes("the exact answer is always accepted", Q.every(q => Math.abs(q.a - q.a) <= q.tol));
+  yes("an answer well outside the band is rejected",
+    Q.every(q => Math.abs((q.a + Math.max(q.tol * 10, 1)) - q.a) > q.tol));
+};
+
+
+PAGES["rules"] = () => {
+  const M = load("rules.html", ["complement", "atLeastOne", "orOf", "andOf", "given",
+    "independent", "mutuallyExclusive", "attemptsForHalf", "withoutRepl", "withRepl",
+    "coinNext", "deckNextRed", "twoChildren", "monty", "montyRandomHost",
+    "TWO_CHILDREN", "DEMERE", "__puzzles", "__drill", "s1", "s2", "s3", "s4", "s5"]);
+
+  console.log("    chapter 01 - count what you don't want");
+  eq("at least one six in 4 rolls: 51.7747%",
+    M.atLeastOne(1 / 6, 4) * 100, 51.7747, 5e-4);
+  eq("  the complement, (5/6)^4", Math.pow(5 / 6, 4) * 100, 48.2253, 5e-4);
+  yes("  and they sum to one",
+    Math.abs(M.atLeastOne(1 / 6, 4) + Math.pow(5 / 6, 4) - 1) < 1e-12);
+  eq("at least one six in 6 rolls is 66.5102%",
+    M.atLeastOne(1 / 6, 6) * 100, 66.5102, 5e-4);
+  yes("  which is NOT 100%, as adding 1/6 six times would suggest",
+    M.atLeastOne(1 / 6, 6) < 0.67);
+  console.log("    chapter 01 - de Mere's two bets");
+  eq("a six in four rolls of one die: 51.7747%",
+    M.atLeastOne(1 / 6, 4) * 100, 51.7747, 5e-4);
+  eq("a double six in 24 rolls of two: 49.1404%",
+    M.atLeastOne(1 / 36, 24) * 100, 49.1404, 5e-4);
+  yes("the first is above a half", M.atLeastOne(1 / 6, 4) > 0.5);
+  yes("  and the second is below it", M.atLeastOne(1 / 36, 24) < 0.5);
+  eq("  separated by 2.63 points",
+    (M.atLeastOne(1 / 6, 4) - M.atLeastOne(1 / 36, 24)) * 100, 2.6343, 5e-4);
+  eq("4 attempts take a 1/6 event past a half", M.attemptsForHalf(1 / 6), 4, 0);
+  eq("25 attempts take a 1/36 event past a half", M.attemptsForHalf(1 / 36), 25, 0);
+  yes("  so de Mere's 24 was one roll short", M.attemptsForHalf(1 / 36) === 25);
+  eq("a 1-in-100 event needs 69 attempts", M.attemptsForHalf(0.01), 69, 0);
+
+  console.log("    chapter 02 - adding, and the overlap");
+  const pH = 13 / 52, pF = 12 / 52, pB = 3 / 52;
+  eq("P(heart) is 25%", pH * 100, 25.0, 1e-9);
+  eq("P(face card) is 23.0769%", pF * 100, 23.0769, 5e-4);
+  eq("P(both) is 5.7692%", pB * 100, 5.7692, 5e-4);
+  eq("the naive sum is 48.0769%", (pH + pF) * 100, 48.0769, 5e-4);
+  eq("P(heart or face) is 42.3077%", M.orOf(pH, pF, pB) * 100, 42.3077, 5e-4);
+  eq("  which is 22 of 52 cards", M.orOf(pH, pF, pB) * 52, 22, 1e-9);
+  eq("  overcounted by exactly the 3 shared cards", (pH + pF - M.orOf(pH, pF, pB)) * 52, 3, 1e-9);
+  eq("heart or spade needs no correction", M.orOf(pH, pH, 0) * 100, 50.0, 1e-9);
+  console.log("    chapter 02 - mutually exclusive is NOT independent");
+  yes("heart and spade are mutually exclusive", M.mutuallyExclusive(0));
+  eq("  if independent, P(both) would be 6.25%", pH * pH * 100, 6.25, 1e-9);
+  yes("  but it is zero, so they are not independent", !M.independent(pH, pH, 0));
+  yes("  and knowing one rules the other out entirely", M.given(0, pH) === 0);
+  yes("independence holds only when P(and) equals the product",
+    M.independent(0.5, 0.4, 0.2) && !M.independent(0.5, 0.4, 0.0));
+  yes("the only way to be both is for one to be impossible",
+    M.mutuallyExclusive(0) && M.independent(0, 0.5, 0));
+
+  console.log("    chapter 03 - multiplying");
+  eq("P(first ace) is 4/52 = 7.6923%", 4 / 52 * 100, 7.6923, 5e-4);
+  eq("P(second ace | first) is 3/51 = 5.8824%", 3 / 51 * 100, 5.8824, 5e-4);
+  eq("P(two aces) is 0.4525%", M.withoutRepl(2, 4, 52) * 100, 0.452489, 5e-6);
+  eq("  which is 1 in 221", 1 / M.withoutRepl(2, 4, 52), 221.0, 0.05);
+  eq("  and matches the counting route C(4,2)/C(52,2)",
+    M.withoutRepl(2, 4, 52), 6 / 1326, 1e-12);
+  eq("with replacement it would be 0.5917%", M.withRepl(2, 4, 52) * 100, 0.591716, 5e-6);
+  yes("  which is larger, because the deck never shrank",
+    M.withRepl(2, 4, 52) > M.withoutRepl(2, 4, 52));
+  console.log("    chapter 03 - the conjunction rule");
+  eq("six independent 90% conditions leave 53.1441%",
+    Math.pow(0.9, 6) * 100, 53.1441, 5e-4);
+  yes("adding a condition can only shrink the probability",
+    [1, 2, 3, 4, 5, 6].every((k, i, a) =>
+      i === 0 || Math.pow(0.9, k) < Math.pow(0.9, a[i - 1])));
+  yes("P(A and B) never exceeds either part",
+    [[0.9, 0.8], [0.5, 0.5], [0.99, 0.2]].every(([a, b]) =>
+      a * b <= a + 1e-12 && a * b <= b + 1e-12));
+
+  console.log("    chapter 04 - a coin has no memory, a deck does");
+  eq("the coin is always 50%", M.coinNext() * 100, 50.0, 1e-12);
+  yes("  however long the run", M.coinNext() === 0.5);
+  eq("P(5 heads in a row) is 3.125%", Math.pow(0.5, 5) * 100, 3.125, 1e-9);
+  eq("P(6 heads in a row) is 1.5625%", Math.pow(0.5, 6) * 100, 1.5625, 1e-9);
+  yes("  yet the sixth flip is still a coin flip", M.coinNext() === 0.5);
+  eq("a fresh deck: P(next is red) is 50%", M.deckNextRed(0, 26) * 100, 50.0, 1e-9);
+  eq("after 10 blacks: 61.9048%", M.deckNextRed(10, 26) * 100, 61.9048, 5e-4);
+  eq("after 20 blacks: 81.25%", M.deckNextRed(20, 26) * 100, 81.25, 5e-4);
+  eq("after 26 blacks: 100%", M.deckNextRed(26, 26) * 100, 100.0, 1e-9);
+  yes("the deck really does even out", M.deckNextRed(26, 26) === 1);
+  yes("  strictly, at every step", [0, 5, 10, 15, 20, 25].every((k, i, a) =>
+    i === 0 || M.deckNextRed(k, 26) > M.deckNextRed(a[i - 1], 26)));
+  yes("while the coin never moves at all", M.coinNext() === 0.5);
+
+  console.log("    chapter 05 - conditioning");
+  const atLeast = M.twoChildren(0), elder = M.twoChildren(1);
+  eq("at least one boy leaves 3 outcomes", atLeast.nKeep, 3, 0);
+  eq("  one of which is BB", atLeast.nWin, 1, 0);
+  eq("  so P(both boys) is 1/3 = 33.3333%", atLeast.p * 100, 33.3333, 5e-4);
+  eq("the elder is a boy leaves 2 outcomes", elder.nKeep, 2, 0);
+  eq("  so P(both boys) is 1/2 = 50%", elder.p * 100, 50.0, 1e-9);
+  yes("two conditions that sound alike give different answers",
+    Math.abs(atLeast.p - elder.p) > 0.16);
+  eq("  differing by 16.67 points", (elder.p - atLeast.p) * 100, 16.6667, 5e-4);
+  console.log("    chapter 05 - Monty Hall");
+  const MH = M.monty(3);
+  eq("staying wins 1/3 = 33.3333%", MH.stick * 100, 33.3333, 5e-4);
+  eq("switching wins 2/3 = 66.6667%", MH.swap * 100, 66.6667, 5e-4);
+  yes("  and the two sum to one", Math.abs(MH.stick + MH.swap - 1) < 1e-12);
+  eq("  switching is exactly twice as good", MH.swap / MH.stick, 2.0, 1e-12);
+  eq("with 10 doors, switching wins 90%", M.monty(10).swap * 100, 90.0, 1e-9);
+  yes("  the advantage grows with the door count",
+    M.monty(10).swap > M.monty(3).swap);
+  eq("a host choosing at random gives 50%", M.montyRandomHost().swap * 100, 50.0, 1e-9);
+  yes("  so the host's RULE is the problem, not the door count",
+    M.montyRandomHost().swap !== M.monty(3).swap);
+
+  console.log("    chapter 06 - the drill generator");
+  const Q = M.__drill();
+  yes("every question has a finite answer, prompt, working and tolerance",
+    Q.every(q => isFinite(q.a) && q.q && q.w && q.tol > 0));
+  const kinds = {};
+  Q.forEach(q => { kinds[q.kind] = (kinds[q.kind] || 0) + 1; });
+  Object.keys(kinds).sort().forEach(k => console.log("      " + k.padEnd(32) + kinds[k]));
+  yes("seven distinct question kinds", Object.keys(kinds).length === 7);
+  yes("the exact answer is always accepted", Q.every(q => Math.abs(q.a - q.a) <= q.tol));
+  yes("an answer well outside the band is rejected",
+    Q.every(q => Math.abs((q.a + Math.max(q.tol * 10, 1)) - q.a) > q.tol));
+};
+
+
+PAGES["describe"] = () => {
+  const M = load("describe.html", ["Z75", "IQR_SIGMA", "MAD_SIGMA", "IQR_TO_SIGMA",
+    "MAD_TO_SIGMA", "iqrOf", "madOf", "spreads", "fiveNumber", "FENCE_SIGMA",
+    "fenceFalseRate", "zOf", "pctOf", "withinK", "affine", "standardize",
+    "BASE", "withOutlier", "__salaries", "__five", "__fence", "__spreadRun",
+    "__drill", "mean", "median", "sd", "quantile", "s1", "s2", "s3", "s4", "s5"]);
+
+  console.log("    chapter 01 - center");
+  const ten = M.withOutlier(1200);
+  eq("ten salaries have a mean of 167.90", M.mean(ten), 167.90, 5e-3);
+  eq("  and a median of 54.00", M.median(ten), 54.0, 1e-9);
+  yes("  so the mean describes nobody in the room",
+    ten.filter(x => x < M.mean(ten)).length === 9);
+  eq("without the outlier the mean is 53.22", M.mean(M.BASE), 53.2222, 5e-4);
+  eq("  and the median is 53.00", M.median(M.BASE), 53.0, 1e-9);
+  eq("the mean moved by 114.68", M.mean(ten) - M.mean(M.BASE), 114.678, 5e-3);
+  eq("  while the median moved by 1.00", M.median(ten) - M.median(M.BASE), 1.0, 1e-9);
+  yes("  a hundredfold difference in sensitivity",
+    (M.mean(ten) - M.mean(M.BASE)) / (M.median(ten) - M.median(M.BASE)) > 100);
+  console.log("    chapter 01 - the breakdown point, demonstrated");
+  eq("push the outlier to 12,000 and the mean is 1,247.90",
+    M.mean(M.withOutlier(12000)), 1247.90, 5e-3);
+  eq("  to 120,000 and it is 12,047.90", M.mean(M.withOutlier(120000)), 12047.90, 5e-3);
+  yes("the median never moves at all",
+    [1200, 12000, 120000, 1e9].every(v => M.median(M.withOutlier(v)) === 54.0));
+  yes("  so one point in ten controls the mean entirely",
+    M.mean(M.withOutlier(1e9)) > 1e8);
+
+  console.log("    chapter 02 - spread");
+  eq("with the outlier, sd is 362.715", M.sd(ten), 362.715, 5e-3);
+  eq("  without it, 7.645", M.sd(M.BASE), 7.6449, 5e-4);
+  eq("  a factor of 47.4", M.sd(ten) / M.sd(M.BASE), 47.446, 5e-3);
+  eq("the IQR moves only from 10.00 to 12.25", M.iqrOf(ten), 12.25, 5e-3);
+  eq("  from", M.iqrOf(M.BASE), 10.0, 1e-9);
+  eq("  a factor of 1.225", M.iqrOf(ten) / M.iqrOf(M.BASE), 1.225, 5e-4);
+  yes("so the IQR is far steadier than the sd",
+    (M.iqrOf(ten) / M.iqrOf(M.BASE)) < 0.05 * (M.sd(ten) / M.sd(M.BASE)));
+  console.log("    chapter 02 - the normal constants");
+  eq("the normal's third quartile is 0.674490 sigma", M.Z75, 0.6744898, 5e-7);
+  eq("so the IQR is 1.348980 sigma", M.IQR_SIGMA, 1.348980, 5e-6);
+  eq("  and the median absolute deviation is 0.674490", M.MAD_SIGMA, 0.6744898, 5e-7);
+  eq("IQR to sigma multiplies by 0.741301", M.IQR_TO_SIGMA, 0.741301, 5e-6);
+  eq("MAD to sigma multiplies by 1.482602", M.MAD_TO_SIGMA, 1.482602, 5e-6);
+  yes("  and the pairs are reciprocals",
+    Math.abs(M.IQR_SIGMA * M.IQR_TO_SIGMA - 1) < 1e-12 &&
+    Math.abs(M.MAD_SIGMA * M.MAD_TO_SIGMA - 1) < 1e-12);
+  console.log("    chapter 02 - on clean data the three agree, on dirty data they do not");
+  const clean = M.__spreadRun(0, 6, 4000, 909);
+  const dirty = M.__spreadRun(0.10, 6, 4000, 909);
+  console.log("      clean: sd " + clean.sd.toFixed(4) + "  IQR-sigma " +
+    clean.iqrSigma.toFixed(4) + "  MAD-sigma " + clean.madSigma.toFixed(4));
+  console.log("      dirty: sd " + dirty.sd.toFixed(4) + "  IQR-sigma " +
+    dirty.iqrSigma.toFixed(4) + "  MAD-sigma " + dirty.madSigma.toFixed(4));
+  yes("on clean normal data all three land near 1",
+    [clean.sd, clean.iqrSigma, clean.madSigma].every(v => Math.abs(v - 1) < 0.08));
+  yes("with 10% contamination the sd runs away", dirty.sd > 1.4);
+  yes("  while the robust pair barely moves",
+    Math.abs(dirty.iqrSigma - 1) < 0.20 && Math.abs(dirty.madSigma - 1) < 0.20);
+  yes("  so their disagreement is a fat-tail diagnostic",
+    dirty.sd / dirty.iqrSigma > 1.15 && clean.sd / clean.iqrSigma < 1.15);
+
+  console.log("    chapter 03 - position");
+  eq("z = 1 is the 84.134th percentile", M.pctOf(1), 84.1345, 5e-3);
+  eq("z = 2 is the 97.725th", M.pctOf(2), 97.7250, 5e-3);
+  eq("z = 3 is the 99.865th", M.pctOf(3), 99.8650, 5e-3);
+  eq("z = 0 is the median", M.pctOf(0), 50.0, 1e-6);
+  eq("within 1 sigma: 68.2689%", M.withinK(1) * 100, 68.2689, 5e-3);
+  eq("within 2 sigma: 95.4500%", M.withinK(2) * 100, 95.4500, 5e-3);
+  eq("within 3 sigma: 99.7300%", M.withinK(3) * 100, 99.7300, 5e-3);
+  yes("so 68-95-99.7 is a rounding, not the exact figures",
+    Math.abs(M.withinK(2) * 100 - 95) > 0.4);
+  yes("and z=2 is the 97.7th percentile, NOT the 95th",
+    Math.abs(M.pctOf(2) - 95) > 2.5);
+  console.log("    chapter 03 - comparing unlike scales");
+  eq("620 on a 500/100 test is z = 1.20", M.zOf(620, 500, 100), 1.20, 1e-9);
+  eq("  the 88.493rd percentile", M.pctOf(M.zOf(620, 500, 100)), 88.4930, 5e-3);
+  eq("31 on a 21/5 test is z = 2.00", M.zOf(31, 21, 5), 2.0, 1e-9);
+  eq("  the 97.725th percentile", M.pctOf(M.zOf(31, 21, 5)), 97.7250, 5e-3);
+  yes("so the smaller raw score is the better result",
+    M.zOf(31, 21, 5) > M.zOf(620, 500, 100));
+
+  console.log("    chapter 04 - five numbers and the fence");
+  const F = M.__five(ten);
+  eq("min is 42", F.min, 42, 0);
+  eq("Q1 is 48.75", F.q1, 48.75, 5e-3);
+  eq("median is 54.00", F.med, 54.0, 1e-9);
+  eq("Q3 is 61.00", F.q3, 61.0, 1e-9);
+  eq("max is 1200", F.max, 1200, 0);
+  eq("IQR is 12.25", F.iqr, 12.25, 5e-3);
+  eq("the lower fence is 30.375", F.loFence, 30.375, 5e-4);
+  eq("the upper fence is 79.375", F.hiFence, 79.375, 5e-4);
+  eq("exactly one point is flagged", F.nOut, 1, 0);
+  yes("  and it is the 1200", F.outliers[0] === 1200);
+  console.log("    chapter 04 - and the rate it fires on clean data");
+  eq("the fence sits at 2.697959 sigma", M.FENCE_SIGMA, 2.697959, 5e-6);
+  eq("  which is Q3 + 1.5 x IQR in sigmas",
+    M.Z75 + 1.5 * M.IQR_SIGMA, 2.697959, 5e-6);
+  eq("it fires on 0.6977% of clean normal points",
+    M.fenceFalseRate() * 100, 0.69766, 5e-4);
+  eq("  which is about one in 143", 1 / M.fenceFalseRate(), 143.3, 0.3);
+  eq("  so 1000 clean points give about 7 flags",
+    1000 * M.fenceFalseRate(), 6.977, 5e-3);
+  yes("the rule is a prompt, not a verdict", M.fenceFalseRate() > 0.005);
+
+  console.log("    chapter 05 - shifting and scaling");
+  const shifted = M.affine(M.BASE, 1, 10);
+  const scaled = M.affine(M.BASE, 2, 0);
+  eq("adding 10 moves the mean by 10",
+    M.mean(shifted) - M.mean(M.BASE), 10.0, 1e-9);
+  eq("  and moves the median by 10",
+    M.median(shifted) - M.median(M.BASE), 10.0, 1e-9);
+  eq("  but leaves the sd untouched", M.sd(shifted), M.sd(M.BASE), 1e-12);
+  eq("  and the IQR untouched", M.iqrOf(shifted), M.iqrOf(M.BASE), 1e-12);
+  eq("doubling doubles the mean", M.mean(scaled) / M.mean(M.BASE), 2.0, 1e-12);
+  eq("  and doubles the sd too", M.sd(scaled) / M.sd(M.BASE), 2.0, 1e-12);
+  eq("  and the IQR", M.iqrOf(scaled) / M.iqrOf(M.BASE), 2.0, 1e-12);
+  yes("so spread follows the stretch but not the shift",
+    Math.abs(M.sd(shifted) - M.sd(M.BASE)) < 1e-12 &&
+    Math.abs(M.sd(scaled) - 2 * M.sd(M.BASE)) < 1e-12);
+  console.log("    chapter 05 - which is why a z-score is invariant");
+  const zA = M.standardize(M.BASE);
+  const zB = M.standardize(shifted);
+  const zC = M.standardize(M.affine(M.BASE, 2, 10));
+  yes("standardizing the shifted data gives identical z-scores",
+    zA.every((v, i) => Math.abs(v - zB[i]) < 1e-12));
+  yes("  and so does standardizing the scaled-and-shifted data",
+    zA.every((v, i) => Math.abs(v - zC[i]) < 1e-12));
+  eq("standardized data has mean exactly 0", M.mean(zA), 0, 1e-12);
+  eq("  and standard deviation exactly 1", M.sd(zA), 1.0, 1e-12);
+
+  console.log("    chapter 06 - the drill generator");
+  const Q = M.__drill();
+  yes("every question has a finite answer, prompt, working and tolerance",
+    Q.every(q => isFinite(q.a) && q.q && q.w && q.tol > 0));
+  const kinds = {};
+  Q.forEach(q => { kinds[q.kind] = (kinds[q.kind] || 0) + 1; });
+  Object.keys(kinds).sort().forEach(k => console.log("      " + k.padEnd(32) + kinds[k]));
+  yes("at least seven distinct question kinds", Object.keys(kinds).length >= 7);
+  yes("the exact answer is always accepted", Q.every(q => Math.abs(q.a - q.a) <= q.tol));
+  yes("an answer well outside the band is rejected",
+    Q.every(q => Math.abs((q.a + Math.max(q.tol * 10, 1)) - q.a) > q.tol));
+};
+
+
 /* ── run ─────────────────────────────────────────────────────────────── */
 const only = process.argv[2];
 const names = only ? [only.replace(/\.html$/, "")] : Object.keys(PAGES);

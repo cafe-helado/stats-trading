@@ -22,7 +22,7 @@
    this file — the inlined dist/ copies are meant to be opened from disk and
    register nothing.
    ═══════════════════════════════════════════════════════════════════════ */
-const CACHE = "chance-visually-v11";
+const CACHE = "chance-visually-v14";
 const FONTS = "chance-visually-fonts";
 
 /* Every URL is relative, so the worker works at / on a dev server and at
@@ -40,6 +40,9 @@ const PRECACHE = [
   "tails.html",
   "bet.html",
   "test.html",
+  "count.html",
+  "rules.html",
+  "describe.html",
   "assets/lab.css",
   "assets/mobile.css",
   "assets/lab.js",
