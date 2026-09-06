@@ -27,7 +27,7 @@
 <header class="serieshead">
   <div class="in">
     <a class="home" href="index.html">← Chance, visually</a>
-    <span class="num">No. 05 · Samples</span>
+    <span class="num">No. 08 · Samples</span>
   </div>
 </header>
 
@@ -183,7 +183,7 @@
       <button>That it beat the market</button>
       <button>Nothing at all — past returns are irrelevant</button>
     </div>
-    <div class="ans"><b>Very little, and the fourth answer overcorrects.</b> Three years is real evidence; it is just much weaker evidence than the headline suggests, and it should be combined with a prior about how common skill is — which is <a href="bayes.html">module 06</a>. The right response to a short track record is neither belief nor dismissal but a small update.</div>
+    <div class="ans"><b>Very little, and the fourth answer overcorrects.</b> Three years is real evidence; it is just much weaker evidence than the headline suggests, and it should be combined with a prior about how common skill is — which is <a href="bayes.html">module 10</a>. The right response to a short track record is neither belief nor dismissal but a small update.</div>
   </div>
 </section>
 
@@ -295,7 +295,7 @@
       <button>It only works for means</button>
       <button>It requires the data to be normal</button>
     </div>
-    <div class="ans"><b>It cannot invent what it has not seen.</b> If your year of data contains no crash, no amount of resampling will produce one, and the bootstrap interval for a tail statistic will be confidently narrow and wrong. It is an excellent tool for the middle of a distribution and a dangerous one for the edges — the same warning that runs through <a href="dist.html">module 04</a>.</div>
+    <div class="ans"><b>It cannot invent what it has not seen.</b> If your year of data contains no crash, no amount of resampling will produce one, and the bootstrap interval for a tail statistic will be confidently narrow and wrong. It is an excellent tool for the middle of a distribution and a dangerous one for the edges — the same warning that runs through <a href="dist.html">module 07</a>.</div>
   </div>
 </section>
 
@@ -311,7 +311,7 @@
     <p class="lead">A 95% confidence interval is built by a recipe with this property: <em>if you ran the recipe on many samples, 95% of the intervals it produced would contain the true value.</em> That is a statement about the recipe, not about the particular interval on your screen.</p>
     <p>Your interval either contains the truth or it does not; there is no probability left in it once it is computed. What you know is that it came from a machine that gets it right nineteen times in twenty.</p>
     <p>The figure makes this concrete by running the machine repeatedly and coloring the misses. About one in twenty comes out red, and there is nothing to distinguish a red one from a blue one except knowing the answer — which is precisely what you do not have.</p>
-    <p>Is the distinction pedantic? Sometimes. It stops being pedantic the moment you have a reason to think this sample is unusual, because the guarantee is an average over samples and says nothing about the one in front of you. Getting a probability <em>about your interval</em> requires a prior, which is <a href="bayes.html">module 06</a>.</p>
+    <p>Is the distinction pedantic? Sometimes. It stops being pedantic the moment you have a reason to think this sample is unusual, because the guarantee is an average over samples and says nothing about the one in front of you. Getting a probability <em>about your interval</em> requires a prior, which is <a href="bayes.html">module 10</a>.</p>
   </div>
 
   <figure class="bleed">
@@ -476,7 +476,7 @@
 </main>
 
 <footer>
-  <p class="n">Every standard error here assumes independent observations, and financial returns are not independent — volatility clusters, so effective sample sizes are smaller than the raw counts and every interval on this page is optimistically narrow. The σ/√(2n) formula for a volatility's standard error additionally assumes the returns are normal; under the fat tails of <a href="dist.html">module 04</a> the estimator is noisier than that, and the discrepancy grows with the kurtosis. The bootstrap makes no distributional assumption but inherits the independence one, and a block bootstrap is the standard repair. And the whole module treats the true volatility as a fixed number to be estimated, which it is not — it moves, and the interesting question is usually forecasting it rather than measuring what it was.</p>
+  <p class="n">Every standard error here assumes independent observations, and financial returns are not independent — volatility clusters, so effective sample sizes are smaller than the raw counts and every interval on this page is optimistically narrow. The σ/√(2n) formula for a volatility's standard error additionally assumes the returns are normal; under the fat tails of <a href="dist.html">module 07</a> the estimator is noisier than that, and the discrepancy grows with the kurtosis. The bootstrap makes no distributional assumption but inherits the independence one, and a block bootstrap is the standard repair. And the whole module treats the true volatility as a fixed number to be estimated, which it is not — it moves, and the interesting question is usually forecasting it rather than measuring what it was.</p>
 </footer>
 
 <script src="assets/lab.js"></script>

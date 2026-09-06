@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F4F1E8">
+<title>Testing a Claim — Chance, visually</title>
+<meta name="description" content="What a p-value is and what it is not. Why a hundred flips finds a genuinely biased coin only 13.5% of the time, why two traders eleven points apart are indistinguishable, and what happens to a 5% threshold the twentieth time you use it.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Testing a Claim — Chance, visually">
+<meta property="og:description" content="What a p-value is and what it is not. Why a hundred flips finds a genuinely biased coin only 13.5% of the time, why two traders eleven points apart are indistinguishable, and what happens to a 5% threshold the twentieth time you use it.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F1E8'/><rect x='5' y='19' width='4' height='7' fill='%230B6E75'/><rect x='11' y='12' width='4' height='14' fill='%230B6E75'/><rect x='17' y='7' width='4' height='19' fill='%230B6E75'/><rect x='23' y='16' width='4' height='10' fill='%230B6E75'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lab.css">
+<link rel="stylesheet" href="assets/mobile.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chance">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+<header class="serieshead">
+  <div class="in">
+    <a class="home" href="index.html">← Chance, visually</a>
+    <span class="num">No. 09 · Testing</span>
+  </div>
+</header>
+
+<div class="progress" id="prog"></div>
+<nav class="chapnav" id="chapnav" aria-label="Chapters">
+  <a href="#c1"><span>The straw man</span><i></i></a>
+  <a href="#c2"><span>Two ways to be wrong</span><i></i></a>
+  <a href="#c3"><span>Power</span><i></i></a>
+  <a href="#c4"><span>Comparing two groups</span><i></i></a>
+  <a href="#c5"><span>When data are categories</span><i></i></a>
+  <a href="#c6"><span>Test twenty things</span><i></i></a>
+  <a href="#c7"><span>Drills</span><i></i></a>
+</nav>
+
+<div class="hero">
+  <canvas id="heroCv" aria-hidden="true"></canvas>
+  <div class="heroInner">
+    <div class="eyebrow">An interactive derivation · No. 09</div>
+    <h1>Sixty heads in a hundred. Is the coin bent?</h1>
+    <p class="sub">The machinery for answering that is the most used and most misunderstood apparatus in statistics. This is what a p-value is, what it is not, the error nobody reports, and what happens to the whole edifice the twentieth time you run it.</p>
+  </div>
+  <div class="scrollcue">Scroll ↓</div>
+</div>
+
+<main>
+
+<div class="orient">
+  <h2>Start here</h2>
+  <p class="lede"><a href="sample.html">Module 08</a> asked how precisely a sample pins a number down. This one asks a narrower and more common question: is what I am looking at distinguishable from nothing at all?</p>
+  <ol>
+    <li><b>Chapter 01 is the definition to get right.</b> A p-value is the probability of data this extreme <em>if the null were true</em>. It is not the probability the null is true, and the gap between those is <a href="bayes.html">module 10</a>'s whole subject.</li>
+    <li><b>Chapter 03 is the one that changes how you read results.</b> A test of a hundred flips finds a genuinely 55/45 coin only <b>13.5%</b> of the time. Most "no significant difference" findings are not evidence of no difference; they are evidence of a small sample.</li>
+    <li><b>Chapter 06 is the one that matters on a desk.</b> Run twenty independent tests at the 5% level with nothing real in any of them and the chance at least one comes back significant is <b>64%</b>.</li>
+  </ol>
+  <details class="drop">
+    <summary>Notation — every symbol used on this page</summary>
+    <table class="ntab">
+      <tr><td>H₀</td><td>The null hypothesis. The dull explanation you are trying to rule out — the coin is fair, the strategy has no edge.</td></tr>
+      <tr><td>H₁</td><td>The alternative. What you would believe instead.</td></tr>
+      <tr><td>p-value</td><td>P(data at least this extreme | H₀). A statement about the data given the null, never about the null given the data.</td></tr>
+      <tr><td>α</td><td>The significance level — how often you are willing to reject a true null. A decision made before looking.</td></tr>
+      <tr><td>β</td><td>The chance of missing a real effect. Power is 1 − β.</td></tr>
+      <tr><td>Type I / Type II</td><td>Crying wolf, and missing the wolf.</td></tr>
+      <tr><td>Effect size</td><td>How big the thing you are looking for actually is. Nothing works without it.</td></tr>
+      <tr><td>χ²</td><td>The statistic for counts in categories: summed squared gaps between observed and expected, each scaled by expected.</td></tr>
+      <tr><td>Family-wise error</td><td>The chance of at least one false positive across a whole batch of tests.</td></tr>
+    </table>
+  </details>
+</div>
+
+<!-- ══════════ 01 ══════════ -->
+<section class="chapter" id="c1">
+  <div class="chead">
+    <div class="cnum">01</div>
+    <h2>Build a straw man, then try to knock it down</h2>
+    <p class="dek">You cannot prove the coin is bent. You can only show that a fair one would rarely do what you just watched it do.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">A hundred flips gave sixty heads. The question is not "is the coin bent" — the machinery cannot answer that. The question it can answer is: <em>if the coin were perfectly fair, how often would it hand me something at least this lopsided?</em></p>
+    <p>That is the whole idea. Assume the dull explanation — the <span class="term" data-t="Null hypothesis" data-def="The deliberately boring explanation a test tries to rule out: the coin is fair, the drug does nothing, the strategy has no edge. It is set up in order to be knocked down, and a test never proves it true.">null hypothesis</span>, written H₀ — then compute how surprising your data would be under it. That probability is the <span class="term" data-t="p-value" data-def="The probability of observing data at least as extreme as yours, assuming the null hypothesis is true. It is a statement about data given a hypothesis. It is not the probability that the hypothesis is true, and reading it that way is the single most common error in applied statistics.">p-value</span>.</p>
+    <p>For sixty heads in a hundred, counting exactly: a fair coin gives 60 or more heads <b>2.84%</b> of the time. Bent could mean bent either way, so the two-sided answer doubles it: <b>5.69%</b>.</p>
+    <p>Now watch something instructive. Use the normal approximation instead — z = (60 − 50)/5 = <b>2.00</b>, which gives a two-sided p of <b>4.55%</b>. The exact calculation says <b>0.0569</b> and the approximation says <b>0.0455</b>. Against the conventional threshold of 0.05 these are opposite verdicts, on identical data. The threshold is a convention, not a discovery, and one wrong side of it is worth exactly nothing.</p>
+    <p>And the thing to carry out of this chapter above all: <b>a p-value of 0.0569 does not mean there is a 5.69% chance the coin is fair.</b> It means a fair coin produces results this lopsided 5.69% of the time. To get from there to a belief about the coin you need a prior, which is <a href="bayes.html">module 10</a>. With an even prior between fair and 60/40-biased, sixty heads takes you to <b>88%</b> on bent; with a 2% prior it takes you to <b>13%</b>. Same data, same p-value, wildly different conclusions.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>What a fair coin does, and where your result landed</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>Outcomes under H₀</span>
+            <span><i class="sw" style="background:var(--verm)"></i>At least this extreme</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>What you saw</span>
+          </span>
+        </div>
+        <canvas id="cv1" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl1"></div>
+        <div class="kv" style="margin-top:20px" id="kv1"></div>
+      </div>
+    </div>
+    <figcaption>The red mass is the p-value, drawn to scale. Notice how much of it there still is at sixty heads — and how fast it vanishes past sixty-five.</figcaption>
+  </figure>
+
+  <div class="mline">p = P( data at least this extreme | H₀ )    ≠    P( H₀ | data )</div>
+  <p class="mread">Reads as: <b>the chance of the evidence given the theory, which is not the chance of the theory given the evidence.</b> Those two are related only through a prior, and swapping them is the same mistake as reading a 99%-accurate medical test as a 99% chance of being ill.</p>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Find the number of heads where the exact and approximate p-values fall on opposite sides of 0.05. Then push the sample to a thousand and watch the two converge.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c1" data-patch='{"n":100,"k":60}' data-focus="cv1">Sixty in a hundred</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"n":100,"k":62}' data-focus="cv1">Sixty-two</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"n":1000,"k":540}' data-focus="cv1">The same edge, ten times the data</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A test returns p = 0.03. What does that mean?</p>
+    <div class="opts">
+      <button>There is a 3% chance the null hypothesis is true</button>
+      <button data-ok="1">If the null were true, data this extreme would show up 3% of the time. It says nothing on its own about how likely the null is</button>
+      <button>There is a 97% chance the effect is real</button>
+      <button>The effect is large</button>
+    </div>
+    <div class="ans"><b>It is a statement about the data, conditional on the null.</b> The first and third options swap the conditional — the error <a href="bayes.html">module 10</a> exists to fix. The fourth confuses significance with size: with enough data a trivially small effect returns a tiny p-value, which is why an effect size always has to be reported next to one.</div>
+  </div>
+</section>
+
+<!-- ══════════ 02 ══════════ -->
+<section class="chapter" id="c2">
+  <div class="chead">
+    <div class="cnum">02</div>
+    <h2>Two ways to be wrong, and you must pick which you fear</h2>
+    <p class="dek">Crying wolf, and missing the wolf. Every threshold trades one against the other, and there is no setting that avoids both.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Before looking at data you choose a <span class="term" data-t="Significance level (α)" data-def="The probability of rejecting a true null hypothesis that you are willing to accept, chosen before the data are seen. Conventionally 0.05, which is a convention and nothing more — it has no mathematical standing.">significance level</span>, α: how often you are prepared to reject a null that is actually true. Convention says 0.05. Convention is all it is.</p>
+    <p>That gives two distinct failures. A <b>type I error</b> is rejecting a true null — announcing a bent coin that was fair. Its rate is α, by construction. A <b>type II error</b> is failing to reject a false null — shrugging at a coin that really was bent. Its rate is β, and unlike α, <em>you do not get to choose it.</em> It falls out of your sample size and how big the real effect is.</p>
+    <p>Tightening α to 0.01 buys fewer false alarms and pays for it in misses. Loosening to 0.10 does the reverse. The only way to improve both at once is more data.</p>
+    <p>One wrinkle worth seeing, because it exposes how arbitrary the threshold is. With a hundred flips at α = 0.05 two-sided, the rejection region is "39 or fewer, or 61 or more." Counts are whole numbers, so the actual type I rate of that test is <b>3.52%</b>, not 5%. You cannot dial a discrete test to exactly five percent; it lands where the arithmetic puts it. And note the consequence for chapter 01: sixty heads is <em>inside</em> the acceptance region. The exact test does not reject.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The null, the alternative, and the line you drew between them</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>If H₀ is true</span>
+            <span><i class="sw" style="background:var(--moss)"></i>If H₁ is true</span>
+            <span><i class="sw" style="background:var(--verm)"></i>Type I</span>
+            <span><i class="sw" style="background:var(--ochre)"></i>Type II</span>
+          </span>
+        </div>
+        <canvas id="cv2" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl2"></div>
+        <div class="kv" style="margin-top:20px" id="kv2"></div>
+      </div>
+    </div>
+    <figcaption>Drag α and watch the red and gold areas trade against each other. Drag the sample size instead and watch both shrink — that is the only move that improves both at once.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">You tighten α from 0.05 to 0.01. What happens?</p>
+    <div class="opts">
+      <button>Both error rates fall</button>
+      <button data-ok="1">False positives fall to 1%, and missed real effects rise. Only more data improves both</button>
+      <button>Nothing — α is just a label</button>
+      <button>Power increases</button>
+    </div>
+    <div class="ans"><b>You bought fewer false alarms with more misses.</b> The two errors sit on opposite ends of one lever, and the only thing that moves both the right way is sample size. This is why "we used a stricter threshold" is not automatically a more careful analysis — on a small sample it mostly means finding nothing.</div>
+  </div>
+</section>
+
+<!-- ══════════ 03 ══════════ -->
+<section class="chapter" id="c3">
+  <div class="chead">
+    <div class="cnum">03</div>
+    <h2>Power: the number nobody reports and everybody needs</h2>
+    <p class="dek">A hundred flips finds a genuinely 55/45 coin 13.5% of the time. Most negative results are not evidence of nothing.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead"><span class="term" data-t="Power" data-def="The probability that a test rejects the null when the alternative is actually true — one minus the type II error rate. It depends on the sample size, the significance level and the true effect size, and a test with low power is nearly incapable of finding what it is looking for.">Power</span> is the chance your test finds a real effect that is really there. It is 1 − β, and it is the most consequential quantity in the whole apparatus because it is the one almost nobody computes.</p>
+    <p>Take a coin that genuinely lands heads 55% of the time and test it at α = 0.05. With a hundred flips the power is <b>13.5%</b>. Not 90%, not 50% — thirteen and a half percent. Six times out of seven the test comes back "not significant" on a coin that is genuinely bent.</p>
+    <p>The numbers going up: 250 flips gives <b>35.2%</b>, 500 gives <b>59.0%</b>, 1,000 gives <b>88.0%</b>. The first sample size that reaches the conventional 80% is <b>786</b>.</p>
+    <p>That number comes with a wrinkle, and it is chapter 02’s discreteness arriving again. <b>Power does not rise monotonically with sample size.</b> At 786 flips it is 80.1%; at 787 it drops to 79.2%, and it keeps falling back below the line until <b>819</b>. Only from <b>820</b> is it reliably above. The cause is visible in the rejection region — it only moves when a whole count crosses it, so the realized α sawtooths between about <b>4.2%</b> and <b>5.0%</b>, and power sawtooths with it. If you want 80% power, ask for 820 rather than 786. For 90% the first crossing is <b>1,055</b> and the reliable point is <b>1,080</b>.</p>
+    <p>This reframes what a negative result means. "No significant difference" from an underpowered test is not evidence that there is no difference — it is barely evidence of anything. To read a null result you have to know what effect the test <em>could</em> have caught, and if the answer is "only an enormous one," the result is silence rather than absence.</p>
+    <p>It also connects straight to <a href="bet.html">module 13</a>. There, an edge clears two standard errors after <b>4 ÷ Sharpe²</b> years. But merely clearing the bar once is a weaker requirement than having a good chance of clearing it: designing for 80% power needs <b>7.85 ÷ Sharpe²</b> years, near enough <b>double</b>. A Sharpe of 1.0 crosses t = 2 in four years and takes almost eight before you would reliably expect it to.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>How often the test finds an effect that is genuinely there</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--moss)"></i>Power</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Missed (type II)</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>80% convention</span>
+          </span>
+        </div>
+        <canvas id="cv3" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl3"></div>
+        <div class="kv" style="margin-top:20px" id="kv3"></div>
+      </div>
+    </div>
+    <figcaption>Look closely and the green curve is serrated rather than smooth — that is the sawtooth, not a rendering artifact. Drag the true rate toward 0.50 and watch the whole thing collapse toward α. A test has no power at all against an effect of zero size — which is the formal way of saying you can never prove a null.</figcaption>
+  </figure>
+
+  <div class="derive">
+    <span class="lab">Where this comes from</span>
+    <p>To reject, the observed effect must clear <b>z<sub>α/2</sub></b> standard errors under the null. To have probability <b>1 − β</b> of doing so when the truth is <b>δ</b> away, the true effect must additionally sit <b>z<sub>β</sub></b> standard errors above that line. So you need <b>δ ≥ (z<sub>α/2</sub> + z<sub>β</sub>)·σ/√n</b>, and rearranging gives the sample size directly:</p>
+    <p><b>n = (z<sub>α/2</sub> + z<sub>β</sub>)² σ² / δ²</b>. At the conventional α = 0.05 and 80% power the bracket is (1.960 + 0.842)² = <b>7.849</b>, which is where the doubling against t = 2 comes from — 4 becomes 7.85. For a 55/45 coin this formula gives 1,047 flips for 90% power against the exact answer of 1,055, an error under one percent.</p>
+    <p><b>Where it breaks:</b> it needs δ, the effect size, which is the thing you do not know — that is why you are running the test. In practice people plug in the smallest effect that would matter to them, which is honest, or the effect their pilot study found, which is not: a pilot that reached significance on a small sample necessarily <em>overstates</em> the effect, so powering off it guarantees an underpowered study. The formula also assumes a known σ and a continuous sampling distribution, so it returns 782.5 where the exact first crossing is 786 — and, worse, it returns a single number where the exact answer is a sawtooth with no single crossing at all.</p>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A study finds no significant difference between two treatments. What have you learned?</p>
+    <div class="opts">
+      <button>The treatments are equivalent</button>
+      <button data-ok="1">Nothing, until you know the power. If it could only have detected a huge difference, a null result is silence rather than evidence of no effect</button>
+      <button>The study was well designed</button>
+      <button>The null hypothesis is true</button>
+    </div>
+    <div class="ans"><b>You cannot read a negative result without its power.</b> A test of a genuinely 55/45 coin at n = 100 returns "not significant" 86.5% of the time. Reporting that as "the coin is fair" inverts the finding completely, and this is exactly how a literature fills with confident null results that are nothing but small samples.</div>
+  </div>
+</section>
+
+<!-- ══════════ 04 ══════════ -->
+<section class="chapter" id="c4">
+  <div class="chead">
+    <div class="cnum">04</div>
+    <h2>Comparing two things</h2>
+    <p class="dek">Two traders, two hit rates, and a gap of eleven points that means nothing at all.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The commonest real question is not "is this different from zero" but "is this different from that." The machinery is the same; only the standard error changes, because now two noisy numbers are being subtracted and their uncertainties add.</p>
+    <p><b>Two proportions.</b> Trader A is right on <b>58 of 100</b>, trader B on <b>47 of 100</b>. Eleven percentage points looks decisive on a whiteboard. Pool the rates at 52.5%, and the standard error of the difference is <b>7.06</b> points — so the gap is <b>1.56</b> standard errors, for a p-value of <b>0.119</b>. Not significant. For an eleven-point gap to clear the bar at these sample sizes it would have to be <b>13.85</b> points.</p>
+    <p><b>Two means.</b> Two strategies, five years of monthly returns each: <b>4.8%</b> a month against <b>2.1%</b>, with volatilities of 21% and 19%. The difference is 2.7 points a month, which annualizes to something a business would be built on. The standard error of that difference is <b>3.66</b> points, giving <b>t = 0.74</b> on 117 degrees of freedom and a p-value of <b>0.46</b>.</p>
+    <p>Five years of data, a gap that would double the business, and the honest verdict is that the two are indistinguishable. That is not a defect in the test. It is <a href="sample.html">module 08</a>'s point arriving in the place it hurts: returns are so noisy relative to their means that the sample sizes a career provides are simply not large.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Two estimates, their uncertainty, and whether they overlap</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>Group A</span>
+            <span><i class="sw" style="background:var(--verm)"></i>Group B</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>95% intervals</span>
+          </span>
+        </div>
+        <canvas id="cv4" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl4"></div>
+        <div class="kv" style="margin-top:20px" id="kv4"></div>
+      </div>
+    </div>
+    <figcaption>Push either sample size up and watch both intervals tighten until the gap finally clears. The gap itself never changed.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Trader A hits 58% and trader B hits 47%, both over 100 trades. Who would you hire?</p>
+    <div class="opts">
+      <button>A — eleven points is a large edge</button>
+      <button data-ok="1">The data does not distinguish them. p = 0.119, and the gap would need to be about 14 points at these sample sizes to clear the usual bar</button>
+      <button>B, since A is probably overfitted</button>
+      <button>Whichever has the higher Sharpe</button>
+    </div>
+    <div class="ans"><b>One hundred trades each cannot separate them.</b> This is the most expensive routine error in the industry: ranking people or strategies on samples far too small to rank them, then acting on the ranking. The gap may well be real — the test simply cannot see it yet, which is chapter 03's point about power arriving in a hiring meeting.</div>
+  </div>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section class="chapter" id="c5">
+  <div class="chead">
+    <div class="cnum">05</div>
+    <h2>When the data are categories</h2>
+    <p class="dek">Counts in buckets need their own statistic. It compares what you saw against what you would have expected, and it has one moving part.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Sometimes the data are not measurements but counts falling into categories: which face the die showed, whether the market went up or down. The statistic for those is <span class="term" data-t="Chi-square (χ²)" data-def="A statistic for counted data: for each category, take the gap between what you observed and what you expected, square it, divide by what you expected, and add them all up. Large values mean the counts do not fit the expectation.">chi-square</span>, and it is one idea repeated across the buckets — squared gap over expected, summed.</p>
+    <p><b>Goodness of fit.</b> A die rolled <b>300</b> times gives 43, 55, 62, 48, 51, 41. You expected 50 each. The statistic comes to <b>6.08</b> on <b>5</b> degrees of freedom, for a p-value of <b>0.299</b>. Nothing to see — a fair die produces spreads at least this uneven about thirty percent of the time. The 62 that catches your eye is what randomness looks like.</p>
+    <p><b>Independence.</b> Now a two-way table. A signal fires on 100 days and does not on another 100. When it fires the market rises 42 times; when it does not, 28. Are the signal and the direction related? The expected counts come from the row and column totals as if they were unrelated, and the statistic is <b>4.31</b> on <b>1</b> degree of freedom, giving <b>p = 0.038</b>.</p>
+    <p>One detail worth noticing because it ties the chapter to the last one: for a 2×2 table, chi-square is exactly the square of the two-proportion z-statistic. Here z = <b>2.0755</b> and z² = <b>4.3077</b>, which is the chi-square to four decimals. They are not two tests. They are one test in two notations, which is worth knowing before someone runs both and reports the one they prefer.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Observed against expected, and where the statistic lands</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>Observed</span>
+            <span><i class="sw" style="background:var(--grey)"></i>Expected</span>
+            <span><i class="sw" style="background:var(--verm)"></i>Contribution to χ²</span>
+          </span>
+        </div>
+        <canvas id="cv5" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl5"></div>
+        <div class="kv" style="margin-top:20px" id="kv5"></div>
+      </div>
+    </div>
+    <figcaption>Drag a single category away from its expectation. Notice the statistic answers to the squared gap divided by what was expected, so the same absolute miss counts for far more in a small bucket.</figcaption>
+  </figure>
+
+  <div class="mline">χ² = Σ (observed − expected)² ÷ expected</div>
+  <p class="mread">Reads as: <b>add up how far each bucket missed, squared, in units of how much it held.</b> The division is what makes a miss of ten out of an expected twelve matter more than a miss of ten out of an expected five hundred.</p>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A die rolled 300 times gives 43, 55, 62, 48, 51, 41. Is it loaded?</p>
+    <div class="opts">
+      <button>Yes — 62 against an expected 50 is a big miss</button>
+      <button data-ok="1">No evidence of it. χ² = 6.08 on 5 df gives p = 0.299; a fair die is at least this uneven about 30% of the time</button>
+      <button>Yes, because the counts are not all equal</button>
+      <button>You cannot test this without more rolls</button>
+    </div>
+    <div class="ans"><b>That spread is what fair looks like.</b> Expecting six equal counts is the same instinct <a href="shape.html">module 06</a> corrects — real randomness is lumpier than people's picture of it, and the largest of six noisy counts is always going to look like it means something.</div>
+  </div>
+</section>
+
+<!-- ══════════ 06 ══════════ -->
+<section class="chapter" id="c6">
+  <div class="chead">
+    <div class="cnum">06</div>
+    <h2>Test twenty things and one will look real</h2>
+    <p class="dek">Everything above assumes you ran one test. Nobody runs one test.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">A 5% significance level means a true null gets rejected one time in twenty. That is a tolerable rate for one test and a catastrophe for a search.</p>
+    <p>Run <b>20</b> independent tests with nothing real in any of them and the chance at least one comes back significant is 1 − 0.95²⁰ = <b>64.15%</b>. At 50 tests it is <b>92.3%</b>; at 100, <b>99.4%</b>. The expected number of false positives is simply α times the count — one in twenty, five in a hundred. Nothing has gone wrong with the mathematics. The threshold was never a promise about a batch.</p>
+    <p>The blunt fix is <span class="term" data-t="Bonferroni correction" data-def="Divide the significance level by the number of tests, so the chance of any false positive across the whole family stays near the original level. Simple, always valid, and conservative — it costs a great deal of power.">Bonferroni</span>: divide α by the number of tests. For 20 tests that is <b>0.0025</b>, bringing the family-wise error back to <b>4.88%</b> and moving the critical z from <b>1.96</b> to <b>3.02</b>. It works, and it is expensive: the power to find a genuinely 55/45 coin on a thousand flips falls from <b>88.7%</b> to <b>55.6%</b>.</p>
+    <p>Now the version that matters here. A researcher tries a hundred strategy variants. Suppose <b>5%</b> of the things anyone tries actually work, the tests have <b>80%</b> power, and the false positive rate is the nominal <b>5%</b>. Of a hundred tried: about <b>4</b> real ones are found, and about <b>4.75</b> dead ones pass anyway. A strategy that passes is real with probability <b>45.7%</b> — worse than a coin flip, from a well-run test with no cheating at all.</p>
+    <p>And that is the optimistic case. <a href="bayes.html">Module 10</a> runs the same arithmetic with a 10% effective false-positive rate — realistic once you account for the variants quietly discarded along the way — and the answer falls to <b>29.6%</b>. The problem is not that people are dishonest with p-values. It is that a threshold designed for one test is being asked to police a search.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The chance of at least one false positive, against how many things you tried</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--verm)"></i>Family-wise error</span>
+            <span><i class="swl" style="background:var(--moss)"></i>After Bonferroni</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>Your α</span>
+          </span>
+        </div>
+        <canvas id="cv6" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl6"></div>
+        <div class="kv" style="margin-top:20px" id="kv6"></div>
+      </div>
+    </div>
+    <figcaption>The red curve is what happens to a 5% threshold when it is used twenty times. The green one is what the correction costs to hold it flat.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">You backtest 20 variants and one comes back with p = 0.04. What do you have?</p>
+    <div class="opts">
+      <button>A strategy significant at the 5% level</button>
+      <button data-ok="1">Roughly what you would expect from twenty tests of nothing — with all nulls true there is a 64% chance of at least one hit, and the expected number of false positives is exactly one</button>
+      <button>Twenty strategies, one of which works</button>
+      <button>Proof the other 19 do not work</button>
+    </div>
+    <div class="ans"><b>You found the thing the search was always going to find.</b> The p-value is correct for the test it describes and meaningless as a description of the search that produced it. The honest options are to correct the threshold, to hold out data the search never touched, or — best — to have had a reason for the variant before testing it, which is what raises the prior rather than patching the p-value.</div>
+  </div>
+</section>
+
+<!-- ══════════ 07 ══════════ -->
+<section class="chapter" id="c7">
+  <div class="chead">
+    <div class="cnum">07</div>
+    <h2>Drill it</h2>
+    <p class="dek">Reading a test, then designing one.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The first tier converts between z, χ² and p-values. The second is the harder skill: how much data a question needs before it can be answered at all.</p>
+  </div>
+
+  <figure>
+    <div class="drill" id="drill">
+      <div class="dstats">
+        <div class="c"><span class="k">Correct</span><span class="v" id="dScore">0 / 0</span></div>
+        <div class="c"><span class="k">Streak</span><span class="v" id="dStreak" style="color:var(--moss)">0</span></div>
+        <div class="c"><span class="k">Best</span><span class="v" id="dBest">0</span></div>
+        <div class="c" style="flex:1;min-width:170px"><span class="k">Tier</span>
+          <div class="seg" style="margin-top:5px;max-width:240px">
+            <button id="dT1" aria-pressed="true">Reading</button>
+            <button id="dT2" aria-pressed="false">Designing</button>
+          </div>
+        </div>
+      </div>
+      <span class="qn" id="dKind">Question</span>
+      <p class="qt" id="dText">Loading…</p>
+      <div class="ansrow">
+        <input type="text" inputmode="decimal" id="dInput" placeholder="your answer" aria-label="Your answer">
+        <span class="unit" id="dUnit"></span>
+        <button class="act" id="dSubmit">Check</button>
+        <button class="act ghost" id="dSkip">Skip</button>
+      </div>
+      <div class="verdict">
+        <div class="vd" id="dVerdict"></div>
+        <div class="work" id="dWork"></div>
+        <div class="btnrow"><button class="act" id="dNext">Next question</button></div>
+      </div>
+    </div>
+    <figcaption>Worth knowing cold: z = 1.96 and 2.576 for two-sided 5% and 1%, χ² = 3.841 at 1 df, and (1.96 + 0.842)² = 7.85 for 80% power.</figcaption>
+  </figure>
+
+  <div class="prose" style="margin-top:46px">
+    <p>Six questions across the page.</p>
+  </div>
+
+  <div class="score" id="scoreBox">
+    <span class="big" id="scoreNum">0 / 6</span>
+    <span class="txt" id="scoreTxt">Answered nothing yet. Questions are scored as you go.</span>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 1 · chapter 01</span>
+    <p class="q">Sixty heads in a hundred flips. What is the exact two-sided p-value, and does it clear the 5% bar?</p>
+    <div class="opts">
+      <button>0.0455, and yes</button>
+      <button data-ok="1">0.0569, and no — the normal approximation gives 0.0455 and would say yes, which is the point</button>
+      <button>0.0284, and yes</button>
+      <button>0.60, and no</button>
+    </div>
+    <div class="ans"><b>0.0569 exactly, 0.0455 approximately.</b> Opposite verdicts on identical data. The third option is the one-sided exact value — half the two-sided one — and choosing between one and two sides after seeing which way the data went is its own way of manufacturing significance.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 2 · chapter 01</span>
+    <p class="q">Which statement about a p-value of 0.03 is correct?</p>
+    <div class="opts">
+      <button>The null has a 3% chance of being true</button>
+      <button data-ok="1">Data this extreme arises 3% of the time when the null is true</button>
+      <button>The result will replicate 97% of the time</button>
+      <button>The effect is three times larger than chance</button>
+    </div>
+    <div class="ans"><b>It conditions on the null, not on the data.</b> Turning it around into a statement about the hypothesis needs a prior — the whole content of <a href="bayes.html">module 10</a>, and the reason the same p-value supports very different conclusions depending on how plausible the claim was to begin with.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 3 · chapter 03</span>
+    <p class="q">A coin genuinely lands heads 55% of the time. Testing 100 flips at α = 0.05, how often does the test catch it?</p>
+    <div class="opts">
+      <button>About 95% of the time</button>
+      <button data-ok="1">13.5% of the time. The first sample size reaching 80% power is 786, and 820 is the first you can rely on</button>
+      <button>About half the time</button>
+      <button>Always, since the coin is genuinely biased</button>
+    </div>
+    <div class="ans"><b>Thirteen and a half percent.</b> Which means a "not significant" verdict here is almost uninformative — the test was never capable of the job. Power depends on sample size, α and the true effect size, and it is the quantity that goes unreported far more often than any other.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 4 · chapter 04</span>
+    <p class="q">Trader A is right 58 times out of 100, trader B 47 out of 100. Is the difference significant?</p>
+    <div class="opts">
+      <button>Yes — eleven points is a wide margin</button>
+      <button data-ok="1">No. z = 1.56 and p = 0.119; the gap would need to be about 14 points at these sample sizes</button>
+      <button>Yes, at the 10% level but not the 5%</button>
+      <button>There is not enough information to say</button>
+    </div>
+    <div class="ans"><b>p = 0.119, comfortably short.</b> Two noisy numbers are being subtracted and their uncertainties add, so a difference always needs more data than either level did. Ranking traders or strategies on a hundred observations each is ranking noise.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 5 · chapter 05</span>
+    <p class="q">For a 2×2 table, how does chi-square relate to the two-proportion z-test?</p>
+    <div class="opts">
+      <button>They test different things</button>
+      <button data-ok="1">χ² is exactly z². In the page's example z = 2.0755 and z² = 4.3077, which is the chi-square, and both give p = 0.038</button>
+      <button>Chi-square is more powerful</button>
+      <button>They agree only for large samples</button>
+    </div>
+    <div class="ans"><b>One test in two notations.</b> Worth knowing before somebody runs both and reports whichever came out lower. The equivalence is exact for a 2×2 table, not asymptotic.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 6 · chapter 06</span>
+    <p class="q">You test 20 independent hypotheses at α = 0.05 and none of them is real. What is the chance at least one comes back significant?</p>
+    <div class="opts">
+      <button>5% — that is what α means</button>
+      <button data-ok="1">64.15%, being 1 − 0.95²⁰, with one false positive expected on average</button>
+      <button>100%</button>
+      <button>20%</button>
+    </div>
+    <div class="ans"><b>Just under two-thirds.</b> A 5% threshold is a promise about one test and says nothing about a batch. Bonferroni restores it by dividing α by 20, at a cost: the power to find a real 55/45 coin on a thousand flips drops from 88.7% to 55.6%.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="n">Every test on this page is two-sided, which is the honest default and not always what gets reported — choosing one side after seeing which way the data went halves the p-value for free and is the most common quiet abuse of the method. The power calculations assume the effect size is known, which it never is; in practice the number to plug in is the smallest effect that would change what you do, not the effect a pilot study found, since a pilot that reached significance on a small sample necessarily overstates it. The chi-square tests assume expected counts of roughly five or more in every cell and are unreliable below that, where an exact test belongs instead. The multiple-comparisons arithmetic assumes independent tests; real strategy variants are heavily correlated, which makes the family-wise error lower than the formula says and the effective number of independent tries much harder to count than twenty. And the entire framework answers only "could this have been chance" — never "is this large enough to care about," which is a question no p-value has ever addressed.</p>
+</footer>
+
+<script src="assets/lab.js"></script>
+<script src="assets/stats.js"></script>
+<script src="assets/pwa.js" defer></script>
+<script>
+"use strict";
+
+/* line() in the engine takes arrays, not a function. Passing a function is a
+   silent no-op, so anything plotted from a formula goes through here. */
+function curve(o, f, col, w, dash) {
+  const n = 260, xs = [], ys = [];
+  for (let i = 0; i <= n; i++) {
+    const x = o.x0 + (o.x1 - o.x0) * i / n;
+    xs.push(x); ys.push(f(x));
+  }
+  line(o, xs, ys, col, w, dash);
+}
+
+/* ── the tests themselves ────────────────────────────────────────────────
+   Exact wherever the exact answer is computable. The page's first chapter
+   turns on the exact and approximate p-values disagreeing across the 0.05
+   line, so approximating both would destroy the point. */
+const binomP = (k, n, p0) => {            /* two-sided exact, by symmetry of the tail */
+  const upper = 1 - pbinom(k - 1, n, p0);
+  const lower = pbinom(k, n, p0);
+  return Math.min(1, 2 * Math.min(upper, lower));
+};
+const binomPone = (k, n, p0) => 1 - pbinom(k - 1, n, p0);
+const normalZ = (k, n, p0) => (k - n * p0) / Math.sqrt(n * p0 * (1 - p0));
+
+/* Build the whole CDF once per (n, p). Calling pbinom inside a loop makes
+   the rejection-region search quadratic, which is fast enough for one figure
+   and far too slow for the sample-size scan below. */
+function binomCdf(n, p) {
+  const c = new Float64Array(n + 1);
+  let s = 0;
+  for (let k = 0; k <= n; k++) { s += dbinom(k, n, p); c[k] = s < 1 ? s : 1; }
+  return c;
+}
+/* the rejection region of an exact two-sided binomial test, and what its
+   type I rate actually is — never exactly alpha, because counts are whole */
+function criticalFrom(c, n, alpha) {
+  let lo = 0, hi = n;
+  while (lo <= n && c[lo] < alpha / 2) lo++;
+  while (hi >= 1 && 1 - c[hi - 1] < alpha / 2) hi--;
+  return { lo: lo, hi: hi,
+    alphaReal: (lo > 0 ? c[lo - 1] : 0) + (hi < n ? 1 - c[hi] : 0) };
+}
+const critical = (n, p0, alpha) => criticalFrom(binomCdf(n, p0), n, alpha);
+/* power: the chance that region is hit when the truth is p1 */
+function power(n, p1, alpha, p0) {
+  p0 = p0 === undefined ? 0.5 : p0;
+  const cr = criticalFrom(binomCdf(n, p0), n, alpha);
+  const c1 = binomCdf(n, p1);
+  return (cr.lo > 0 ? c1[cr.lo - 1] : 0) + (cr.hi < n ? 1 - c1[cr.hi] : 0);
+}
+
+/* How much data reaches a target power.
+   Power is NOT monotonic in n for a discrete test. The rejection region only
+   moves when a whole count crosses it, so the realized alpha sawtooths — and
+   power sawtooths with it. A binary search is therefore invalid: it lands
+   somewhere on a tooth rather than on the first crossing. This one was
+   written as a binary search, returned 805 where the true first crossing is
+   786, and that is how the sawtooth was found at all.
+   So: scan, anchored near the normal-theory estimate, and report both the
+   first n to reach the target and the n from which it stays there. Cached,
+   because a slider redraw asks the same question over and over. */
+const NCACHE = new Map();
+function nSearch(p1, target, alpha) {
+  if (!(Math.abs(p1 - 0.5) > 1e-9)) return { first: Infinity, safe: Infinity };
+  const key = p1.toFixed(4) + "|" + target.toFixed(3) + "|" + alpha.toFixed(4);
+  if (NCACHE.has(key)) return NCACHE.get(key);
+  const est = Math.max(20, nFormula(p1, target, alpha));
+  const lo = Math.max(5, Math.floor(est * 0.55));
+  let hi = Math.ceil(est * 1.9) + 80;
+  let first = null, lastDip = null;
+  for (let pass = 0; pass < 4; pass++) {
+    first = null; lastDip = null;
+    for (let n = lo; n <= hi; n++) {
+      const pw = power(n, p1, alpha);
+      if (first === null && pw >= target) first = n;
+      else if (first !== null && pw < target) lastDip = n;
+    }
+    if (first !== null) break;
+    hi = Math.ceil(hi * 1.9);
+    if (hi > 80000) break;
+  }
+  const out = first === null ? { first: Infinity, safe: Infinity }
+    : { first: first, safe: lastDip === null ? first : lastDip + 1 };
+  NCACHE.set(key, out);
+  return out;
+}
+const nForPower = (p1, target, alpha) => nSearch(p1, target, alpha).first;
+const nForPowerSafe = (p1, target, alpha) => nSearch(p1, target, alpha).safe;
+/* the normal-theory sample size, for the derivation's reading */
+const nFormula = (p1, target, alpha) => {
+  const za = -qnorm(alpha / 2), zb = -qnorm(1 - target);
+  return Math.pow((za * 0.5 + zb * Math.sqrt(p1 * (1 - p1))) / (p1 - 0.5), 2);
+};
+
+/* ── comparing two groups ──────────────────────────────────────────────── */
+function twoProp(x1, n1, x2, n2) {
+  const p1 = x1 / n1, p2 = x2 / n2, pp = (x1 + x2) / (n1 + n2);
+  const se = Math.sqrt(pp * (1 - pp) * (1 / n1 + 1 / n2));
+  const z = se > 0 ? (p1 - p2) / se : 0;
+  /* each group's own interval, which is what the figure draws */
+  const se1 = Math.sqrt(p1 * (1 - p1) / n1), se2 = Math.sqrt(p2 * (1 - p2) / n2);
+  return { p1: p1, p2: p2, pooled: pp, se: se, z: z, p: zP(z),
+    lo1: p1 - 1.959964 * se1, hi1: p1 + 1.959964 * se1,
+    lo2: p2 - 1.959964 * se2, hi2: p2 + 1.959964 * se2,
+    needed: 1.959964 * se };
+}
+/* Welch, because equal variances is an assumption nobody checks */
+function twoMean(m1, s1, k1, m2, s2, k2) {
+  const v1 = s1 * s1 / k1, v2 = s2 * s2 / k2;
+  const se = Math.sqrt(v1 + v2);
+  const t = (m1 - m2) / se;
+  const df = Math.pow(v1 + v2, 2) /
+    (v1 * v1 / (k1 - 1) + v2 * v2 / (k2 - 1));
+  return { se: se, t: t, df: df, p: tP(t, df) };
+}
+
+/* ── chi-square ─────────────────────────────────────────────────────────── */
+function gof(obs) {
+  const N = obs.reduce((a, b) => a + b, 0), e = N / obs.length;
+  const contrib = obs.map(o => (o - e) * (o - e) / e);
+  const X = contrib.reduce((a, b) => a + b, 0);
+  return { N: N, exp: e, contrib: contrib, X: X, df: obs.length - 1,
+    p: chisqP(X, obs.length - 1) };
+}
+function indep(t) {                        /* a 2x2 table */
+  const r = [t[0][0] + t[0][1], t[1][0] + t[1][1]];
+  const c = [t[0][0] + t[1][0], t[0][1] + t[1][1]];
+  const N = r[0] + r[1];
+  let X = 0; const e = [[0, 0], [0, 0]];
+  for (let i = 0; i < 2; i++) for (let j = 0; j < 2; j++) {
+    e[i][j] = r[i] * c[j] / N;
+    X += Math.pow(t[i][j] - e[i][j], 2) / e[i][j];
+  }
+  return { X: X, df: 1, p: chisqP(X, 1), exp: e, rows: r, cols: c, N: N };
+}
+
+/* ── many tests at once ─────────────────────────────────────────────────── */
+const familyWise = (m, alpha) => 1 - Math.pow(1 - alpha, m);
+const bonferroni = (m, alpha) => alpha / m;
+/* a normal-theory power, so the correction's cost can be drawn continuously */
+function powerZ(n, p1, alpha) {
+  const zc = -qnorm(alpha / 2), se0 = 0.5 / Math.sqrt(n);
+  const se1 = Math.sqrt(p1 * (1 - p1) / n), d = p1 - 0.5;
+  return 1 - pnorm((zc * se0 - d) / se1) + pnorm((-zc * se0 - d) / se1);
+}
+/* how often a "significant" finding is real, given how rarely anything is */
+const ppv = (prior, pw, fp) => prior * pw / (prior * pw + (1 - prior) * fp);
+
+/* ══════════ hero ══════════ */
+(function () {
+  const cv = document.getElementById("heroCv"); let w, h, g, raf, t0 = 0;
+  function size() {
+    const dpr = window.devicePixelRatio || 1;
+    w = cv.clientWidth; h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr;
+    g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  /* twenty tests of nothing; the ones that cross the line light up */
+  const r = rng(1907), runs = [];
+  for (let i = 0; i < 20; i++) runs.push(Math.abs(r.normal(0, 1)));
+  function draw(ph) {
+    g.fillStyle = C("--chalk"); g.fillRect(0, 0, w, h);
+    const padX = w * 0.07, gw = w - padX * 2, base = h * 0.80;
+    const thr = 1.959964;
+    const sweep = Math.min(1, ph * 0.5);
+    const bw = gw / (runs.length * 1.7);
+    for (let i = 0; i < runs.length; i++) {
+      const x = padX + gw * (i + 0.5) / runs.length;
+      const v = runs[i] * (i / runs.length < sweep ? 1 : 0);
+      const hit = v > thr;
+      g.fillStyle = C(hit ? "--verm" : "--hair");
+      g.globalAlpha = hit ? 0.92 : 0.6;
+      const bh = Math.min(v / 3.2, 1) * h * 0.56;
+      g.fillRect(x - bw / 2, base - bh, bw, bh);
+    }
+    g.globalAlpha = 0.4; g.strokeStyle = C("--ink"); g.setLineDash([4, 4]);
+    const ty = base - (thr / 3.2) * h * 0.56;
+    g.beginPath(); g.moveTo(padX, ty); g.lineTo(padX + gw, ty); g.stroke();
+    g.setLineDash([]); g.globalAlpha = 1;
+  }
+  function tick(t) { if (!t0) t0 = t; draw((t - t0) / 1200); raf = requestAnimationFrame(tick); }
+  window.drawHero = function () {
+    size(); if (RM) { draw(4); return; }
+    if (raf) cancelAnimationFrame(raf); t0 = 0; raf = requestAnimationFrame(tick);
+  };
+})();
+
+/* ══════════ 01 — the straw man ══════════ */
+const s1 = { n: 100, k: 60, sides: 2 };
+(function () {
+  sliders(document.getElementById("ctl1"), [
+    { id: "a1", k: "n", lbl: "n", name: "How many flips", min: 20, max: 1000, step: 10,
+      fmt: v => v.toFixed(0) },
+    { id: "b1", k: "k", lbl: "k", name: "Heads observed", min: 1, max: 999, step: 1,
+      fmt: v => v.toFixed(0) },
+    { id: "c1", k: "sides", lbl: "±", name: "One or two sided", min: 1, max: 2, step: 1,
+      fmt: v => v > 1.5 ? "two-sided" : "one-sided" }
+  ], s1, () => draw(), "c1");
+  window.draw1 = draw;
+  function draw() {
+    const n = Math.round(s1.n);
+    const k = Math.max(0, Math.min(n, Math.round(s1.k)));
+    const two = s1.sides > 1.5;
+    const sd = Math.sqrt(n * 0.25), mid = n * 0.5;
+    const lo = Math.max(0, Math.floor(mid - 4.2 * sd)), hi = Math.min(n, Math.ceil(mid + 4.2 * sd));
+    let top = 0;
+    for (let i = lo; i <= hi; i++) top = Math.max(top, dbinom(i, n, 0.5));
+    const o = Fig(document.getElementById("cv1"),
+      { h: 320, x0: lo, x1: hi, y0: 0, y1: top * 1.16, pad: { l: 62, r: 14, t: 14 } });
+    axes(o, v => v.toFixed(0), v => (v * 100).toFixed(1) + "%", 6, 4);
+    const g = o.g, bw = Math.max(1, o.pw / (hi - lo + 1) - 0.6);
+    const mirror = n - k;                    /* the other tail, for two-sided */
+    for (let i = lo; i <= hi; i++) {
+      const pr = dbinom(i, n, 0.5);
+      const inTail = k >= mid
+        ? (i >= k || (two && i <= mirror))
+        : (i <= k || (two && i >= mirror));
+      g.save();
+      g.fillStyle = C(inTail ? "--verm" : "--blue");
+      g.globalAlpha = inTail ? 0.85 : 0.55;
+      g.fillRect(o.X(i) - bw / 2, o.Y(pr), bw, o.Y(0) - o.Y(pr));
+      g.restore();
+    }
+    vline(o, k, C("--ochre"), "k = " + k);
+    const pExact = two ? binomP(k, n, 0.5)
+      : (k >= mid ? binomPone(k, n, 0.5) : pbinom(k, n, 0.5));
+    const z = normalZ(k, n, 0.5);
+    const pApprox = two ? zP(z) : (1 - pnorm(Math.abs(z)));
+    const verdictE = pExact < 0.05 ? "reject" : "do not reject";
+    const verdictA = pApprox < 0.05 ? "reject" : "do not reject";
+    document.getElementById("kv1").innerHTML = kvHTML([
+      ["Flips", String(n)],
+      ["Heads", String(k) + "  (" + (k / n * 100).toFixed(1) + "%)"],
+      ["Expected under H₀", (n * 0.5).toFixed(1)],
+      ["z", z.toFixed(4)],
+      ["p, exact", pExact.toFixed(5), pExact < 0.05 ? "verm" : "blue"],
+      ["p, normal approx", pApprox.toFixed(5), pApprox < 0.05 ? "verm" : "blue"],
+      ["At α = 0.05, exact says", verdictE, pExact < 0.05 ? "verm" : "moss"],
+      ["— and the approx says", verdictA, pApprox < 0.05 ? "verm" : "moss"],
+      ["They disagree?", verdictE !== verdictA ? "YES" : "no",
+        verdictE !== verdictA ? "ochre" : "grey"]
+    ]);
+  }
+})();
+
+/* ══════════ 02 — the two errors ══════════ */
+const s2 = { n: 100, p1: 0.60, alpha: 0.05 };
+(function () {
+  sliders(document.getElementById("ctl2"), [
+    { id: "a2", k: "n", lbl: "n", name: "Sample size", min: 20, max: 600, step: 10,
+      fmt: v => v.toFixed(0) },
+    { id: "b2", k: "p1", lbl: "p₁", name: "If the coin is really…", min: 0.50, max: 0.85, step: 0.005,
+      fmt: v => (v * 100).toFixed(1) + "%" },
+    { id: "c2", k: "alpha", lbl: "α", name: "Significance level", min: 0.005, max: 0.20, step: 0.005,
+      fmt: v => v.toFixed(3) }
+  ], s2, () => draw(), "c2");
+  window.draw2 = draw;
+  function draw() {
+    const n = Math.round(s2.n);
+    const c = critical(n, 0.5, s2.alpha);
+    const sd = Math.sqrt(n * 0.25);
+    const lo = Math.max(0, Math.floor(n * 0.5 - 4.4 * sd));
+    const hi = Math.min(n, Math.ceil(n * Math.max(0.5, s2.p1) + 4.4 * sd));
+    let top = 0;
+    for (let i = lo; i <= hi; i++) top = Math.max(top, dbinom(i, n, 0.5), dbinom(i, n, s2.p1));
+    const o = Fig(document.getElementById("cv2"),
+      { h: 320, x0: lo, x1: hi, y0: 0, y1: top * 1.16, pad: { l: 62, r: 14, t: 14 } });
+    axes(o, v => v.toFixed(0), v => (v * 100).toFixed(1) + "%", 6, 4);
+    const g = o.g, bw = Math.max(1, o.pw / (hi - lo + 1) - 0.6);
+    for (let i = lo; i <= hi; i++) {
+      const rejects = i < c.lo || i > c.hi;
+      /* null distribution: the part in the rejection region is type I */
+      const p0 = dbinom(i, n, 0.5);
+      g.save();
+      g.fillStyle = C(rejects ? "--verm" : "--blue");
+      g.globalAlpha = rejects ? 0.9 : 0.42;
+      g.fillRect(o.X(i) - bw / 2, o.Y(p0), bw, o.Y(0) - o.Y(p0));
+      g.restore();
+      /* alternative: the part NOT in the rejection region is type II */
+      const pa = dbinom(i, n, s2.p1);
+      g.save();
+      g.fillStyle = C(rejects ? "--moss" : "--ochre");
+      g.globalAlpha = rejects ? 0.42 : 0.72;
+      g.fillRect(o.X(i) - bw / 2, o.Y(pa), bw, o.Y(0) - o.Y(pa));
+      g.restore();
+    }
+    if (c.hi < n) vline(o, c.hi + 0.5, C("--ink"), "reject above");
+    if (c.lo > 0) vline(o, c.lo - 0.5, C("--ink"), "");
+    const pw = power(n, s2.p1, s2.alpha);
+    document.getElementById("kv2").innerHTML = kvHTML([
+      ["Reject when k is", "≤ " + (c.lo - 1) + " or ≥ " + (c.hi + 1)],
+      ["α you asked for", s2.alpha.toFixed(3)],
+      ["α you actually get", c.alphaReal.toFixed(5), "verm"],
+      ["— short by", ((s2.alpha - c.alphaReal) * 100).toFixed(2) + " pts", "grey"],
+      ["Type I error", (c.alphaReal * 100).toFixed(2) + "%", "verm"],
+      ["Type II error", ((1 - pw) * 100).toFixed(2) + "%", "ochre"],
+      ["Power", (pw * 100).toFixed(2) + "%", "moss"],
+      ["Counts are discrete", "so α lands where it lands", "grey"]
+    ]);
+  }
+})();
+
+/* ══════════ 03 — power ══════════ */
+const s3 = { p1: 0.55, alpha: 0.05, nMax: 1500 };
+(function () {
+  sliders(document.getElementById("ctl3"), [
+    { id: "a3", k: "p1", lbl: "p₁", name: "The coin's true rate", min: 0.505, max: 0.80, step: 0.005,
+      fmt: v => (v * 100).toFixed(1) + "%" },
+    { id: "b3", k: "alpha", lbl: "α", name: "Significance level", min: 0.005, max: 0.20, step: 0.005,
+      fmt: v => v.toFixed(3) },
+    { id: "c3", k: "nMax", lbl: "→", name: "How far to look", min: 200, max: 6000, step: 100,
+      fmt: v => v.toFixed(0) + " flips" }
+  ], s3, () => draw(), "c3");
+  window.draw3 = draw;
+  function draw() {
+    const o = Fig(document.getElementById("cv3"),
+      { h: 320, x0: 20, x1: s3.nMax, y0: 0, y1: 1.04, pad: { l: 58, r: 14, t: 14 } });
+    axes(o, v => v >= 1000 ? (v / 1000).toFixed(1) + "k" : v.toFixed(0),
+      v => (v * 100).toFixed(0) + "%", 6, 5);
+    curve(o, n => power(Math.round(n), s3.p1, s3.alpha), C("--moss"), 2.2);
+    curve(o, n => 1 - power(Math.round(n), s3.p1, s3.alpha), C("--verm"), 1.6, [5, 4]);
+    hline(o, 0.80, C("--ochre"), "80% power");
+    const n80 = nForPower(s3.p1, 0.80, s3.alpha);
+    const n80s = nForPowerSafe(s3.p1, 0.80, s3.alpha);
+    const n90 = nForPower(s3.p1, 0.90, s3.alpha);
+    if (isFinite(n80) && n80 <= s3.nMax) vline(o, n80, C("--ochre"), "n = " + n80);
+    document.getElementById("kv3").innerHTML = kvHTML([
+      ["True rate", (s3.p1 * 100).toFixed(1) + "%"],
+      ["Power at n = 100", (power(100, s3.p1, s3.alpha) * 100).toFixed(2) + "%", "moss"],
+      ["— at 250", (power(250, s3.p1, s3.alpha) * 100).toFixed(2) + "%"],
+      ["— at 500", (power(500, s3.p1, s3.alpha) * 100).toFixed(2) + "%"],
+      ["— at 1000", (power(1000, s3.p1, s3.alpha) * 100).toFixed(2) + "%"],
+      ["n first reaching 80%", isFinite(n80) ? n80.toLocaleString() : "—", "ochre"],
+      ["— but reliable only from", isFinite(n80s) ? n80s.toLocaleString() : "—", "verm"],
+      ["n first reaching 90%", isFinite(n90) ? n90.toLocaleString() : "—"],
+      ["— the formula says", isFinite(n90) ? nFormula(s3.p1, 0.90, s3.alpha).toFixed(0) : "—", "grey"],
+      ["Missed at n = 100", ((1 - power(100, s3.p1, s3.alpha)) * 100).toFixed(2) + "%", "verm"]
+    ]);
+  }
+})();
+
+/* ══════════ 04 — comparing two groups ══════════ */
+const s4 = { x1: 58, n1: 100, x2: 47, n2: 100 };
+(function () {
+  sliders(document.getElementById("ctl4"), [
+    { id: "a4", k: "x1", lbl: "A", name: "Group A successes", min: 1, max: 500, step: 1, fmt: v => v.toFixed(0) },
+    { id: "b4", k: "n1", lbl: "n", name: "Group A trials", min: 10, max: 1000, step: 10, fmt: v => v.toFixed(0) },
+    { id: "c4", k: "x2", lbl: "B", name: "Group B successes", min: 1, max: 500, step: 1, fmt: v => v.toFixed(0) },
+    { id: "d4", k: "n2", lbl: "n", name: "Group B trials", min: 10, max: 1000, step: 10, fmt: v => v.toFixed(0) }
+  ], s4, () => draw(), "c4");
+  window.draw4 = draw;
+  function draw() {
+    const n1 = Math.round(s4.n1), n2 = Math.round(s4.n2);
+    const x1 = Math.max(0, Math.min(n1, Math.round(s4.x1)));
+    const x2 = Math.max(0, Math.min(n2, Math.round(s4.x2)));
+    const T = twoProp(x1, n1, x2, n2);
+    const lo = Math.max(0, Math.min(T.lo1, T.lo2) - 0.06);
+    const hi = Math.min(1, Math.max(T.hi1, T.hi2) + 0.06);
+    const o = Fig(document.getElementById("cv4"),
+      { h: 320, x0: lo, x1: hi, y0: 0, y1: 1, pad: { l: 58, r: 14, t: 14 } });
+    axes(o, v => (v * 100).toFixed(0) + "%", () => "", 6, 0);
+    const g = o.g;
+    const band = (y, a, b, mid, col) => {
+      const py = o.Y(y);
+      g.save(); g.strokeStyle = C(col); g.lineWidth = 2.4;
+      g.beginPath(); g.moveTo(o.X(a), py); g.lineTo(o.X(b), py); g.stroke();
+      [a, b].forEach(v => {
+        g.beginPath(); g.moveTo(o.X(v), py - 7); g.lineTo(o.X(v), py + 7); g.stroke();
+      });
+      g.fillStyle = C(col);
+      g.beginPath(); g.arc(o.X(mid), py, 5, 0, 6.2832); g.fill();
+      g.restore();
+    };
+    band(0.66, T.lo1, T.hi1, T.p1, "--blue");
+    band(0.34, T.lo2, T.hi2, T.p2, "--verm");
+    const g2 = o.g;
+    g2.fillStyle = C("--ink2"); g2.font = "10px 'IBM Plex Mono', monospace";
+    g2.textAlign = "left"; g2.textBaseline = "bottom";
+    g2.fillText("A  " + (T.p1 * 100).toFixed(1) + "%", o.P.l + 4, o.Y(0.66) - 12);
+    g2.fillText("B  " + (T.p2 * 100).toFixed(1) + "%", o.P.l + 4, o.Y(0.34) - 12);
+    const sig = T.p < 0.05;
+    document.getElementById("kv4").innerHTML = kvHTML([
+      ["A", x1 + "/" + n1 + " = " + (T.p1 * 100).toFixed(1) + "%", "blue"],
+      ["B", x2 + "/" + n2 + " = " + (T.p2 * 100).toFixed(1) + "%", "verm"],
+      ["The gap", ((T.p1 - T.p2) * 100).toFixed(2) + " pts"],
+      ["Pooled rate", (T.pooled * 100).toFixed(2) + "%"],
+      ["se of the difference", (T.se * 100).toFixed(3) + " pts"],
+      ["z", T.z.toFixed(4)],
+      ["p", T.p.toFixed(5), sig ? "moss" : "verm"],
+      ["Verdict", sig ? "distinguishable" : "not distinguishable", sig ? "moss" : "verm"],
+      ["Gap needed for p<0.05", (T.needed * 100).toFixed(2) + " pts", "ochre"]
+    ]);
+  }
+})();
+
+/* ══════════ 05 — categories ══════════ */
+const s5 = { c1: 43, c2: 55, c3: 62, c4: 48, c5: 51, c6: 41 };
+(function () {
+  sliders(document.getElementById("ctl5"), [
+    { id: "a5", k: "c3", lbl: "3", name: "Count in category 3", min: 20, max: 110, step: 1, fmt: v => v.toFixed(0) },
+    { id: "b5", k: "c6", lbl: "6", name: "Count in category 6", min: 20, max: 110, step: 1, fmt: v => v.toFixed(0) },
+    { id: "c5s", k: "c1", lbl: "1", name: "Count in category 1", min: 20, max: 110, step: 1, fmt: v => v.toFixed(0) }
+  ], s5, () => draw(), "c5");
+  window.draw5 = draw;
+  window.__tables = () => ({
+    die: gof([43, 55, 62, 48, 51, 41]),
+    signal: indep([[42, 58], [28, 72]])
+  });
+  function draw() {
+    const obs = [s5.c1, s5.c2, s5.c3, s5.c4, s5.c5, s5.c6].map(Math.round);
+    const G = gof(obs);
+    const top = Math.max.apply(null, obs.concat([G.exp])) * 1.22;
+    const o = Fig(document.getElementById("cv5"),
+      { h: 320, x0: -0.6, x1: 5.6, y0: 0, y1: top, pad: { l: 56, r: 14, t: 14 } });
+    axes(o, v => String(Math.round(v) + 1), v => v.toFixed(0), 6, 5);
+    const g = o.g, bw = o.pw / 10;
+    obs.forEach((v, i) => {
+      g.save(); g.fillStyle = C("--blue"); g.globalAlpha = 0.85;
+      g.fillRect(o.X(i) - bw / 2, o.Y(v), bw, o.Y(0) - o.Y(v));
+      g.restore();
+      /* the contribution to chi-square, stacked beside it */
+      const cscale = G.contrib[i] / Math.max(G.X, 1e-9) * G.exp * 0.9;
+      g.save(); g.fillStyle = C("--verm"); g.globalAlpha = 0.8;
+      g.fillRect(o.X(i) + bw / 2 + 2, o.Y(cscale), bw * 0.45, o.Y(0) - o.Y(cscale));
+      g.restore();
+      g.fillStyle = C("--ink2"); g.font = "9.5px 'IBM Plex Mono', monospace";
+      g.textAlign = "center"; g.textBaseline = "bottom";
+      g.fillText(String(v), o.X(i), o.Y(v) - 4);
+    });
+    hline(o, G.exp, C("--grey"), "expected " + G.exp.toFixed(1));
+    const I = indep([[42, 58], [28, 72]]);
+    document.getElementById("kv5").innerHTML = kvHTML([
+      ["Total rolls", String(G.N)],
+      ["Expected each", G.exp.toFixed(2)],
+      ["χ²", G.X.toFixed(4), "verm"],
+      ["Degrees of freedom", String(G.df)],
+      ["p", G.p.toFixed(5), G.p < 0.05 ? "verm" : "moss"],
+      ["Verdict", G.p < 0.05 ? "loaded" : "no evidence of loading", G.p < 0.05 ? "verm" : "moss"],
+      ["— 5% needs χ² above", "11.07", "grey"],
+      ["The 2×2 table: χ²", I.X.toFixed(4), "blue"],
+      ["— its p", I.p.toFixed(5)],
+      ["— and z² for the same", (Math.pow(twoProp(42, 100, 28, 100).z, 2)).toFixed(4), "grey"]
+    ]);
+  }
+})();
+
+/* ══════════ 06 — many tests ══════════ */
+const s6 = { m: 20, alpha: 0.05, prior: 0.05, pw: 0.80 };
+(function () {
+  sliders(document.getElementById("ctl6"), [
+    { id: "a6", k: "m", lbl: "m", name: "How many tests you ran", min: 1, max: 100, step: 1, fmt: v => v.toFixed(0) },
+    { id: "b6", k: "alpha", lbl: "α", name: "Significance level", min: 0.005, max: 0.20, step: 0.005, fmt: v => v.toFixed(3) },
+    { id: "c6", k: "prior", lbl: "π", name: "Share of tried ideas that work", min: 0.01, max: 0.50, step: 0.01, fmt: v => (v * 100).toFixed(0) + "%" },
+    { id: "d6", k: "pw", lbl: "1−β", name: "Power of each test", min: 0.20, max: 0.99, step: 0.01, fmt: v => (v * 100).toFixed(0) + "%" }
+  ], s6, () => draw(), "c6");
+  window.draw6 = draw;
+  function draw() {
+    const o = Fig(document.getElementById("cv6"),
+      { h: 320, x0: 1, x1: 100, y0: 0, y1: 1.04, pad: { l: 58, r: 14, t: 14 } });
+    axes(o, v => v.toFixed(0), v => (v * 100).toFixed(0) + "%", 6, 5);
+    curve(o, m => familyWise(m, s6.alpha), C("--verm"), 2.2);
+    curve(o, m => familyWise(m, bonferroni(Math.max(1, Math.round(m)), s6.alpha)),
+      C("--moss"), 2.0);
+    hline(o, s6.alpha, C("--ochre"), "α = " + s6.alpha.toFixed(3));
+    vline(o, s6.m, C("--ink"), s6.m + " tests");
+    const m = Math.round(s6.m);
+    const b = bonferroni(m, s6.alpha);
+    const post = ppv(s6.prior, s6.pw, s6.alpha);
+    document.getElementById("kv6").innerHTML = kvHTML([
+      ["Tests run", String(m)],
+      ["P(at least one hit)", (familyWise(m, s6.alpha) * 100).toFixed(2) + "%", "verm"],
+      ["Expected false positives", (m * s6.alpha).toFixed(2)],
+      ["Bonferroni α", b.toFixed(5), "moss"],
+      ["— family-wise error then", (familyWise(m, b) * 100).toFixed(3) + "%", "moss"],
+      ["Critical z, before", (-qnorm(s6.alpha / 2)).toFixed(4)],
+      ["— after", (-qnorm(b / 2)).toFixed(4), "ochre"],
+      ["Power cost at n=1000", (powerZ(1000, 0.55, s6.alpha) * 100).toFixed(1) + "% → " +
+        (powerZ(1000, 0.55, b) * 100).toFixed(1) + "%", "verm"],
+      ["P(real | it passed)", (post * 100).toFixed(2) + "%", post < 0.5 ? "verm" : "moss"],
+      ["Per 100 tried", (100 * s6.prior * s6.pw).toFixed(1) + " real, " +
+        (100 * (1 - s6.prior) * s6.alpha).toFixed(2) + " false", "grey"]
+    ]);
+  }
+})();
+
+/* ══════════ 07 — the drill ══════════ */
+(function () {
+  const E = id => document.getElementById(id);
+  let cur = null, sc = 0, asked = 0, streak = 0, best = 0, tier = 1;
+  const R = Math.random;
+  const pick = a => a[Math.floor(R() * a.length)];
+  function make() {
+    if (tier === 1) {
+      const t = Math.floor(R() * 4);
+      if (t === 0) {
+        const z = pick([1.0, 1.5, 1.96, 2.0, 2.5, 3.0]);
+        const a = zP(z);
+        return { kind: "z to a two-sided p-value", unit: "", a: a, tol: Math.max(0.0005, a * 0.02),
+          q: "A test statistic of <b>z = " + z.toFixed(2) + "</b>. What is the two-sided p-value?",
+          w: "2 × (1 − Φ(" + z.toFixed(2) + ")) = <b>" + a.toFixed(5) +
+            "</b>. At z = 1.96 this is 0.05, which is where the convention comes from." };
+      }
+      if (t === 1) {
+        const al = pick([0.10, 0.05, 0.02, 0.01]);
+        const a = -qnorm(al / 2);
+        return { kind: "α to a critical z", unit: "", a: a, tol: 0.005,
+          q: "You are testing two-sided at <b>α = " + al.toFixed(2) +
+            "</b>. What critical value of z must the statistic beat?",
+          w: "The " + (al / 2 * 100).toFixed(1) + "% point of a normal: <b>" + a.toFixed(4) +
+            "</b>. The two to memorize are 1.960 at 5% and 2.576 at 1%." };
+      }
+      if (t === 2) {
+        const cats = pick([2, 3, 4, 5, 6, 10]);
+        const a = cats - 1;
+        return { kind: "Degrees of freedom", unit: "df", a: a, tol: 0.01,
+          q: "A goodness-of-fit test across <b>" + cats +
+            "</b> categories. How many degrees of freedom?",
+          w: "Categories minus one: <b>" + a + "</b>. One is spent because the counts " +
+            "must add to the total you already know." };
+      }
+      const X = pick([2.5, 3.841, 5.0, 6.635, 9.0]);
+      const df = pick([1, 2, 3, 5]);
+      const a = chisqP(X, df);
+      return { kind: "χ² to a p-value", unit: "", a: a, tol: Math.max(0.0005, a * 0.02),
+        q: "A chi-square statistic of <b>" + X + "</b> on <b>" + df +
+          "</b> degrees of freedom. What is the p-value?",
+        w: "The upper tail of a χ²(" + df + "): <b>" + a.toFixed(5) +
+          "</b>. On 1 df, 3.841 is exactly the 5% point." };
+    }
+    const t = Math.floor(R() * 4);
+    if (t === 0) {
+      const m = pick([5, 10, 20, 50, 100]);
+      const al = pick([0.05, 0.01]);
+      const a = familyWise(m, al) * 100;
+      return { kind: "Family-wise error", unit: "%", a: a, tol: Math.max(0.05, a * 0.02),
+        q: "You run <b>" + m + "</b> independent tests at <b>α = " + al +
+          "</b> with nothing real in any of them. What is the chance at least one looks significant?",
+        w: "1 − (1 − " + al + ")<sup>" + m + "</sup> = <b>" + a.toFixed(2) +
+          "%</b>, with " + (m * al).toFixed(2) + " false positives expected on average." };
+    }
+    if (t === 1) {
+      const m = pick([4, 5, 10, 20, 25, 50]);
+      const al = pick([0.05, 0.10]);
+      const a = bonferroni(m, al);
+      return { kind: "Bonferroni threshold", unit: "", a: a, tol: Math.max(1e-5, a * 0.02),
+        q: "Correcting <b>α = " + al + "</b> for <b>" + m + "</b> tests. What is the new threshold?",
+        w: al + " / " + m + " = <b>" + a.toFixed(5) +
+          "</b>, which moves the critical z to " + (-qnorm(a / 2)).toFixed(3) + "." };
+    }
+    if (t === 2) {
+      const p1 = pick([0.55, 0.60, 0.65, 0.70]);
+      const a = power(100, p1, 0.05) * 100;
+      return { kind: "Power at n = 100", unit: "%", a: a, tol: Math.max(0.1, a * 0.03),
+        q: "A coin that truly lands heads <b>" + (p1 * 100).toFixed(0) +
+          "%</b> of the time, tested on <b>100</b> flips at α = 0.05. How often is it caught?",
+        w: "<b>" + a.toFixed(2) + "%</b>. At 55% it is only 13.5%, which is why " +
+          "a null result from a small sample is not evidence of no effect." };
+    }
+    const sr = pick([0.5, 0.75, 1.0, 1.5, 2.0]);
+    const a = 7.849 / (sr * sr);
+    return { kind: "Years to 80% power", unit: "years", a: a, tol: Math.max(0.02, a * 0.02),
+      q: "A strategy with an annual Sharpe of <b>" + sr.toFixed(2) +
+        "</b>. How long before a test has an 80% chance of detecting it?",
+      w: "(1.960 + 0.842)² / Sharpe² = 7.849 / " + (sr * sr).toFixed(4) + " = <b>" +
+        a.toFixed(2) + " years</b> — about double the " + (4 / (sr * sr)).toFixed(2) +
+        " it takes merely to cross t = 2 once." };
+  }
+  function next() {
+    cur = make();
+    E("dKind").textContent = cur.kind; E("dText").innerHTML = cur.q;
+    E("dUnit").textContent = cur.unit; E("dInput").value = "";
+    E("drill").classList.remove("done");
+    focusSoft(E("dInput"), E("drill"));
+  }
+  function submit() {
+    if (!cur || E("drill").classList.contains("done")) return;
+    const raw = parseFloat(String(E("dInput").value).replace(/[$,%\s]/g, ""));
+    asked++;
+    const ok = isFinite(raw) && Math.abs(raw - cur.a) <= cur.tol;
+    if (ok) { sc++; streak++; if (streak > best) best = streak; } else streak = 0;
+    E("dVerdict").textContent = ok ? "CORRECT"
+      : ("NOT QUITE — the answer is " + (cur.a < 0.01 ? cur.a.toFixed(5) : cur.a.toFixed(3)));
+    E("dVerdict").className = "vd " + (ok ? "ok" : "no");
+    E("dWork").innerHTML = cur.w;
+    E("dScore").textContent = sc + " / " + asked;
+    E("dStreak").textContent = String(streak); E("dBest").textContent = String(best);
+    E("drill").classList.add("done");
+  }
+  E("dSubmit").addEventListener("click", submit);
+  E("dInput").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+  E("dNext").addEventListener("click", next);
+  E("dSkip").addEventListener("click", () => { streak = 0; E("dStreak").textContent = "0"; next(); });
+  [1, 2].forEach(k => E("dT" + k).addEventListener("click", () => {
+    tier = k;
+    [1, 2].forEach(j => E("dT" + j).setAttribute("aria-pressed", j === k ? "true" : "false"));
+    next();
+  }));
+  window.drawDrill = next;
+  window.__drill = () => {
+    const o = [];
+    for (let i = 0; i < 2; i++) { tier = i + 1; for (let j = 0; j < 400; j++) o.push(make()); }
+    tier = 1; return o;
+  };
+})();
+
+function drawAll() {
+  drawHero(); draw1(); draw2(); draw3(); draw4(); draw5(); draw6(); drawDrill();
+}
+LAB.boot(drawAll);
+
+</script>
+</body>
+</html>

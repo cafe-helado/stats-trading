@@ -173,6 +173,72 @@ const dbeta = (x, a, b) => (x <= 0 || x >= 1) ? 0
   : Math.exp((a - 1) * Math.log(x) + (b - 1) * Math.log(1 - x)
     + lgamma(a + b) - lgamma(a) - lgamma(b));
 
+/* \u2500\u2500 the two CDFs a hypothesis test needs \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+   Both are built on the regularized incomplete gamma and beta, which is the
+   standard route and the reason they are worth having once rather than
+   approximating twice. Every value below was checked against published
+   critical-value tables before it shipped: pchisq(3.8415, 1) and
+   pt(2.2622, 9) must read 0.95 and 0.975, and they do. */
+function gammap(a, x) {                 /* regularized lower incomplete gamma */
+  if (!(x >= 0) || a <= 0) return NaN;
+  if (x === 0) return 0;
+  if (x < a + 1) {                      /* series converges fast down here */
+    let ap = a, sum = 1 / a, del = sum;
+    for (let i = 0; i < 500; i++) {
+      ap++; del *= x / ap; sum += del;
+      if (Math.abs(del) < Math.abs(sum) * 1e-15) break;
+    }
+    return sum * Math.exp(-x + a * Math.log(x) - lgamma(a));
+  }
+  let b = x + 1 - a, c = 1e300, d = 1 / b, h = d;   /* continued fraction up here */
+  for (let i = 1; i <= 500; i++) {
+    const an = -i * (i - a);
+    b += 2; d = an * d + b; if (Math.abs(d) < 1e-300) d = 1e-300;
+    c = b + an / c; if (Math.abs(c) < 1e-300) c = 1e-300;
+    d = 1 / d; const del = d * c; h *= del;
+    if (Math.abs(del - 1) < 1e-15) break;
+  }
+  return 1 - Math.exp(-x + a * Math.log(x) - lgamma(a)) * h;
+}
+function betacf(a, b, x) {
+  const TINY = 1e-300;
+  const qab = a + b, qap = a + 1, qam = a - 1;
+  let c = 1, d = 1 - qab * x / qap;
+  if (Math.abs(d) < TINY) d = TINY;
+  d = 1 / d; let h = d;
+  for (let m = 1; m <= 300; m++) {
+    const m2 = 2 * m;
+    let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+    d = 1 + aa * d; if (Math.abs(d) < TINY) d = TINY;
+    c = 1 + aa / c; if (Math.abs(c) < TINY) c = TINY;
+    d = 1 / d; h *= d * c;
+    aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+    d = 1 + aa * d; if (Math.abs(d) < TINY) d = TINY;
+    c = 1 + aa / c; if (Math.abs(c) < TINY) c = TINY;
+    d = 1 / d; const del = d * c; h *= del;
+    if (Math.abs(del - 1) < 1e-15) break;
+  }
+  return h;
+}
+function betai(a, b, x) {               /* regularized incomplete beta */
+  if (x <= 0) return 0;
+  if (x >= 1) return 1;
+  const bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) +
+    a * Math.log(x) + b * Math.log(1 - x));
+  return x < (a + 1) / (a + b + 2) ? bt * betacf(a, b, x) / a
+    : 1 - bt * betacf(b, a, 1 - x) / b;
+}
+const pchisq = (x, k) => x <= 0 ? 0 : gammap(k / 2, x / 2);
+const pt = (t, df) => {
+  const half = 0.5 * betai(df / 2, 0.5, df / (df + t * t));
+  return t > 0 ? 1 - half : half;
+};
+/* the two-sided p-value each test actually reports */
+const chisqP = (x, k) => 1 - pchisq(x, k);
+const tP = (t, df) => 2 * (1 - pt(Math.abs(t), df));
+const zP = z => 2 * (1 - pnorm(Math.abs(z)));
+
+
 /* ── odds ────────────────────────────────────────────────────────────────
    Three notations for one number, and the conversions people get wrong.
    Decimal odds include the stake; fractional and American do not, which is

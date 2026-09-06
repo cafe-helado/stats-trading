@@ -27,7 +27,7 @@
 <header class="serieshead">
   <div class="in">
     <a class="home" href="index.html">← Chance, visually</a>
-    <span class="num">No. 06 · Updating</span>
+    <span class="num">No. 10 · Updating</span>
   </div>
 </header>
 
@@ -55,7 +55,7 @@
 
 <div class="orient">
   <h2>Start here</h2>
-  <p class="lede">Module 05 showed how weak the evidence in a small sample is. This module is about what to do with weak evidence: combine it with what you already believed, in the only way that is arithmetically consistent. That is all Bayes' rule is.</p>
+  <p class="lede">Module 08 showed how weak the evidence in a small sample is. This module is about what to do with weak evidence: combine it with what you already believed, in the only way that is arithmetically consistent. That is all Bayes' rule is.</p>
   <ol>
     <li><b>Chapter 01 is the classic, and it is worth being surprised by.</b> A 99%-accurate test on a 1-in-1000 disease gives a 9% chance of being sick when it comes back positive.</li>
     <li><b>Chapter 02 draws the rule as a rectangle</b>, because the formula hides what the picture makes obvious: you are comparing two areas, and the base rate sets how big they start.</li>
@@ -189,7 +189,7 @@
       <button>The base rate</button>
       <button>The sample size</button>
     </div>
-    <div class="ans"><b>The odds, which is why odds are the natural currency of evidence.</b> In odds form Bayes is a multiplication and nothing else, and independent pieces of evidence just multiply in sequence. It is also why <a href="odds.html">module 01</a>'s notations were worth learning — betting odds and evidential odds are the same object.</div>
+    <div class="ans"><b>The odds, which is why odds are the natural currency of evidence.</b> In odds form Bayes is a multiplication and nothing else, and independent pieces of evidence just multiply in sequence. It is also why <a href="odds.html">module 03</a>'s notations were worth learning — betting odds and evidential odds are the same object.</div>
   </div>
 </section>
 
@@ -255,7 +255,7 @@
     <p>Under the 20% story a 6% day is a <b>4.76-sigma</b> event — the daily standard deviation is 1.26%, so 6% is nearly five of them. Under the 40% story it is 2.38 sigma, unusual but ordinary. The likelihoods are <b>0.0004</b> and <b>0.9297</b>, a ratio of about <b>2,470 to 1</b> in favor of high volatility.</p>
     <p>Multiply that into prior odds of 9 to 1 and the posterior is <b>0.36%</b> for the low-volatility story. One day has taken you from 90% confident to essentially certain you were wrong.</p>
     <p>That is the correct response and it feels wrong, which is the lesson. Extreme observations are much more informative than ordinary ones, precisely because they are so unlikely under one hypothesis and unremarkable under another. The instinct to call a 6% day "an outlier" and carry on is the instinct to throw away the most informative data point you have.</p>
-    <p>The honest caveat: this calculation assumed the only two possibilities were 20% and 40%. Real hypothesis spaces are wider, and a genuine third option — "the volatility is 20% but the return distribution has fat tails" — would absorb some of that update. <a href="dist.html">Module 04</a> is exactly that hypothesis, and distinguishing it from a volatility change takes more than one day.</p>
+    <p>The honest caveat: this calculation assumed the only two possibilities were 20% and 40%. Real hypothesis spaces are wider, and a genuine third option — "the volatility is 20% but the return distribution has fat tails" — would absorb some of that update. <a href="dist.html">Module 07</a> is exactly that hypothesis, and distinguishing it from a volatility change takes more than one day.</p>
   </div>
 
   <figure class="bleed">
@@ -479,7 +479,7 @@
 </main>
 
 <footer>
-  <p class="n">Every sequential update on this page assumes the pieces of evidence are independent given the hypothesis, and that assumption is usually the weakest link. Two runs of the same medical test on the same sample share failure modes; two backtests on overlapping data share the same lucky period; two days of returns during the same crisis are not two independent observations of volatility. Where the independence fails, these calculations overstate how much you have learned, sometimes enormously. Chapter 04 additionally restricts the hypothesis space to exactly two volatilities, which makes the update sharper than an honest continuous prior would — and it excludes the third explanation, that volatility is unchanged and the return distribution has fat tails, which <a href="dist.html">module 04</a> argues is often the better story. Chapter 05's numbers are illustrative rather than measured: nobody knows the true base rate for trading strategies, and the point of the chapter is that the answer depends on it far more than on the backtest.</p>
+  <p class="n">Every sequential update on this page assumes the pieces of evidence are independent given the hypothesis, and that assumption is usually the weakest link. Two runs of the same medical test on the same sample share failure modes; two backtests on overlapping data share the same lucky period; two days of returns during the same crisis are not two independent observations of volatility. Where the independence fails, these calculations overstate how much you have learned, sometimes enormously. Chapter 04 additionally restricts the hypothesis space to exactly two volatilities, which makes the update sharper than an honest continuous prior would — and it excludes the third explanation, that volatility is unchanged and the return distribution has fat tails, which <a href="dist.html">module 07</a> argues is often the better story. Chapter 05's numbers are illustrative rather than measured: nobody knows the true base rate for trading strategies, and the point of the chapter is that the answer depends on it far more than on the backtest.</p>
 </footer>
 
 <script src="assets/lab.js"></script>

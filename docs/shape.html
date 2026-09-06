@@ -27,7 +27,7 @@
 <header class="serieshead">
   <div class="in">
     <a class="home" href="index.html">← Chance, visually</a>
-    <span class="num">No. 03 · Shape</span>
+    <span class="num">No. 06 · Shape</span>
   </div>
 </header>
 
@@ -148,7 +148,7 @@
   <div class="prose">
     <p class="lead">Coins are suspiciously convenient — symmetric, two outcomes, obviously heading somewhere symmetric. So take the flattest thing available instead: a number drawn uniformly between 0 and 1, which has no peak at all. Add several and standardize.</p>
     <p>One draw is a rectangle, as far from a bell as a distribution gets: its <span class="term" data-t="Excess kurtosis" data-def="A measure of how much of the variance comes from the tails, scaled so that a normal distribution reads exactly zero. Negative means thinner tails than normal; positive means fatter.">excess kurtosis</span> is <b>−1.20</b>. Two draws make a triangle, at <b>−0.59</b>. Five draws reach <b>−0.24</b>, and the largest gap between its cumulative distribution and a normal's is <b>0.007</b> — under a percentage point, anywhere. Thirty draws sit at <b>−0.05</b> with a maximum gap of <b>0.003</b>.</p>
-    <p>Nothing about the rectangle survives. This is the <span class="term" data-t="Central limit theorem" data-def="Sums of many independent random quantities converge to a normal distribution, whatever the shape of the individual quantities, provided their variance is finite. The last clause is the escape hatch that module 08 walks through.">central limit theorem</span>, and it is the reason the normal distribution turns up everywhere: most quantities you measure are secretly sums of many small independent things, and sums forget their ingredients.</p>
+    <p>Nothing about the rectangle survives. This is the <span class="term" data-t="Central limit theorem" data-def="Sums of many independent random quantities converge to a normal distribution, whatever the shape of the individual quantities, provided their variance is finite. The last clause is the escape hatch that module 12 walks through.">central limit theorem</span>, and it is the reason the normal distribution turns up everywhere: most quantities you measure are secretly sums of many small independent things, and sums forget their ingredients.</p>
   </div>
 
   <figure class="bleed">
@@ -192,7 +192,7 @@
       <button>There must be at least thirty of them</button>
       <button>They must be symmetric</button>
     </div>
-    <div class="ans"><b>Finite variance, and it is not a technicality.</b> The other three are all false: the theorem works for non-identical and asymmetric ingredients, and "thirty" is a rule of thumb rather than a condition. But a distribution with infinite variance — the Cauchy is the standard example — sums to itself forever and never becomes normal. <a href="index.html">Module 08</a> is about how close real markets get to that boundary.</div>
+    <div class="ans"><b>Finite variance, and it is not a technicality.</b> The other three are all false: the theorem works for non-identical and asymmetric ingredients, and "thirty" is a rule of thumb rather than a condition. But a distribution with infinite variance — the Cauchy is the standard example — sums to itself forever and never becomes normal. <a href="tails.html">Module 12</a> is about how close real markets get to that boundary.</div>
   </div>
 </section>
 
@@ -319,7 +319,7 @@
   <div class="prose">
     <p class="lead">For a normal distribution, <b>68.27%</b> of the mass sits within one standard deviation of the mean, <b>95.45%</b> within two, and <b>99.73%</b> within three. Those are worth knowing exactly rather than approximately, because the interesting quantity is always what is left over.</p>
     <p>Outside one sigma is <b>31.7%</b> — about one day in three. Outside two is <b>4.55%</b>, one day in 22. Outside three is <b>0.27%</b>, one in 370, which is roughly once every year and a half of trading.</p>
-    <p>Keep going and the numbers stop being believable. A four-sigma day should occur once in <b>15,780</b> trading days — about once every <b>63 years</b>. A five-sigma day, once every <b>6,911 years</b>. Markets deliver both several times a decade, which does not mean the arithmetic is wrong. It means the normal distribution is the wrong model for the tails, and that discrepancy is the subject of <a href="index.html">module 08</a>.</p>
+    <p>Keep going and the numbers stop being believable. A four-sigma day should occur once in <b>15,780</b> trading days — about once every <b>63 years</b>. A five-sigma day, once every <b>6,911 years</b>. Markets deliver both several times a decade, which does not mean the arithmetic is wrong. It means the normal distribution is the wrong model for the tails, and that discrepancy is the subject of <a href="tails.html">module 12</a>.</p>
   </div>
 
   <figure class="bleed">
@@ -486,7 +486,7 @@
 </main>
 
 <footer>
-  <p class="n">Every simulation here uses a seeded generator, so the numbers in the prose are the numbers on the screen and will be the same tomorrow. The central limit theorem needs finite variance and independence, and financial returns violate the second one routinely — volatility clusters, so a big day makes the next day bigger, and sums of dependent draws converge more slowly than these figures suggest. The √T rule inherits that assumption whole: it is exactly right for independent increments and progressively wrong as returns become autocorrelated, which is why realized volatility measured over overlapping windows behaves differently from the tidy arithmetic on this page. And the tail probabilities in chapter 05 are the normal's, which is the model this series spends <a href="index.html">module 08</a> arguing against.</p>
+  <p class="n">Every simulation here uses a seeded generator, so the numbers in the prose are the numbers on the screen and will be the same tomorrow. The central limit theorem needs finite variance and independence, and financial returns violate the second one routinely — volatility clusters, so a big day makes the next day bigger, and sums of dependent draws converge more slowly than these figures suggest. The √T rule inherits that assumption whole: it is exactly right for independent increments and progressively wrong as returns become autocorrelated, which is why realized volatility measured over overlapping windows behaves differently from the tidy arithmetic on this page. And the tail probabilities in chapter 05 are the normal's, which is the model this series spends <a href="tails.html">module 12</a> arguing against.</p>
 </footer>
 
 <script src="assets/lab.js"></script>

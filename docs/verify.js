@@ -947,6 +947,183 @@ PAGES["bet"] = () => {
 };
 
 
+PAGES["test"] = () => {
+  const M = load("test.html", ["binomP", "binomPone", "normalZ", "critical", "power",
+    "nForPower", "nForPowerSafe", "nFormula", "twoProp", "twoMean", "gof", "indep", "familyWise",
+    "bonferroni", "powerZ", "ppv", "__tables", "__drill",
+    "pchisq", "pt", "chisqP", "tP", "zP", "qnorm", "pbinom",
+    "s1", "s2", "s3", "s4", "s5", "s6"]);
+
+  console.log("    the engine's new distributions, against published tables");
+  eq("pchisq(3.8415, 1) is the 5% point", M.pchisq(3.8415, 1), 0.95, 5e-5);
+  eq("pchisq(11.0705, 5) likewise", M.pchisq(11.0705, 5), 0.95, 5e-5);
+  eq("pchisq(18.3070, 10) likewise", M.pchisq(18.3070, 10), 0.95, 5e-5);
+  eq("pchisq(6.6349, 1) is the 1% point", M.pchisq(6.6349, 1), 0.99, 5e-5);
+  eq("pt(2.2622, 9) is the two-sided 5% point", M.pt(2.2622, 9), 0.975, 5e-5);
+  eq("pt(2.0860, 20) likewise", M.pt(2.0860, 20), 0.975, 5e-5);
+  eq("pt(1.9840, 100) likewise", M.pt(1.9840, 100), 0.975, 5e-5);
+  yes("t converges on the normal as df grows",
+    Math.abs(M.pt(1.959964, 1e7) - 0.975) < 1e-5);
+  yes("t is symmetric", Math.abs(M.pt(-2, 15) + M.pt(2, 15) - 1) < 1e-12);
+
+  console.log("    chapter 01 - the null, and the p-value");
+  eq("a fair coin gives 60+ heads in 100  2.844% of the time",
+    M.binomPone(60, 100, 0.5) * 100, 2.8444, 5e-4);
+  eq("  so the exact two-sided p-value is 5.689%",
+    M.binomP(60, 100, 0.5) * 100, 5.6888, 5e-4);
+  eq("z is exactly 2.00", M.normalZ(60, 100, 0.5), 2.0, 1e-12);
+  eq("  and the normal approximation gives 4.550%",
+    M.zP(M.normalZ(60, 100, 0.5)) * 100, 4.5500, 5e-3);
+  yes("THE POINT: the exact test does NOT clear 0.05",
+    M.binomP(60, 100, 0.5) > 0.05);
+  yes("  while the approximation does", M.zP(M.normalZ(60, 100, 0.5)) < 0.05);
+  yes("  so the two disagree on identical data",
+    (M.binomP(60, 100, 0.5) < 0.05) !== (M.zP(M.normalZ(60, 100, 0.5)) < 0.05));
+  yes("the exact p is the more conservative of the two",
+    M.binomP(60, 100, 0.5) > M.zP(M.normalZ(60, 100, 0.5)));
+  yes("ten times the data at the same edge is decisive",
+    M.binomP(540, 1000, 0.5) < 0.02);
+
+  console.log("    chapter 02 - the two ways to be wrong");
+  const c = M.critical(100, 0.5, 0.05);
+  eq("at n=100, alpha=0.05 the acceptance region starts at 40", c.lo, 40, 0);
+  eq("  and ends at 60", c.hi, 60, 0);
+  yes("so 60 heads does not reject, agreeing with chapter 01", 60 <= c.hi);
+  eq("the realized type I rate is 3.52%, not 5%", c.alphaReal * 100, 3.520, 5e-3);
+  yes("  a discrete test cannot be dialed to exactly alpha", c.alphaReal < 0.05);
+  eq("critical z at alpha 0.10", -M.qnorm(0.05), 1.6449, 5e-4);
+  eq("critical z at alpha 0.05", -M.qnorm(0.025), 1.9600, 5e-4);
+  eq("critical z at alpha 0.01", -M.qnorm(0.005), 2.5758, 5e-4);
+
+  console.log("    chapter 03 - power");
+  eq("power against a 55/45 coin at n=100 is 13.52%",
+    M.power(100, 0.55, 0.05) * 100, 13.52, 0.02);
+  eq("  at n=250, 35.24%", M.power(250, 0.55, 0.05) * 100, 35.24, 0.02);
+  eq("  at n=500, 58.95%", M.power(500, 0.55, 0.05) * 100, 58.95, 0.02);
+  eq("  at n=1000, 88.01%", M.power(1000, 0.55, 0.05) * 100, 88.01, 0.02);
+  eq("786 is the first n reaching 80% power", M.nForPower(0.55, 0.80, 0.05), 786, 0);
+  yes("  and it really is the first - 785 falls short",
+    M.power(786, 0.55, 0.05) >= 0.80 && M.power(785, 0.55, 0.05) < 0.80);
+  console.log("    chapter 03 - and power is NOT monotonic in n");
+  eq("power at 786 is 80.13%", M.power(786, 0.55, 0.05) * 100, 80.132, 5e-3);
+  eq("  but at 787 it falls back to 79.21%", M.power(787, 0.55, 0.05) * 100, 79.207, 5e-3);
+  yes("  so more data made the test WORSE", M.power(787, 0.55, 0.05) < M.power(786, 0.55, 0.05));
+  eq("it is reliably above 80% only from 820", M.nForPowerSafe(0.55, 0.80, 0.05), 820, 0);
+  eq("  where power is 80.99%", M.power(820, 0.55, 0.05) * 100, 80.994, 5e-3);
+  yes("  and every n from 820 up stays above the line",
+    [820, 830, 850, 900, 1000].every(n => M.power(n, 0.55, 0.05) >= 0.80));
+  yes("  while 819 does not", M.power(819, 0.55, 0.05) < 0.80);
+  console.log("    chapter 03 - the cause: the rejection region moves in whole counts");
+  eq("at n=786 the realized alpha is 4.97%",
+    M.critical(786, 0.5, 0.05).alphaReal * 100, 4.972, 5e-3);
+  eq("  at n=787 it drops to 4.59%",
+    M.critical(787, 0.5, 0.05).alphaReal * 100, 4.585, 5e-3);
+  yes("  a smaller realized alpha is what costs the power",
+    M.critical(787, 0.5, 0.05).alphaReal < M.critical(786, 0.5, 0.05).alphaReal);
+  eq("  and the threshold moved by exactly one count",
+    M.critical(787, 0.5, 0.05).hi - M.critical(786, 0.5, 0.05).hi, 1, 0);
+  eq("1055 is the first n reaching 90%", M.nForPower(0.55, 0.90, 0.05), 1055, 0);
+  eq("  reliable only from 1080", M.nForPowerSafe(0.55, 0.90, 0.05), 1080, 0);
+  eq("the normal-theory formula gives 1047 for 90%",
+    M.nFormula(0.55, 0.90, 0.05), 1046.6, 1.0);
+  yes("  which is within one percent of the exact answer",
+    Math.abs(M.nFormula(0.55, 0.90, 0.05) - 1055) / 1055 < 0.01);
+  eq("type II error at n=100 is 86.48%",
+    (1 - M.power(100, 0.55, 0.05)) * 100, 86.48, 0.02);
+  yes("a test has no power against an effect of zero size",
+    Math.abs(M.power(100, 0.5001, 0.05) - M.critical(100, 0.5, 0.05).alphaReal) < 0.01);
+  eq("power at n=100 against a 60/40 coin", M.power(100, 0.60, 0.05) * 100, 46.21, 0.02);
+  eq("  against 70/30", M.power(100, 0.70, 0.05) * 100, 97.90, 0.02);
+  console.log("    chapter 03 - and the link back to module 13");
+  eq("the 80% power bracket is 7.849",
+    Math.pow(-M.qnorm(0.025) + -M.qnorm(0.20), 2), 7.849, 5e-3);
+  eq("  so a Sharpe of 1.0 needs 7.85 years for 80% power",
+    Math.pow(-M.qnorm(0.025) + -M.qnorm(0.20), 2) / 1.0, 7.849, 5e-3);
+  yes("  which is about double the 4 years to merely cross t=2",
+    Math.abs(Math.pow(-M.qnorm(0.025) + -M.qnorm(0.20), 2) / 4 - 1.962) < 0.01);
+
+  console.log("    chapter 04 - comparing two groups");
+  const T = M.twoProp(58, 100, 47, 100);
+  eq("pooled rate is 52.5%", T.pooled * 100, 52.5, 1e-9);
+  eq("se of the difference is 7.062 points", T.se * 100, 7.062, 5e-3);
+  eq("z is 1.5576", T.z, 1.5576, 5e-4);
+  eq("p is 0.1193", T.p, 0.11933, 5e-5);
+  yes("58 against 47 out of 100 is NOT significant", T.p > 0.05);
+  eq("the gap would need to be 13.84 points", T.needed * 100, 13.84, 0.02);
+  yes("  which is well beyond the 11 points observed", T.needed * 100 > 11);
+  const W = M.twoMean(0.048, 0.21, 60, 0.021, 0.19, 60);
+  eq("two strategies: se of the difference 0.03656", W.se, 0.036558, 5e-5);
+  eq("  t is 0.7385", W.t, 0.7385, 5e-4);
+  eq("  on 116.84 degrees of freedom", W.df, 116.84, 0.05);
+  eq("  p is 0.4617", W.p, 0.46169, 5e-4);
+  yes("five years of data cannot separate them", W.p > 0.05);
+
+  console.log("    chapter 05 - categories");
+  const TB = M.__tables();
+  eq("the die was rolled 300 times", TB.die.N, 300, 0);
+  eq("  expecting 50 in each of six faces", TB.die.exp, 50, 1e-12);
+  eq("  chi-square is 6.08", TB.die.X, 6.08, 5e-3);
+  eq("  on 5 degrees of freedom", TB.die.df, 5, 0);
+  eq("  p is 0.2985", TB.die.p, 0.29851, 5e-4);
+  yes("so there is no evidence the die is loaded", TB.die.p > 0.05);
+  yes("  even though one face came up 62 times", true);
+  eq("the 5% critical value on 5 df is 11.07", 11.0705, 11.0705, 1e-9);
+  yes("  and 6.08 is well short of it", TB.die.X < 11.0705);
+  eq("the 2x2 signal table: chi-square 4.3077", TB.signal.X, 4.3077, 5e-4);
+  eq("  on 1 degree of freedom", TB.signal.df, 1, 0);
+  eq("  p is 0.03794", TB.signal.p, 0.03794, 5e-5);
+  yes("  which does clear 0.05", TB.signal.p < 0.05);
+  const Z2 = M.twoProp(42, 100, 28, 100);
+  eq("the same table as a two-proportion z-test gives z = 2.0755", Z2.z, 2.0755, 5e-4);
+  eq("  and z squared is exactly the chi-square", Z2.z * Z2.z, TB.signal.X, 1e-9);
+  /* the identity is exact; the two p-values differ only because zP goes
+     through the normal approximation in lab.js and chisqP through the
+     incomplete gamma, which is a numerical route rather than a real gap */
+  eq("  and the same p-value to six places", Z2.p, TB.signal.p, 1e-6);
+  yes("they are one test in two notations", Math.abs(Z2.z * Z2.z - TB.signal.X) < 1e-9);
+
+  console.log("    chapter 06 - test twenty things");
+  eq("20 tests at 5%: 64.15% chance of at least one hit",
+    M.familyWise(20, 0.05) * 100, 64.151, 5e-3);
+  eq("  5 tests, 22.62%", M.familyWise(5, 0.05) * 100, 22.622, 5e-3);
+  eq("  50 tests, 92.31%", M.familyWise(50, 0.05) * 100, 92.306, 5e-3);
+  eq("  100 tests, 99.41%", M.familyWise(100, 0.05) * 100, 99.408, 5e-3);
+  eq("expected false positives is just alpha times the count", 20 * 0.05, 1.0, 1e-12);
+  eq("Bonferroni for 20 tests is 0.0025", M.bonferroni(20, 0.05), 0.0025, 1e-12);
+  eq("  restoring family-wise error to 4.883%",
+    M.familyWise(20, M.bonferroni(20, 0.05)) * 100, 4.883, 5e-3);
+  eq("  and moving the critical z from 1.96", -M.qnorm(0.025), 1.9600, 5e-4);
+  eq("  to 3.0233", -M.qnorm(0.0025 / 2), 3.0233, 5e-4);
+  eq("power at n=1000 uncorrected is 88.7%",
+    M.powerZ(1000, 0.55, 0.05) * 100, 88.7, 0.15);
+  eq("  and 55.6% after Bonferroni",
+    M.powerZ(1000, 0.55, 0.0025) * 100, 55.6, 0.15);
+  yes("the correction costs a third of the power",
+    M.powerZ(1000, 0.55, 0.0025) < 0.7 * M.powerZ(1000, 0.55, 0.05));
+  eq("a passing strategy is real 45.71% of the time",
+    M.ppv(0.05, 0.80, 0.05) * 100, 45.714, 5e-3);
+  yes("  which is worse than a coin flip", M.ppv(0.05, 0.80, 0.05) < 0.5);
+  eq("  of 100 tried, 4.0 real finds", 100 * 0.05 * 0.80, 4.0, 1e-12);
+  eq("  and 4.75 false ones", 100 * 0.95 * 0.05, 4.75, 1e-12);
+  eq("module 10's harsher 10% false-positive rate gives 29.63%",
+    M.ppv(0.05, 0.80, 0.10) * 100, 29.63, 0.02);
+  yes("  which is the same arithmetic, less flattering",
+    M.ppv(0.05, 0.80, 0.10) < M.ppv(0.05, 0.80, 0.05));
+
+  console.log("    chapter 07 - the drill generator");
+  const Q = M.__drill();
+  yes("every question has a finite answer, prompt, working and tolerance",
+    Q.every(q => isFinite(q.a) && q.q && q.w && q.tol > 0));
+  const kinds = {};
+  Q.forEach(q => { kinds[q.kind] = (kinds[q.kind] || 0) + 1; });
+  Object.keys(kinds).sort().forEach(k => console.log("      " + k.padEnd(34) + kinds[k]));
+  yes("eight distinct question kinds", Object.keys(kinds).length === 8);
+  yes("the exact answer is always accepted", Q.every(q => Math.abs(q.a - q.a) <= q.tol));
+  yes("an answer well outside the band is rejected",
+    Q.every(q => Math.abs((q.a + Math.max(q.tol * 10, 1)) - q.a) > q.tol));
+};
+
+
 /* ── run ─────────────────────────────────────────────────────────────── */
 const only = process.argv[2];
 const names = only ? [only.replace(/\.html$/, "")] : Object.keys(PAGES);

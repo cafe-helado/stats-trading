@@ -27,7 +27,7 @@
 <header class="serieshead">
   <div class="in">
     <a class="home" href="index.html">← Chance, visually</a>
-    <span class="num">No. 04 · Distributions</span>
+    <span class="num">No. 07 · Distributions</span>
   </div>
 </header>
 
@@ -55,7 +55,7 @@
 
 <div class="orient">
   <h2>Start here</h2>
-  <p class="lede">Module 03 showed that sums of independent things go normal. This one is about everything that is <em>not</em> a sum of independent things — prices, which multiply; counts, which are integers; and returns, which have tails a normal cannot produce.</p>
+  <p class="lede">Module 06 showed that sums of independent things go normal. This one is about everything that is <em>not</em> a sum of independent things — prices, which multiply; counts, which are integers; and returns, which have tails a normal cannot produce.</p>
   <ol>
     <li><b>Chapter 01 is the one finance is built on.</b> Prices multiply rather than add, so the normal belongs on the <em>log</em> return and the lognormal on the price. Which is why halving is more likely than doubling.</li>
     <li><b>Chapter 04 is the surprise.</b> A mixture of two calm-and-stressed regimes produces tails 116 times fatter than a normal four standard deviations out — and <em>thinner</em> tails two standard deviations out. Fat tails come with a thin shoulder.</li>
@@ -86,7 +86,7 @@
 
   <div class="prose">
     <p class="lead">Start with the arithmetic everyone has met and nobody quite believes. Up 10%, then down 10%, leaves you at <b>0.99</b> — not back where you started. Percentage returns do not add.</p>
-    <p>Their <span class="term" data-t="Log return" data-def="The natural logarithm of one price divided by the previous one. Unlike a percentage return it adds across periods, which is what makes it the right thing to model as normal.">logarithms</span> do. ln(1.10) = <b>0.0953</b> and ln(0.90) = <b>−0.1054</b>; they sum to −0.0101, and exponentiating gives 0.9900 exactly. So if you want a quantity that behaves like a sum — and module 03 says sums go normal — you want the log return, not the percentage one.</p>
+    <p>Their <span class="term" data-t="Log return" data-def="The natural logarithm of one price divided by the previous one. Unlike a percentage return it adds across periods, which is what makes it the right thing to model as normal.">logarithms</span> do. ln(1.10) = <b>0.0953</b> and ln(0.90) = <b>−0.1054</b>; they sum to −0.0101, and exponentiating gives 0.9900 exactly. So if you want a quantity that behaves like a sum — and module 06 says sums go normal — you want the log return, not the percentage one.</p>
     <p>Make the log return normal and the price becomes <b>lognormal</b>, which fixes the other problem too: a lognormal cannot go below zero, and a stock cannot either. Model returns as plain normal and you assign real probability to a negative price — <b>0.043%</b> at 30% annual volatility, which is small and is still nonsense.</p>
     <p>The consequence people find hardest is the asymmetry. At 30% volatility and no drift, the chance a stock <em>halves</em> over a year is <b>1.54%</b> while the chance it <em>doubles</em> is <b>0.69%</b> — less than half as likely, despite both being "a factor of two." The mean sits above the median, and most outcomes land below the mean: <b>55.96%</b> of them.</p>
   </div>
@@ -246,7 +246,7 @@
       <button>Because you cannot have fewer than four observations</button>
       <button>It does work; the formula just gives a negative number</button>
     </div>
-    <div class="ans"><b>The moment stops existing.</b> A t with 4 or fewer degrees of freedom has infinite kurtosis, and one with 2 or fewer has infinite <em>variance</em> — at which point the central limit theorem from module 03 stops applying. That is not a curiosity: it is the boundary between "fat tails I can model" and "a quantity whose average is not a meaningful summary."</div>
+    <div class="ans"><b>The moment stops existing.</b> A t with 4 or fewer degrees of freedom has infinite kurtosis, and one with 2 or fewer has infinite <em>variance</em> — at which point the central limit theorem from module 06 stops applying. That is not a curiosity: it is the boundary between "fat tails I can model" and "a quantity whose average is not a meaningful summary."</div>
   </div>
 </section>
 

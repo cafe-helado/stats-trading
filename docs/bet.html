@@ -27,7 +27,7 @@
 <header class="serieshead">
   <div class="in">
     <a class="home" href="index.html">← Chance, visually</a>
-    <span class="num">No. 09 · Putting it to work</span>
+    <span class="num">No. 13 · Putting it to work</span>
   </div>
 </header>
 
@@ -85,7 +85,7 @@
   </div>
 
   <div class="prose">
-    <p class="lead">A standard American sports market quotes <b>−110</b> on both sides: risk $110 to win $100, either way. <a href="odds.html">Module 01</a> converted that to a probability — <b>52.381%</b>. Both sides at once sum to <b>104.762%</b>.</p>
+    <p class="lead">A standard American sports market quotes <b>−110</b> on both sides: risk $110 to win $100, either way. <a href="odds.html">Module 03</a> converted that to a probability — <b>52.381%</b>. Both sides at once sum to <b>104.762%</b>.</p>
     <p>That excess is the <span class="term" data-t="Overround" data-def="The amount by which the implied probabilities across a market sum past 100%. It is the book's margin expressed in probability terms, and it is why the quoted prices are never anyone's honest forecast.">overround</span>: <b>4.762</b> points of probability that do not exist. It is not a mistake and it is not a forecast. It is the price of the service.</p>
     <p>Follow the cash rather than the percentages. Two bettors each stake <b>$110</b>, one on each side. Whichever wins is paid <b>$210</b> — their stake back plus $100. The book took in $220 and paid out $210, keeping <b>$10</b>. As a fraction of what was staked that is <b>4.545%</b>, and it arrives with certainty. The book did not need an opinion about the game.</p>
     <p>The mirror image is what the bettor faces. To break even at −110 you must win <b>52.381%</b> of your bets — you have to be right <b>2.38 percentage points</b> more often than a coin just to stand still. A bettor with no edge at all, picking at exactly 50%, loses <b>4.545%</b> of every dollar they stake, forever.</p>
@@ -150,7 +150,7 @@
 
   <div class="prose">
     <p class="lead">Suppose you find the other side of chapter 01 — a bet where you genuinely have the edge. How much of your bankroll should go on it?</p>
-    <p>Maximizing expected <em>money</em> gives a useless answer: bet everything, every time, because that maximizes the average. <a href="ev.html">Module 02</a> showed why the average is the wrong target for anything repeated — you go broke on the first loss, and the average is carried by paths you will never be on.</p>
+    <p>Maximizing expected <em>money</em> gives a useless answer: bet everything, every time, because that maximizes the average. <a href="ev.html">Module 05</a> showed why the average is the wrong target for anything repeated — you go broke on the first loss, and the average is carried by paths you will never be on.</p>
     <p>Maximize the expected <b>logarithm</b> of the bankroll instead, which is the same as maximizing the median long-run outcome, and the answer is the <span class="term" data-t="Kelly criterion" data-def="The bet size that maximizes the expected logarithm of wealth, and so the long-run growth rate of a repeatedly-staked bankroll. For a bet paying b-to-1 with win probability p it is (bp − q)/b.">Kelly criterion</span>:</p>
     <p>For a coin landing heads <b>60%</b> of the time at even money, that gives <b>f* = 0.20</b> — bet a fifth of the bankroll. The growth rate at that stake is <b>2.03%</b> per bet. Bet 10% instead and you grow at 1.50%; bet 30% and you grow at 1.47%. The peak is flat near the top, which turns out to matter enormously in chapter 03.</p>
     <p>Two properties are worth internalizing. First, the growth curve comes back down and <b>crosses zero at about twice the optimal stake</b> — in the continuous case, exactly twice. Betting double Kelly gives you all of the volatility and none of the growth, which is a remarkably precise description of a lot of trading. Second, a bigger edge does not mean a bigger bet: a <b>+400</b> longshot you think wins 25% of the time carries a <b>25%</b> edge but a Kelly stake of only <b>6.25%</b>, while a <b>−200</b> favorite with an <b>8%</b> edge takes <b>16%</b>. The stake follows edge <em>divided by variance</em>, and the longshot has far more of the latter.</p>
@@ -201,7 +201,7 @@
       <button>They take the same stake</button>
       <button>B, always</button>
     </div>
-    <div class="ans"><b>Edge alone does not size a bet.</b> This is the same statement as <a href="corr.html">module 07</a>'s: a number is meaningless until you know the spread around it. A large edge on something wild is a small bet; a modest edge on something tame is a large one.</div>
+    <div class="ans"><b>Edge alone does not size a bet.</b> This is the same statement as <a href="corr.html">module 11</a>'s: a number is meaningless until you know the spread around it. A large edge on something wild is a small bet; a modest edge on something tame is a large one.</div>
   </div>
 </section>
 
@@ -275,7 +275,7 @@
     <p><b>Card counting.</b> A <b>1%</b> average edge — smaller than any other seat here — with a per-hand standard deviation of 1.15, but <b>20,000</b> hands a year. Annual Sharpe <b>1.23</b>, the second highest in the table, from the smallest edge in it.</p>
     <p><b>Live poker.</b> Five big blinds per hundred hands against a standard deviation of ninety, over 30,000 hands a year. Annual Sharpe <b>0.96</b> — the largest per-unit edge and the worst ratio, because live poker deals so few hands.</p>
     <p><b>Selling volatility.</b> 15% of alpha a year against 10% of volatility, marked daily. Annual Sharpe <b>1.50</b>.</p>
-    <p>And now the number that makes the whole series cohere. <a href="sample.html">Module 05</a> showed that a mean needs <b>(2/SR)²</b> observations before it is two standard errors from zero. Convert that to years and the units cancel completely:</p>
+    <p>And now the number that makes the whole series cohere. <a href="sample.html">Module 08</a> showed that a mean needs <b>(2/SR)²</b> observations before it is two standard errors from zero. Convert that to years and the units cancel completely:</p>
     <p>A Sharpe of 1.0 takes <b>four years</b>. A Sharpe of 1.5 takes <b>1.78</b>. A Sharpe of 0.5 takes <b>sixteen</b>. This is true for a card counter, a poker player, a sports bettor and a hedge fund identically, and it does not care how many bets a year you make — a strategy trading a thousand times a day and one trading once a month need exactly the same number of <em>years</em> to prove the same Sharpe ratio.</p>
   </div>
 
@@ -332,15 +332,15 @@
   <div class="chead">
     <div class="cnum">05</div>
     <h2>Where it breaks</h2>
-    <p class="dek">Kelly tells the vol seller to run fifteen times leverage. Chapter 04 says it takes 1.78 years to establish the number that produced it, and module 08 says the returns are not the shape assumed.</p>
+    <p class="dek">Kelly tells the vol seller to run fifteen times leverage. Chapter 04 says it takes 1.78 years to establish the number that produced it, and module 12 says the returns are not the shape assumed.</p>
   </div>
 
   <div class="prose">
     <p class="lead">Run the Kelly formula on the fourth seat exactly as written. Edge 15%, volatility 10%, so f* = μ/σ² = <b>15× leverage</b>. Every part of that calculation is correct and the answer is insane. It is worth being precise about why, because all three reasons are things this series has already shown.</p>
     <p><b>The inputs are estimates, and bad ones.</b> The 1.5 Sharpe that produced 15× is exactly the quantity chapter 04 says takes <b>1.78 years</b> of data to distinguish from zero. Sizing off a number with that much sampling error is not aggressive; it is arithmetic performed on noise. Kelly is also asymmetric here: <em>over</em>estimating your edge by a factor of two puts you at double Kelly, where growth is zero, and by a factor of three puts you well past it, where growth is negative.</p>
-    <p><b>The distribution is wrong.</b> The continuous derivation assumes a Gaussian. <a href="tails.html">Module 08</a> showed a mild two-regime mixture whose 99% expected shortfall is <b>63%</b> worse than a normal's, and short-volatility returns are considerably more skewed than that mixture. A Kelly stake computed from μ and σ alone is blind to precisely the shape that ends leveraged positions.</p>
+    <p><b>The distribution is wrong.</b> The continuous derivation assumes a Gaussian. <a href="tails.html">Module 12</a> showed a mild two-regime mixture whose 99% expected shortfall is <b>63%</b> worse than a normal's, and short-volatility returns are considerably more skewed than that mixture. A Kelly stake computed from μ and σ alone is blind to precisely the shape that ends leveraged positions.</p>
     <p><b>Ruin is not a fraction.</b> The formula assumes you can always stake a proportion of what remains. A margin call, a risk limit, a table minimum and a redemption are all the same event: a floor that turns a drawdown into an exit, at which point the long run the whole derivation is about no longer applies to you.</p>
-    <p>None of this makes the framework useless — it makes it a <em>ceiling</em> rather than a target. The correct reading of Kelly is: this is the most that could ever be justified, under assumptions you know are optimistic, on inputs you cannot measure well. Take a fraction of it. And notice that the argument arrives at the same place as <a href="tails.html">module 08</a>'s from the opposite direction: be precise about the middle, conservative about the tail, and size so that being wrong is survivable.</p>
+    <p>None of this makes the framework useless — it makes it a <em>ceiling</em> rather than a target. The correct reading of Kelly is: this is the most that could ever be justified, under assumptions you know are optimistic, on inputs you cannot measure well. Take a fraction of it. And notice that the argument arrives at the same place as <a href="tails.html">module 12</a>'s from the opposite direction: be precise about the middle, conservative about the tail, and size so that being wrong is survivable.</p>
   </div>
 
   <figure class="bleed">
