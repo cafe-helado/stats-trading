@@ -121,40 +121,40 @@
     <span class="st live">Live &rarr;</span>
   </a>
 
-  <div class="entry planned">
+  <a class="entry" href="dist.html">
     <span class="n">04</span>
     <div>
-      <h3>The Distributions You Actually Meet</h3>
-      <p class="subj">Lognormal, Poisson, Student's t — and which one options assume</p>
-      <p>Five distributions, what each one is for, and how to tell them apart from a sample. Why prices are modeled lognormal and returns normal; why counting things gets a Poisson; why Student's t is the honest default for anything financial; and what a mixture is, which turns out to be the cheapest way to make a fat tail.</p>
-      <div class="tags"><span>Lognormal</span><span>Poisson</span><span>Student's t</span><span>Mixtures</span><span>Fat tails</span></div>
+      <h3>Five Shapes, and What Each Is For</h3>
+      <p class="subj">Lognormal, Poisson, Student's t, and the mixture</p>
+      <p>Prices multiply rather than add, so the normal belongs on the log return and the lognormal on the price &mdash; which is why halving is more likely than doubling. Then counts, where the Poisson's variance equals its mean and any departure is the story. Then Student's t, whose one dial reads 6/(df&minus;4) in kurtosis. Ends with the surprise: a mixture of two normals is 116&times; fatter than a normal four sigma out and <em>thinner</em> two sigma out.</p>
+      <div class="tags"><span>Lognormal</span><span>Poisson</span><span>Student's t</span><span>Mixtures</span><span>Fat tails</span><span>Identification</span></div>
     </div>
-    <span class="st soon">Planned</span>
-  </div>
+    <span class="st live">Live &rarr;</span>
+  </a>
 
   <h2 class="grp">Inference — what a sample is allowed to tell you</h2>
 
-  <div class="entry planned">
+  <a class="entry" href="sample.html">
     <span class="n">05</span>
     <div>
-      <h3>What a Sample Can Tell You</h3>
-      <p class="subj">Estimators, standard error, and how many days to know a volatility</p>
-      <p>You have thirty days of returns and want a volatility. The number you compute is not the number you want, and the gap has a size. Estimators, bias, standard error and confidence intervals, built by resampling rather than by formula — then the practical question the whole chapter exists for: how long must you watch before an estimate is worth trading on?</p>
-      <div class="tags"><span>Estimators</span><span>Standard error</span><span>Confidence intervals</span><span>Bootstrap</span><span>Vol estimation</span></div>
+      <h3>What a Sample Is Allowed to Tell You</h3>
+      <p class="subj">Standard errors, confidence intervals, and the bootstrap</p>
+      <p>Five years of daily returns pins a stock's <em>average</em> return to within &plusmn;28 percentage points &mdash; useless &mdash; and its <em>volatility</em> to within &plusmn;0.9. Same column of numbers, opposite verdicts, and the reason is one factor of two hiding in a formula. Then the bootstrap, which gets an interval by resampling rather than algebra, and the sentence about confidence intervals that almost everyone says wrong.</p>
+      <div class="tags"><span>Standard error</span><span>Confidence intervals</span><span>Bootstrap</span><span>Sample size</span><span>Coverage</span></div>
     </div>
-    <span class="st soon">Planned</span>
-  </div>
+    <span class="st live">Live &rarr;</span>
+  </a>
 
-  <div class="entry planned">
+  <a class="entry" href="bayes.html">
     <span class="n">06</span>
     <div>
-      <h3>Updating on Evidence</h3>
-      <p class="subj">Bayes, base rates, and the belief that moves too far</p>
-      <p>A stock gaps four standard deviations. Was that a four-sigma move, or was your volatility estimate wrong? Bayes' rule as a picture rather than a formula, why base rates dominate any single observation, the medical-test problem that catches everyone, and the trader's version: how much should one enormous day move your estimate of the next one?</p>
-      <div class="tags"><span>Bayes</span><span>Base rates</span><span>Priors</span><span>Likelihood</span><span>Updating vol</span></div>
+      <h3>A Test That Is Right 99% of the Time</h3>
+      <p class="subj">Bayes drawn as a rectangle, and the base rates people skip</p>
+      <p>It comes back positive and the chance you are sick is nine percent &mdash; because the healthy population is a thousand times larger and its 1% error rate swamps the true cases. Then the trading versions: one 6% day carries a likelihood ratio of 2,470 to 1 and flips a 90% view of volatility to under half a percent, and a good backtest on a strategy you had no reason to believe leaves it 29.6% likely to be real.</p>
+      <div class="tags"><span>Bayes</span><span>Base rates</span><span>Likelihood ratio</span><span>Sequential updating</span><span>Backtests</span></div>
     </div>
-    <span class="st soon">Planned</span>
-  </div>
+    <span class="st live">Live &rarr;</span>
+  </a>
 
   <h2 class="grp">Structure — things that move together, and things that break</h2>
 

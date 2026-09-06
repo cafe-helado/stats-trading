@@ -379,6 +379,237 @@ PAGES["shape"] = () => {
     Q.every(q => Math.abs((q.a + Math.max(q.tol * 10, 1)) - q.a) > q.tol));
 };
 
+PAGES["dist"] = () => {
+  const M = load("dist.html", ["mixVol", "mixKurt", "mixTail", "normTail", "tTail",
+    "__sample5", "__drill", "ncdf", "dpois", "dt", "mean", "variance", "skewness",
+    "kurtosis", "s1", "s2", "s3", "s4", "s5"]);
+  const {mean, variance, skewness, kurtosis} = M;
+
+  console.log("    chapter 01 - the lognormal");
+  eq("up 10% then down 10% leaves 0.99", 1.1 * 0.9, 0.99, 1e-12);
+  eq("  ln(1.1) = 0.0953", Math.log(1.1), 0.09531, 1e-5);
+  eq("  ln(0.9) = -0.1054", Math.log(0.9), -0.10536, 1e-5);
+  eq("  and they sum back to the product", Math.exp(Math.log(1.1) + Math.log(0.9)), 0.99, 1e-12);
+  const S = 100, mu = 0.08, sg = 0.30, T = 1;
+  const m = Math.log(S) + (mu - sg * sg / 2) * T, sq = sg * Math.sqrt(T);
+  eq("mean price after a year is $108.33", S * Math.exp(mu * T), 108.329, 5e-3);
+  eq("  median is $103.56", Math.exp(m), 103.562, 5e-3);
+  eq("  mean is 4.60% above median", (S * Math.exp(mu * T) / Math.exp(m) - 1) * 100, 4.60, 0.02);
+  eq("  P(below the mean) = 55.96%",
+    M.ncdf((Math.log(S * Math.exp(mu * T)) - m) / sq) * 100, 55.96, 0.05);
+  /* halving beats doubling at zero drift */
+  const m0 = Math.log(100) + (0 - 0.09 / 2), s0 = 0.30;
+  eq("P(price halves) at 30 vol, no drift",
+    M.ncdf((Math.log(50) - m0) / s0) * 100, 1.537, 5e-3);
+  eq("P(price doubles)", (1 - M.ncdf((Math.log(200) - m0) / s0)) * 100, 0.694, 5e-3);
+  yes("halving is more than twice as likely as doubling",
+    M.ncdf((Math.log(50) - m0) / s0) > 2 * (1 - M.ncdf((Math.log(200) - m0) / s0)));
+
+  console.log("    chapter 02 - the Poisson");
+  eq("three halts a year: P(none) = 4.98%", M.dpois(0, 3) * 100, 4.979, 5e-3);
+  let six = 0; for (let k = 0; k < 6; k++) six += M.dpois(k, 3);
+  eq("  P(six or more) = 8.39%", (1 - six) * 100, 8.392, 5e-3);
+  eq("lambda = 4 gives a standard deviation of exactly 2", Math.sqrt(4), 2, 1e-15);
+  yes("the variance equals the mean, by construction", true);
+  eq("lambda = 0.5: P(zero) = 60.65%", M.dpois(0, 0.5) * 100, 60.653, 5e-3);
+  eq("lambda = 6: P(zero) = 0.25%", M.dpois(0, 6) * 100, 0.2479, 5e-4);
+
+  console.log("    chapter 03 - Student's t");
+  eq("t with 5 df, beyond 3 sigma: 3.01%", M.tTail(3, 5) * 100, 3.010, 0.02);
+  eq("  a normal there: 0.27%", M.normTail(3) * 100, 0.2700, 5e-4);
+  eq("  the t is 11 times fatter", M.tTail(3, 5) / M.normTail(3), 11.15, 0.08);
+  eq("t with 10 df is 4.9x", M.tTail(3, 10) / M.normTail(3), 4.94, 0.05);
+  eq("t with 30 df is 2.0x", M.tTail(3, 30) / M.normTail(3), 2.00, 0.03);
+  eq("excess kurtosis of t(5) is 6", 6 / (5 - 4), 6, 1e-12);
+  eq("excess kurtosis of t(6) is 3", 6 / (6 - 4), 3, 1e-12);
+  eq("excess kurtosis of t(10) is 1", 6 / (10 - 4), 1, 1e-12);
+  eq("kurtosis 6 implies 5 degrees of freedom", 4 + 6 / 6, 5, 1e-12);
+
+  console.log("    chapter 04 - the mixture and its thin shoulder");
+  const w = 0.90, v1 = 0.15, v2 = 0.45;
+  eq("90% at 15 vol + 10% at 45 vol gives 20.12% overall",
+    M.mixVol(w, v1, v2) * 100, 20.1246, 5e-3);
+  eq("  excess kurtosis 5.33", M.mixKurt(w, v1, v2), 5.3333, 5e-3);
+  eq("beyond 2 sigma the mixture is THINNER", M.mixTail(2, w, v1, v2) * 100, 4.367, 5e-3);
+  eq("  the normal there", M.normTail(2) * 100, 4.550, 5e-3);
+  yes("  so the ratio is below one", M.mixTail(2, w, v1, v2) < M.normTail(2));
+  eq("beyond 3 sigma: 6.7x fatter", M.mixTail(3, w, v1, v2) / M.normTail(3), 6.68, 0.05);
+  eq("beyond 4 sigma: 116x", M.mixTail(4, w, v1, v2) / M.normTail(4), 116.2, 1.0);
+  eq("beyond 5 sigma: 4,414x", M.mixTail(5, w, v1, v2) / M.normTail(5), 4414, 40);
+  yes("the fat tail is paid for out of the shoulder",
+    M.mixTail(2, w, v1, v2) < M.normTail(2) && M.mixTail(4, w, v1, v2) > M.normTail(4));
+
+  console.log("    chapter 05 - identifying a sample");
+  const pois = M.__sample5(1, 20000);
+  yes("the Poisson sample is all non-negative integers",
+    pois.every(v => Number.isInteger(v) && v >= 0));
+  eq("  its variance-to-mean ratio is about one",
+    variance(pois) / mean(pois), 1.0, 0.08);
+  const lg = M.__sample5(0, 20000);
+  yes("the lognormal sample is strictly positive", lg.every(v => v > 0));
+  yes("  and right-skewed", skewness(lg) > 0.8);
+  const tt = M.__sample5(2, 20000);
+  yes("the t sample has fat tails", kurtosis(tt) > 2);
+  const nn = M.__sample5(4, 20000);
+  yes("the plain normal reads near zero kurtosis", Math.abs(kurtosis(nn)) < 0.3);
+  const mixS = M.__sample5(3, 20000);
+  yes("the mixture reads fat too", kurtosis(mixS) > 2);
+
+  console.log("    chapter 06 - the drill generator");
+  const Q = M.__drill();
+  yes("every question has a finite answer, prompt, working and tolerance",
+    Q.every(q => isFinite(q.a) && q.q && q.w && q.tol > 0));
+  const kinds = {};
+  Q.forEach(q => { kinds[q.kind] = (kinds[q.kind] || 0) + 1; });
+  Object.keys(kinds).sort().forEach(k => console.log("      " + k.padEnd(34) + kinds[k]));
+  yes("six distinct question kinds", Object.keys(kinds).length === 6);
+  yes("the exact answer is always accepted", Q.every(q => Math.abs(q.a - q.a) <= q.tol));
+  yes("an answer well outside the band is rejected",
+    Q.every(q => Math.abs((q.a + Math.max(q.tol * 10, 1)) - q.a) > q.tol));
+};
+
+PAGES["sample"] = () => {
+  const M = load("sample.html", ["seMean", "seVol", "daysForVol", "yearOfReturns",
+    "annVol", "maxDrawdown", "__boot", "__cover", "__drill", "mean", "sd", "s1", "s2", "s3", "s4", "s5"]);
+
+  console.log("    chapter 01 - the standard error of a mean");
+  eq("sd 1, n 100: se is 0.10", M.seMean(1, 100), 0.10, 1e-12);
+  eq("quadrupling n halves it", M.seMean(1, 400), 0.05, 1e-12);
+  yes("four times the data halves the error",
+    Math.abs(M.seMean(1, 400) / M.seMean(1, 100) - 0.5) < 1e-12);
+
+  console.log("    chapter 02 - drift is unmeasurable");
+  eq("2% daily is 31.75% annualized", 0.02 * Math.sqrt(252) * 100, 31.749, 5e-3);
+  eq("20 days: se of the daily mean is 0.447%", 0.02 / Math.sqrt(20) * 100, 0.4472, 1e-3);
+  eq("  annualized, 113%", 0.02 / Math.sqrt(20) * 252 * 100, 112.70, 0.05);
+  eq("252 days: annualized se is 31.7%", 0.02 / Math.sqrt(252) * 252 * 100, 31.75, 0.02);
+  eq("1260 days: annualized se is 14.2%", 0.02 / Math.sqrt(1260) * 252 * 100, 14.20, 0.02);
+  eq("  so the 95% half-width is 28 points",
+    1.96 * 0.02 / Math.sqrt(1260) * 252 * 100, 27.83, 0.05);
+  yes("after five years, zero drift is still inside the interval",
+    1.96 * 0.02 / Math.sqrt(1260) * 252 > 0.08);
+
+  console.log("    chapter 03 - volatility is measurable");
+  eq("20 vol from 20 days: se 3.16 points", M.seVol(0.20, 20) * 100, 3.162, 5e-3);
+  eq("from 60 days: 1.83", M.seVol(0.20, 60) * 100, 1.826, 5e-3);
+  eq("from 252 days: 0.89", M.seVol(0.20, 252) * 100, 0.891, 5e-3);
+  eq("  so the 95% band is 18.25% to 21.75%",
+    (0.20 - 1.96 * M.seVol(0.20, 252)) * 100, 18.253, 5e-3);
+  eq("  upper end", (0.20 + 1.96 * M.seVol(0.20, 252)) * 100, 21.747, 5e-3);
+  eq("769 days pin it to one point", M.daysForVol(0.20, 0.01), 769, 0);
+  eq("193 days pin it to two", M.daysForVol(0.20, 0.02), 193, 0);
+  yes("halving the target width quadruples the days",
+    Math.abs(M.daysForVol(0.20, 0.01) / M.daysForVol(0.20, 0.02) - 4) < 0.05);
+  yes("one year pins volatility to under 10% of itself",
+    1.96 * M.seVol(0.20, 252) / 0.20 < 0.10);
+  yes("  while drift stays uncertain by many multiples of itself",
+    1.96 * 0.32 / 0.08 > 5);
+
+  console.log("    chapter 04 - the bootstrap");
+  const B = M.__boot(0, 2000, 252);
+  console.log("      observed vol " + B.obs.toFixed(3) + "%  bootstrap " +
+    B.lo.toFixed(3) + "% to " + B.hi.toFixed(3) + "%");
+  const fse = M.seVol(B.obs / 100, 252) * 100;
+  console.log("      formula interval " + (B.obs - 1.96 * fse).toFixed(3) + "% to " +
+    (B.obs + 1.96 * fse).toFixed(3) + "%");
+  yes("the bootstrap interval brackets the observed value", B.lo < B.obs && B.hi > B.obs);
+  yes("the bootstrap standard error matches the formula within 15%",
+    Math.abs(B.seBoot - fse) / fse < 0.15);
+  const D = M.__boot(2, 1000, 252);
+  yes("the bootstrap works for a drawdown, which has no formula",
+    isFinite(D.obs) && D.hi > D.lo);
+
+  console.log("    chapter 05 - what an interval claims");
+  const iv = M.__cover(0.95, 40, 400);
+  const hits = iv.filter(i => i.hit).length / iv.length;
+  console.log("      95% intervals caught the truth " + (hits * 100).toFixed(1) + "% of the time");
+  eq("coverage is close to the nominal level", hits * 100, 95, 3.0);
+  const iv80 = M.__cover(0.80, 40, 400);
+  const h80 = iv80.filter(i => i.hit).length / iv80.length;
+  eq("an 80% interval covers about 80%", h80 * 100, 80, 5.0);
+  yes("a lower confidence level covers less often", h80 < hits);
+
+  console.log("    chapter 06 - the drill generator");
+  const Q = M.__drill();
+  yes("every question has a finite answer, prompt, working and tolerance",
+    Q.every(q => isFinite(q.a) && q.q && q.w && q.tol > 0));
+  const kinds = {};
+  Q.forEach(q => { kinds[q.kind] = (kinds[q.kind] || 0) + 1; });
+  Object.keys(kinds).sort().forEach(k => console.log("      " + k.padEnd(34) + kinds[k]));
+  yes("six distinct question kinds", Object.keys(kinds).length === 6);
+  yes("the exact answer is always accepted", Q.every(q => Math.abs(q.a - q.a) <= q.tol));
+  yes("an answer well outside the band is rejected",
+    Q.every(q => Math.abs((q.a + Math.max(q.tol * 10, 1)) - q.a) > q.tol));
+};
+
+PAGES["bayes"] = () => {
+  const M = load("bayes.html", ["posterior", "toOdds", "fromOdds", "likRatio",
+    "volPosterior", "__chain", "__drill", "dnorm", "s1", "s2", "s3", "s4", "s5"]);
+
+  console.log("    chapter 01 - the screening problem");
+  eq("1 in 1000, a 99/99 test: 9.02%", M.posterior(0.001, 0.99, 0.99) * 100, 9.016, 5e-3);
+  eq("  out of 100,000: 99 true positives", 100000 * 0.001 * 0.99, 99, 1e-9);
+  eq("  and 999 false ones", 100000 * 0.999 * 0.01, 999, 1e-9);
+  eq("  which is 99 over 1098", 99 / 1098 * 100, 9.016, 5e-3);
+  eq("at 1% prevalence it is 50%", M.posterior(0.01, 0.99, 0.99) * 100, 50.0, 0.05);
+  eq("at 10% prevalence, 91.7%", M.posterior(0.10, 0.99, 0.99) * 100, 91.67, 0.02);
+  eq("better sensitivity barely helps",
+    M.posterior(0.001, 0.999, 0.99) * 100, 9.09, 0.02);
+  eq("better specificity is transformative",
+    M.posterior(0.001, 0.99, 0.999) * 100, 49.77, 0.05);
+  yes("specificity moves the answer far more than sensitivity",
+    M.posterior(0.001, 0.99, 0.999) > 4 * M.posterior(0.001, 0.999, 0.99));
+
+  console.log("    chapter 02 - the odds form");
+  eq("a 99/99 test has a likelihood ratio of 99", M.likRatio(0.99, 0.99), 99, 1e-9);
+  eq("prior odds of 1 in 999", M.toOdds(0.001), 0.001001, 1e-6);
+  eq("  times 99 gives posterior odds", M.toOdds(0.001) * 99, 0.09910, 1e-5);
+  eq("  which converts to 9.02%", M.fromOdds(M.toOdds(0.001) * 99) * 100, 9.016, 5e-3);
+  yes("the odds form and the area form agree exactly",
+    Math.abs(M.fromOdds(M.toOdds(0.001) * M.likRatio(0.99, 0.99))
+      - M.posterior(0.001, 0.99, 0.99)) < 1e-12);
+
+  console.log("    chapter 03 - repeated tests");
+  const ch = M.__chain(0.001, 0.99, 0.99, 3);
+  eq("after one positive: 9.02%", ch[1] * 100, 9.016, 5e-3);
+  eq("after two: 90.75%", ch[2] * 100, 90.750, 0.01);
+  eq("after three: 99.90%", ch[3] * 100, 99.897, 0.01);
+  yes("belief rises with each positive", ch[1] < ch[2] && ch[2] < ch[3]);
+
+  console.log("    chapter 04 - updating a volatility");
+  const V = M.volPosterior(0.06, 0.90, 0.20, 0.40, 252);
+  eq("a 6% day is 4.76 sigma under the calm story", V.sigmaLo, 4.762, 5e-3);
+  eq("  and 2.38 under the stressed one", V.sigmaHi, 2.381, 5e-3);
+  eq("the likelihood ratio is about 2,470 to 1", V.ratio, 2469.7, 5);
+  eq("posterior on calm falls to 0.36%", V.post * 100, 0.359, 0.01);
+  yes("one day flips a 90% belief", V.post < 0.01);
+  const ord = M.volPosterior(0.01, 0.90, 0.20, 0.40, 252);
+  yes("an ordinary 1% day barely moves it", ord.post > 0.85);
+  yes("  because its likelihood ratio is near one", ord.ratio < 2.5);
+
+  console.log("    chapter 05 - the backtest base rate");
+  const bt = (pr, po, fp) => pr * po / (pr * po + (1 - pr) * fp);
+  eq("5% prior, 80% power, 10% false positives: 29.6%", bt(0.05, 0.80, 0.10) * 100, 29.63, 0.02);
+  eq("at a 1% prior it is 7.5%", bt(0.01, 0.80, 0.10) * 100, 7.48, 0.02);
+  eq("at 20% it is 66.7%", bt(0.20, 0.80, 0.10) * 100, 66.67, 0.02);
+  eq("at 50% it is 88.9%", bt(0.50, 0.80, 0.10) * 100, 88.89, 0.02);
+  yes("a good backtest alone leaves it more likely dead than alive",
+    bt(0.05, 0.80, 0.10) < 0.5);
+  eq("the prior needed to reach a coin flip", 0.10 / (0.80 + 0.10) * 100, 11.11, 0.02);
+
+  console.log("    chapter 06 - the drill generator");
+  const Q = M.__drill();
+  yes("every question has a finite answer, prompt, working and tolerance",
+    Q.every(q => isFinite(q.a) && q.q && q.w && q.tol > 0));
+  const kinds = {};
+  Q.forEach(q => { kinds[q.kind] = (kinds[q.kind] || 0) + 1; });
+  Object.keys(kinds).sort().forEach(k => console.log("      " + k.padEnd(34) + kinds[k]));
+  yes("six distinct question kinds", Object.keys(kinds).length === 6);
+  yes("the exact answer is always accepted", Q.every(q => Math.abs(q.a - q.a) <= q.tol));
+  yes("an answer well outside the band is rejected",
+    Q.every(q => Math.abs((q.a + Math.max(q.tol * 10, 1)) - q.a) > q.tol));
+};
+
 /* ── run ─────────────────────────────────────────────────────────────── */
 const only = process.argv[2];
 const names = only ? [only.replace(/\.html$/, "")] : Object.keys(PAGES);

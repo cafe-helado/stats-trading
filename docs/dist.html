@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F4F1E8">
+<title>The Distributions You Actually Meet — Chance, visually</title>
+<meta name="description" content="Lognormal, Poisson, Student&#x27;s t and mixtures: what question each one answers, why prices are lognormal and halving beats doubling, and how a mixture of two normals gets tails 116 times fatter at four sigma and thinner at two.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The Distributions You Actually Meet — Chance, visually">
+<meta property="og:description" content="Lognormal, Poisson, Student&#x27;s t and mixtures: what question each one answers, why prices are lognormal and halving beats doubling, and how a mixture of two normals gets tails 116 times fatter at four sigma and thinner at two.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F1E8'/><rect x='5' y='19' width='4' height='7' fill='%230B6E75'/><rect x='11' y='12' width='4' height='14' fill='%230B6E75'/><rect x='17' y='7' width='4' height='19' fill='%230B6E75'/><rect x='23' y='16' width='4' height='10' fill='%230B6E75'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lab.css">
+<link rel="stylesheet" href="assets/mobile.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chance">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+<header class="serieshead">
+  <div class="in">
+    <a class="home" href="index.html">← Chance, visually</a>
+    <span class="num">No. 04 · Distributions</span>
+  </div>
+</header>
+
+<div class="progress" id="prog"></div>
+<nav class="chapnav" id="chapnav" aria-label="Chapters">
+  <a href="#c1"><span>Why prices are lognormal</span><i></i></a>
+  <a href="#c2"><span>Counting rare things</span><i></i></a>
+  <a href="#c3"><span>The honest default</span><i></i></a>
+  <a href="#c4"><span>The cheapest fat tail</span><i></i></a>
+  <a href="#c5"><span>Telling them apart</span><i></i></a>
+  <a href="#c6"><span>Drills</span><i></i></a>
+</nav>
+
+<div class="hero">
+  <canvas id="heroCv" aria-hidden="true"></canvas>
+  <div class="heroInner">
+    <div class="eyebrow">An interactive derivation · No. 04</div>
+    <h1>Five shapes, and what each is <em>for</em></h1>
+    <p class="sub">The normal is not the only distribution and usually not the right one. Here are the four you will actually meet, what question each one answers, and the single diagnostic that tells them apart from a sample.</p>
+  </div>
+  <div class="scrollcue">Scroll ↓</div>
+</div>
+
+<main>
+
+<div class="orient">
+  <h2>Start here</h2>
+  <p class="lede">Module 03 showed that sums of independent things go normal. This one is about everything that is <em>not</em> a sum of independent things — prices, which multiply; counts, which are integers; and returns, which have tails a normal cannot produce.</p>
+  <ol>
+    <li><b>Chapter 01 is the one finance is built on.</b> Prices multiply rather than add, so the normal belongs on the <em>log</em> return and the lognormal on the price. Which is why halving is more likely than doubling.</li>
+    <li><b>Chapter 04 is the surprise.</b> A mixture of two calm-and-stressed regimes produces tails 116 times fatter than a normal four standard deviations out — and <em>thinner</em> tails two standard deviations out. Fat tails come with a thin shoulder.</li>
+    <li><b>Chapter 05 is the practical skill:</b> given a sample, which of these is it? One number does most of the work.</li>
+  </ol>
+  <details class="drop">
+    <summary>Notation — every symbol used on this page</summary>
+    <table class="ntab">
+      <tr><td>Lognormal</td><td>A quantity whose <em>logarithm</em> is normal. What you get when many small multiplicative shocks compound.</td></tr>
+      <tr><td>Log return</td><td>ln(price now ÷ price before). Adds across periods, where percentage returns do not.</td></tr>
+      <tr><td>Poisson</td><td>The distribution of how many rare independent events happen in a fixed window. Its variance equals its mean.</td></tr>
+      <tr><td>λ</td><td>The Poisson's one parameter: the average number of events per window.</td></tr>
+      <tr><td>Student's t</td><td>A bell with fatter tails, controlled by its degrees of freedom. As df → ∞ it becomes the normal.</td></tr>
+      <tr><td>Degrees of freedom</td><td>The t's tail-fatness dial. Low means fat; its excess kurtosis is 6/(df − 4).</td></tr>
+      <tr><td>Mixture</td><td>Draw from one of several distributions at random. The cheapest way to build a fat tail out of normals.</td></tr>
+      <tr><td>Excess kurtosis</td><td>Zero for a normal. The single most useful number for telling these shapes apart from data.</td></tr>
+    </table>
+  </details>
+</div>
+
+<!-- ══════════ 01 ══════════ -->
+<section class="chapter" id="c1">
+  <div class="chead">
+    <div class="cnum">01</div>
+    <h2>Prices multiply, so the normal goes on the logarithm</h2>
+    <p class="dek">A stock cannot go negative and a 10% gain does not undo a 10% loss. Both facts point at the same distribution.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Start with the arithmetic everyone has met and nobody quite believes. Up 10%, then down 10%, leaves you at <b>0.99</b> — not back where you started. Percentage returns do not add.</p>
+    <p>Their <span class="term" data-t="Log return" data-def="The natural logarithm of one price divided by the previous one. Unlike a percentage return it adds across periods, which is what makes it the right thing to model as normal.">logarithms</span> do. ln(1.10) = <b>0.0953</b> and ln(0.90) = <b>−0.1054</b>; they sum to −0.0101, and exponentiating gives 0.9900 exactly. So if you want a quantity that behaves like a sum — and module 03 says sums go normal — you want the log return, not the percentage one.</p>
+    <p>Make the log return normal and the price becomes <b>lognormal</b>, which fixes the other problem too: a lognormal cannot go below zero, and a stock cannot either. Model returns as plain normal and you assign real probability to a negative price — <b>0.043%</b> at 30% annual volatility, which is small and is still nonsense.</p>
+    <p>The consequence people find hardest is the asymmetry. At 30% volatility and no drift, the chance a stock <em>halves</em> over a year is <b>1.54%</b> while the chance it <em>doubles</em> is <b>0.69%</b> — less than half as likely, despite both being "a factor of two." The mean sits above the median, and most outcomes land below the mean: <b>55.96%</b> of them.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Where the price lands after a year</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Lognormal price</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>Median</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Mean</span>
+          </span>
+        </div>
+        <canvas id="cv1" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl1"></div>
+        <div class="kv" style="margin-top:20px" id="kv1"></div>
+      </div>
+    </div>
+    <figcaption>Notice the mean sits to the right of the peak and to the right of the median. The long right tail drags the average up, so the average outcome is above the typical one — always, for anything lognormal.</figcaption>
+  </figure>
+
+  <div class="mline">price is lognormal   ⟺   ln(price) is normal   ⟺   returns compound</div>
+  <p class="mread">Reads as: <b>the three statements are the same statement.</b> Choosing a lognormal for the price is not a modeling flourish — it is what you get automatically once you accept that returns multiply.</p>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A stock at 30% volatility, no drift. Is it more likely to halve or to double over a year?</p>
+    <div class="opts">
+      <button>Equally likely — they are the same size move</button>
+      <button data-ok="1">To halve, 1.54% against 0.69%. Halving needs a log return of −0.69 and doubling needs +0.69, but the drift adjustment −σ²/2 tilts the distribution down</button>
+      <button>To double, since prices trend up</button>
+      <button>Neither is possible at 30% volatility</button>
+    </div>
+    <div class="ans"><b>Halving, by more than two to one.</b> The two moves are symmetric in log space but the log return is centered at −σ²/2 rather than at zero, which is what makes them asymmetric in price. That −σ²/2 is not a fudge: it is what forces the <em>mean</em> price to come out right when the <em>median</em> is what the normal is centered on.</div>
+  </div>
+</section>
+
+<!-- ══════════ 02 ══════════ -->
+<section class="chapter" id="c2">
+  <div class="chead">
+    <div class="cnum">02</div>
+    <h2>Counting rare things</h2>
+    <p class="dek">The Poisson has one parameter and one signature: its variance equals its mean. If a count does not obey that, it is not Poisson.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Some quantities are not measurements, they are counts: how many trading halts this year, how many defaults in a portfolio, how many customers arrive in an hour, how many of your short options get assigned. Counts are integers, cannot be negative, and have no natural upper bound.</p>
+    <p>The distribution for that is the <b>Poisson</b>, and it has exactly one parameter — λ, the average count per window. Everything else follows. If an exchange sees an average of three halts a year, the chance of a year with <em>none</em> is <b>4.98%</b> and the chance of six or more is <b>8.39%</b>.</p>
+    <p>Its diagnostic is unusually clean: <b>the variance equals the mean.</b> A Poisson with λ = 4 has a standard deviation of exactly 2. If you have count data whose variance is much larger than its mean, it is not Poisson — the events are clustering, which is a real and important finding rather than a modeling inconvenience.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>How many events in one window</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>Poisson</span>
+            <span><i class="swl" style="background:var(--verm)"></i>The normal with the same mean and spread</span>
+          </span>
+        </div>
+        <canvas id="cv2" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl2"></div>
+        <div class="kv" style="margin-top:20px" id="kv2"></div>
+      </div>
+    </div>
+    <figcaption>Notice how lopsided it is at small λ and how quickly it straightens out. By λ = 20 the normal is a good approximation; at λ = 1 it is useless, and negative counts are the giveaway.</figcaption>
+  </figure>
+
+  <div class="mline">P(k events) = e<sup>−λ</sup> λᵏ / k!      mean = λ,   variance = λ</div>
+  <p class="mread">Reads as: <b>one parameter sets everything, and the spread is locked to the average.</b> That lock is the test — real count data that breaks it is telling you the events are not independent.</p>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Set λ to 1 and predict the most likely number of events. There are two answers and that is not a mistake.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c2" data-patch='{"lam":1}' data-focus="cv2">One per window</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"lam":3}' data-focus="cv2">Three</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"lam":25}' data-focus="cv2">Twenty-five</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">You count defaults per year over a long history: mean 4, variance 19. What does that tell you?</p>
+    <div class="opts">
+      <button>Nothing — variance and mean are unrelated</button>
+      <button data-ok="1">That it is not Poisson. The variance should equal the mean, so five times the mean means defaults are clustering rather than arriving independently</button>
+      <button>That the sample is too small</button>
+      <button>That the mean estimate is wrong</button>
+    </div>
+    <div class="ans"><b>Clustering, and it is the most important thing in the data.</b> Independent arrivals give variance equal to mean; correlated ones give more. In credit that correlation is the entire risk — a portfolio of a hundred loans that default independently is safe, and the same hundred loans defaulting together is not, and the mean default rate is identical in both worlds.</div>
+  </div>
+</section>
+
+<!-- ══════════ 03 ══════════ -->
+<section class="chapter" id="c3">
+  <div class="chead">
+    <div class="cnum">03</div>
+    <h2>Student's t, and why it is the honest default</h2>
+    <p class="dek">A bell with a dial for tail fatness. Turn it to five and you have something that fits real returns.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The normal's problem is not its middle, it is its edges. Three standard deviations out it puts <b>0.27%</b> of the mass, and real financial returns put far more there.</p>
+    <p>Student's t is the same bell shape with a dial: its <b>degrees of freedom</b> control how fat the tails are, and as the dial goes to infinity it becomes exactly the normal. At <b>5 degrees of freedom</b> the mass beyond three sigma is <b>3.01%</b> — <b>11 times</b> the normal's. At 10 df it is 1.33%, about five times. At 30 df it is twice.</p>
+    <p>The dial has a direct reading in <span class="term" data-t="Excess kurtosis" data-def="How much of the variance comes from the tails, scaled so a normal reads exactly zero. For a Student's t with v degrees of freedom it is 6/(v−4), which is why the t is the easiest fat-tailed distribution to fit.">excess kurtosis</span>: <b>6/(df − 4)</b>. So t with 5 df has excess kurtosis 6.0, t with 6 df has 3.0, and t with 10 df has 1.0. Daily equity returns typically measure somewhere between 3 and 8, which is why <b>5 or 6 degrees of freedom</b> is the usual fit and why anyone who models daily returns as normal is choosing a distribution they know is wrong in the one place it matters.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The same bell, with the tail dial turned</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Student's t</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Normal</span>
+            <span><i class="sw" style="background:var(--ochre)"></i>The tail in question</span>
+          </span>
+        </div>
+        <canvas id="cv3" height="300"></canvas>
+        <canvas id="cv3b" height="200" style="margin-top:16px"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl3"></div>
+        <div class="kv" style="margin-top:20px" id="kv3"></div>
+      </div>
+    </div>
+    <figcaption>Notice the two curves are almost indistinguishable in the middle — the lower panel is the ratio of their tails, on a log scale, and it is the only place the difference lives.</figcaption>
+  </figure>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Set the degrees of freedom to 30 and see how little is left of the difference. Then drop it to 4 and watch the ratio panel.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c3" data-patch='{"df":5}' data-focus="cv3">Five — a typical fit</button>
+      <button class="act ghost" data-preset="c3" data-patch='{"df":30}' data-focus="cv3">Thirty</button>
+      <button class="act ghost" data-preset="c3" data-patch='{"df":4.2}' data-focus="cv3">Barely finite kurtosis</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Why does the t's excess kurtosis formula, 6/(df − 4), stop working at four degrees of freedom?</p>
+    <div class="opts">
+      <button>It is an approximation that breaks down</button>
+      <button data-ok="1">Because below five degrees of freedom the fourth moment is infinite — the tails are so fat that kurtosis has no finite value at all</button>
+      <button>Because you cannot have fewer than four observations</button>
+      <button>It does work; the formula just gives a negative number</button>
+    </div>
+    <div class="ans"><b>The moment stops existing.</b> A t with 4 or fewer degrees of freedom has infinite kurtosis, and one with 2 or fewer has infinite <em>variance</em> — at which point the central limit theorem from module 03 stops applying. That is not a curiosity: it is the boundary between "fat tails I can model" and "a quantity whose average is not a meaningful summary."</div>
+  </div>
+</section>
+
+<!-- ══════════ 04 ══════════ -->
+<section class="chapter" id="c4">
+  <div class="chead">
+    <div class="cnum">04</div>
+    <h2>The cheapest fat tail, and its thin shoulder</h2>
+    <p class="dek">Mix two normals and you get tails 116 times fatter than a normal — and, four steps earlier, tails that are thinner.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Here is the least exotic way to build a fat tail. Suppose the market is calm 90% of the time, at 15% volatility, and stressed the other 10%, at 45%. Each regime is perfectly normal. The <em>mixture</em> is not.</p>
+    <p>Its overall volatility is <b>20.12%</b> and its excess kurtosis is <b>5.33</b> — squarely in the range real equity returns show, built out of nothing but two normals and a coin. This is why regime-switching is the default explanation for fat tails: you do not need an exotic distribution, only the observation that markets have quiet periods and loud ones.</p>
+    <p>Now the part that surprises people. Compare the mixture to a single normal with the same overall volatility:</p>
+    <ul style="max-width:62ch;margin:18px auto 22px;padding-left:22px;color:var(--ink2);font-weight:300;line-height:1.65">
+      <li>Beyond <b>2σ</b>: the mixture has <b>4.37%</b> against the normal's 4.55% — <em>thinner</em>.</li>
+      <li>Beyond <b>3σ</b>: 1.80% against 0.27% — <b>6.7×</b> fatter.</li>
+      <li>Beyond <b>4σ</b>: 0.736% against 0.0063% — <b>116×</b> fatter.</li>
+      <li>Beyond <b>5σ</b>: 0.253% against 0.00006% — <b>4,414×</b> fatter.</li>
+    </ul>
+    <p>A fat-tailed distribution is not uniformly fatter. It has to take the mass from somewhere, and it takes it from the shoulders. Which means a model that looks conservative at two standard deviations can be wrong by two orders of magnitude at four, and testing it only in the ordinary range will never reveal that.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>A mixture of two normals against the single normal that matches its volatility</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>The mixture</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Matched normal</span>
+          </span>
+        </div>
+        <canvas id="cv4" height="300"></canvas>
+        <canvas id="cv4b" height="200" style="margin-top:16px"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl4"></div>
+        <div class="kv" style="margin-top:20px" id="kv4"></div>
+      </div>
+    </div>
+    <figcaption>The lower panel is the ratio of the two tails. Notice it starts <em>below</em> one — the thin shoulder — crosses at around two and a half sigma, and then goes vertical.</figcaption>
+  </figure>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Make the stressed regime rarer but more violent — 2% of the time at 90% volatility — and predict what happens to the crossover point.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c4" data-patch='{"w":0.90,"v1":0.15,"v2":0.45}' data-focus="cv4">The example</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"w":0.98,"v1":0.17,"v2":0.90}' data-focus="cv4">Rarer and worse</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"w":0.5,"v1":0.18,"v2":0.24}' data-focus="cv4">Barely a mixture</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A risk model is validated against two years of daily data and matches the observed 2σ exceedances almost exactly. What does that establish?</p>
+    <div class="opts">
+      <button>That the model is sound</button>
+      <button data-ok="1">Very little about the tails. Two-sigma events are where a fat-tailed distribution can be thinner than a normal, so matching there is consistent with being wrong by a hundredfold at four sigma</button>
+      <button>That the model is too conservative</button>
+      <button>That the distribution is normal</button>
+    </div>
+    <div class="ans"><b>It validates the part of the distribution nobody is worried about.</b> Two years of daily data holds about 500 observations, roughly 23 of which should be 2σ events and none of which should be 4σ. A test with no 4σ observations in it cannot distinguish a model that is right there from one that is wrong by two orders of magnitude — which is the structural reason tail models fail their first real test rather than their validation.</div>
+  </div>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section class="chapter" id="c5">
+  <div class="chead">
+    <div class="cnum">05</div>
+    <h2>Which one is this?</h2>
+    <p class="dek">Given a sample and no label, three questions get you to the right family almost every time.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The practical version of this module is identification. You have a column of numbers; which of these shapes is it?</p>
+    <p><b>One — is it a count?</b> Non-negative integers with no upper bound point at Poisson. Then check the signature: variance against mean. Equal means Poisson; much larger means clustered arrivals and a different model.</p>
+    <p><b>Two — is it positive and multiplicative?</b> Prices, volumes, incomes and durations cannot go negative and tend to have a long right tail. Take logs and look again; if the logs are symmetric you have a lognormal and should be working in log space from here on.</p>
+    <p><b>Three — what is the excess kurtosis?</b> This is the single most useful number. Zero says normal. Two to eight says Student's t or a mixture, with the t's degrees of freedom recoverable as <b>4 + 6/kurtosis</b>. Very large, or unstable as you add data, says you may be near the boundary where the moment does not exist.</p>
+    <p>The last diagnostic deserves a warning. Kurtosis is a fourth moment, so it is enormously sensitive to the largest few observations — a single extreme day can move it substantially, and it is <em>less</em> stable exactly when the data is fat-tailed. Use it to choose a family, never to claim precision.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>An unlabeled sample, and what the diagnostics say</h3>
+          <span class="legend" style="margin:0" id="leg5"></span>
+        </div>
+        <canvas id="cv5" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl5"></div>
+        <div class="btnrow"><button class="act" id="reveal5">Reveal what it was</button></div>
+        <div class="kv" style="margin-top:20px" id="kv5"></div>
+      </div>
+    </div>
+    <figcaption>Read the diagnostics before you press. The point is not to be right every time — it is to notice which numbers actually carried the information.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A sample has excess kurtosis 2.0 in the first half of the data and 9.0 in the second half. What is the most likely explanation?</p>
+    <div class="opts">
+      <button>The two halves come from different distributions</button>
+      <button data-ok="1">One or two extreme observations landed in the second half. Kurtosis is a fourth moment and is dominated by the largest few points, so it is unstable exactly when the data is fat-tailed</button>
+      <button>The sample is too small to compute kurtosis</button>
+      <button>The data is normal and this is noise</button>
+    </div>
+    <div class="ans"><b>A handful of points, almost certainly.</b> The first answer might also be true — regimes are real — but it is not the parsimonious reading of a fourth moment doubling. The practical rule is to compute kurtosis, use it to pick a family, and never quote it to more than one significant figure.</div>
+  </div>
+</section>
+
+<!-- ══════════ 06 ══════════ -->
+<section class="chapter" id="c6">
+  <div class="chead">
+    <div class="cnum">06</div>
+    <h2>Drill it</h2>
+    <p class="dek">Lognormal arithmetic, Poisson probabilities and tail comparisons.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The first tier is the shapes themselves. The second is the tails, which is where the money is.</p>
+  </div>
+
+  <figure>
+    <div class="drill" id="drill">
+      <div class="dstats">
+        <div class="c"><span class="k">Correct</span><span class="v" id="dScore">0 / 0</span></div>
+        <div class="c"><span class="k">Streak</span><span class="v" id="dStreak" style="color:var(--moss)">0</span></div>
+        <div class="c"><span class="k">Best</span><span class="v" id="dBest">0</span></div>
+        <div class="c" style="flex:1;min-width:170px"><span class="k">Tier</span>
+          <div class="seg" style="margin-top:5px;max-width:240px">
+            <button id="dT1" aria-pressed="true">Shapes</button>
+            <button id="dT2" aria-pressed="false">Tails</button>
+          </div>
+        </div>
+      </div>
+      <span class="qn" id="dKind">Question</span>
+      <p class="qt" id="dText">Loading…</p>
+      <div class="ansrow">
+        <input type="text" inputmode="decimal" id="dInput" placeholder="your answer" aria-label="Your answer">
+        <span class="unit" id="dUnit"></span>
+        <button class="act" id="dSubmit">Check</button>
+        <button class="act ghost" id="dSkip">Skip</button>
+      </div>
+      <div class="verdict">
+        <div class="vd" id="dVerdict"></div>
+        <div class="work" id="dWork"></div>
+        <div class="btnrow"><button class="act" id="dNext">Next question</button></div>
+      </div>
+    </div>
+    <figcaption>Poisson probabilities are marked loosely — the skill is knowing roughly how unlikely a count is, not evaluating a factorial.</figcaption>
+  </figure>
+
+  <div class="prose" style="margin-top:46px">
+    <p>Six questions across the page.</p>
+  </div>
+
+  <div class="score" id="scoreBox">
+    <span class="big" id="scoreNum">0 / 6</span>
+    <span class="txt" id="scoreTxt">Answered nothing yet. Questions are scored as you go.</span>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 1 · chapter 01</span>
+    <p class="q">Why is the normal put on log returns rather than on percentage returns?</p>
+    <div class="opts">
+      <button>Because logs are easier to compute</button>
+      <button data-ok="1">Because returns compound. Log returns add across periods and percentage returns do not, and it is sums that go normal — plus a lognormal price cannot go negative</button>
+      <button>Because log returns are always positive</button>
+      <button>Convention only; either works</button>
+    </div>
+    <div class="ans"><b>Because compounding is multiplication, and logs turn multiplication into addition.</b> Up 10% then down 10% is 0.99, not 1.00 — but ln(1.1) + ln(0.9) = −0.0101 exactly, and exponentiating recovers 0.99. Everything else about the lognormal follows from that one move.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 2 · chapter 01</span>
+    <p class="q">At 30% volatility and no drift, which is more likely over a year?</p>
+    <div class="opts">
+      <button>Doubling, at 1.54% against 0.69%</button>
+      <button data-ok="1">Halving, at 1.54% against 0.69%</button>
+      <button>They are equally likely</button>
+      <button>Neither happens at 30% volatility</button>
+    </div>
+    <div class="ans"><b>Halving, by more than two to one.</b> Symmetric in logs, asymmetric in price, because the log return is centered at −σ²/2. This is also why the median outcome of a volatile asset is below its mean — and why the average of many volatile assets flatters the typical one.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 3 · chapter 02</span>
+    <p class="q">What is the Poisson's identifying signature?</p>
+    <div class="opts">
+      <button>It is symmetric around its mean</button>
+      <button data-ok="1">Its variance equals its mean. λ = 4 means a standard deviation of exactly 2</button>
+      <button>It has two parameters</button>
+      <button>Its tails are fatter than a normal's</button>
+    </div>
+    <div class="ans"><b>Variance equals mean, and it is a testable claim.</b> Count data whose variance far exceeds its mean is telling you the events cluster — which in defaults, outages or claims is usually the single most important thing in the dataset.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 4 · chapter 03</span>
+    <p class="q">Beyond three standard deviations, how much more mass does a t with 5 degrees of freedom hold than a normal?</p>
+    <div class="opts">
+      <button>About twice as much</button>
+      <button data-ok="1">About eleven times — 3.01% against 0.27%</button>
+      <button>About the same; the difference is in the middle</button>
+      <button>About a hundred times</button>
+    </div>
+    <div class="ans"><b>Eleven times, and the difference is entirely in the tails.</b> The two densities are nearly identical within one standard deviation, which is exactly why fitting a model on ordinary days and trusting it on extreme ones goes wrong.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 5 · chapter 04</span>
+    <p class="q">A mixture of 90% at 15 vol and 10% at 45 vol has more mass beyond 4σ than a matched normal. How much more?</p>
+    <div class="opts">
+      <button>About twice</button>
+      <button>About ten times</button>
+      <button data-ok="1">About 116 times — 0.736% against 0.0063%</button>
+      <button>About the same, since the volatilities match</button>
+    </div>
+    <div class="ans"><b>Two orders of magnitude, from nothing more exotic than two normals and a coin.</b> And at 2σ the same mixture is <em>thinner</em> than the normal, 4.37% against 4.55%. Fat tails are paid for out of the shoulders.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 6 · chapter 05</span>
+    <p class="q">A sample has excess kurtosis of about 6. What family should you reach for?</p>
+    <div class="opts">
+      <button>Normal — six is close to zero on this scale</button>
+      <button data-ok="1">Student's t with about 5 degrees of freedom, since df = 4 + 6/kurtosis — or equivalently a two-regime mixture</button>
+      <button>Poisson</button>
+      <button>Uniform</button>
+    </div>
+    <div class="ans"><b>t with 5 df, or a mixture, and the two are hard to tell apart from data.</b> They are different stories about the same shape — one says the tails are intrinsic, the other says the world switches between calm and stressed. Which story you believe changes what you expect next, even though both fit the histogram.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="n">Every figure here is a clean parametric distribution, which real data never is. The lognormal assumes returns are independent across periods; they are not, because volatility clusters, and that dependence fattens the tails of multi-day returns beyond anything on this page. The Poisson assumes events arrive independently at a constant rate, which almost no interesting count obeys — halts, defaults and outages all cluster, and the honest diagnostic is the variance-to-mean ratio rather than the fit. Student's t and the two-regime mixture produce very similar histograms from very different stories, and a sample of a few thousand days cannot reliably tell them apart; choosing between them is a modeling judgment, not a measurement. And every kurtosis quoted here is a fourth moment computed from a finite sample, which means it is dominated by its largest few observations and should never be trusted to more than one significant figure.</p>
+</footer>
+
+<script src="assets/lab.js"></script>
+<script src="assets/stats.js"></script>
+<script src="assets/pwa.js" defer></script>
+<script>
+"use strict";
+
+/* The mixture used by chapters 04 and 05: draw from one of two zero-mean
+   normals. Its total variance is the weighted average of the two, and its
+   excess kurtosis follows from the fourth moments. */
+function mixVol(w, v1, v2) { return Math.sqrt(w * v1 * v1 + (1 - w) * v2 * v2); }
+function mixKurt(w, v1, v2) {
+  const v = w * v1 * v1 + (1 - w) * v2 * v2;
+  const m4 = w * 3 * Math.pow(v1, 4) + (1 - w) * 3 * Math.pow(v2, 4);
+  return m4 / (v * v) - 3;
+}
+/* the two-sided tail of the mixture, measured in units of its OWN sd */
+function mixTail(k, w, v1, v2) {
+  const s = mixVol(w, v1, v2);
+  return w * 2 * (1 - ncdf(k * s / v1)) + (1 - w) * 2 * (1 - ncdf(k * s / v2));
+}
+const normTail = k => 2 * (1 - ncdf(k));
+/* the t's two-sided tail, by numerical integration — good enough for a figure
+   and honest about being a quadrature rather than a closed form */
+function tTail(k, df) {
+  const N = 4000, hi = 60;
+  let s = 0;
+  for (let i = 0; i < N; i++) s += dt(k + hi * (i + 0.5) / N, df) * (hi / N);
+  return 2 * s;
+}
+
+/* ══════════ hero ══════════ */
+(function(){
+  const cv=document.getElementById("heroCv");let w,h,g,raf,t0=0;
+  function size(){const dpr=window.devicePixelRatio||1;
+    w=cv.clientWidth;h=cv.clientHeight;cv.width=w*dpr;cv.height=h*dpr;
+    g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);}
+  function draw(ph){
+    g.fillStyle=C("--chalk");g.fillRect(0,0,w,h);
+    const padX=w*0.06,padY=h*0.16,gw=w-padX*2,gh=h-padY*2;
+    const X=x=>padX+gw*(x+4)/8, Y=v=>padY+gh-v/0.42*gh;
+    /* a family of densities breathing between normal and fat */
+    for(let k=0;k<6;k++){
+      const t=Math.sin(ph*0.5+k*0.7)*0.5+0.5;
+      const df=3+t*40;
+      g.strokeStyle=k%2?C("--verm"):C("--blue");
+      g.globalAlpha=0.08+0.13*t;g.lineWidth=1.6;
+      g.beginPath();
+      for(let i=0;i<=160;i++){const x=-4+8*i/160;
+        const y=dt(x,df);
+        i?g.lineTo(X(x),Y(y)):g.moveTo(X(x),Y(y));}
+      g.stroke();
+    }
+    g.globalAlpha=1;
+  }
+  function tick(t){if(!t0)t0=t;draw((t-t0)/2600);raf=requestAnimationFrame(tick);}
+  window.drawHero=function(){size();if(RM){draw(0);return;}
+    if(raf)cancelAnimationFrame(raf);t0=0;raf=requestAnimationFrame(tick);};
+})();
+
+/* ══════════ 01 — the lognormal ══════════ */
+const s1={S:100,mu:0.08,sig:0.30,T:1};
+(function(){
+  sliders(document.getElementById("ctl1"),[
+    {id:"a1",k:"mu",lbl:"μ",name:"Drift",min:-0.10,max:0.25,step:0.005,fmt:v=>(v*100).toFixed(1)+"%"},
+    {id:"b1",k:"sig",lbl:"σ",name:"Volatility",min:0.05,max:1.0,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"c1t",k:"T",lbl:"T",name:"Horizon",min:0.1,max:5,step:0.1,fmt:v=>v.toFixed(1)+"y"}
+  ],s1,()=>draw(),"c1");
+  window.draw1=draw;
+  function draw(){
+    const S=s1.S,mu=s1.mu,sg=s1.sig,T=s1.T;
+    const m=Math.log(S)+(mu-sg*sg/2)*T, s=sg*Math.sqrt(T);
+    const med=Math.exp(m), mean=S*Math.exp(mu*T), mode=Math.exp(m-s*s);
+    const hi=Math.max(mean*2.4,S*2);
+    const xs=[],ys=[];
+    for(let i=1;i<=400;i++){const x=hi*i/400;xs.push(x);ys.push(dlnorm(x,m,s));}
+    const o=Fig(document.getElementById("cv1"),
+      {h:310,x0:0,x1:hi,y0:0,y1:Math.max.apply(null,ys)*1.14,pad:{l:64,r:14,t:14}});
+    axes(o,v=>"$"+v.toFixed(0),v=>v.toFixed(3),5,4);
+    shade(o,x=>x<=0?0:dlnorm(x,m,s),0.01,mean,C("--blue"),0.14);
+    clip(o,()=>line(o,xs,ys,C("--blue"),2.2));
+    vline(o,med,C("--ochre"),"median");
+    vline(o,mean,C("--verm"),"mean");
+    const pBelowMean=ncdf((Math.log(mean)-m)/s);
+    document.getElementById("kv1").innerHTML=kvHTML([
+      ["Start","$"+S.toFixed(2)],
+      ["Mean","$"+mean.toFixed(3)],
+      ["Median","$"+med.toFixed(3)],
+      ["Mode","$"+mode.toFixed(3)],
+      ["Mean over median",((mean/med-1)*100).toFixed(2)+"%"],
+      ["P(below the mean)",(pBelowMean*100).toFixed(2)+"%"],
+      ["P(price halves)",(ncdf((Math.log(0.5*S)-m)/s)*100).toFixed(3)+"%"],
+      ["P(price doubles)",((1-ncdf((Math.log(2*S)-m)/s))*100).toFixed(3)+"%"],
+      ["  halving ÷ doubling",(ncdf((Math.log(0.5*S)-m)/s)/(1-ncdf((Math.log(2*S)-m)/s))).toFixed(2)+"×"],
+      ["Up 10% then down 10%",(1.1*0.9).toFixed(4)]
+    ]);
+  }
+})();
+
+/* ══════════ 02 — the Poisson ══════════ */
+const s2={lam:3};
+(function(){
+  sliders(document.getElementById("ctl2"),[
+    {id:"a2",k:"lam",lbl:"λ",name:"Average events per window",min:0.2,max:40,step:0.1,fmt:v=>v.toFixed(1)}
+  ],s2,()=>draw(),"c2");
+  window.draw2=draw;
+  function draw(){
+    const lam=s2.lam, sd=Math.sqrt(lam);
+    const hi=Math.max(6,Math.ceil(lam+4*sd));
+    const ks=[],ps=[];
+    for(let k=0;k<=hi;k++){ks.push(k);ps.push(dpois(k,lam));}
+    const o=Fig(document.getElementById("cv2"),
+      {h:310,x0:-0.6,x1:hi+0.6,y0:0,y1:Math.max.apply(null,ps)*1.16,pad:{l:62,r:14,t:14}});
+    axes(o,v=>v.toFixed(0),v=>v.toFixed(3),5,4);
+    bars(o,ks,ps,C("--blue"),{alpha:0.82});
+    const xs=[],ys=[];
+    for(let i=0;i<=300;i++){const x=-0.6+(hi+1.2)*i/300;xs.push(x);ys.push(dnorm(x,lam,sd));}
+    clip(o,()=>line(o,xs,ys,C("--verm"),2.0));
+    vline(o,lam,C("--ochre"),"λ");
+    let cum=0,k2=Math.ceil(2*lam)-1;
+    for(let k=0;k<=k2;k++)cum+=dpois(k,lam);
+    document.getElementById("kv2").innerHTML=kvHTML([
+      ["λ (mean)",lam.toFixed(2)],
+      ["Variance",lam.toFixed(2)],
+      ["  they are equal","by construction"],
+      ["Standard deviation",sd.toFixed(4)],
+      ["P(zero events)",(dpois(0,lam)*100).toFixed(3)+"%"],
+      ["P(exactly one)",(dpois(1,lam)*100).toFixed(3)+"%"],
+      ["P(twice λ or more)",((1-cum)*100).toFixed(3)+"%"],
+      ["Most likely count",String(Math.floor(lam))+(Number.isInteger(lam)?" or "+(lam-1):"")],
+      ["Normal is usable when","λ ≳ 20"]
+    ]);
+  }
+})();
+
+/* ══════════ 03 — Student's t ══════════ */
+const s3={df:5,k:3};
+(function(){
+  sliders(document.getElementById("ctl3"),[
+    {id:"a3",k:"df",lbl:"ν",name:"Degrees of freedom",min:2.5,max:60,step:0.1,fmt:v=>v.toFixed(1)},
+    {id:"b3",k:"k",lbl:"k",name:"Tail threshold",min:1,max:5,step:0.05,fmt:v=>v.toFixed(2)+" σ"}
+  ],s3,()=>draw(),"c3");
+  window.draw3=draw;
+  function draw(){
+    const df=s3.df;
+    const xs=[],tv=[],nv=[];
+    for(let i=0;i<=400;i++){const x=-5+10*i/400;xs.push(x);tv.push(dt(x,df));nv.push(dnorm(x));}
+    const o=Fig(document.getElementById("cv3"),
+      {h:300,x0:-5,x1:5,y0:0,y1:0.45,pad:{l:60,r:14,t:14}});
+    axes(o,v=>v.toFixed(0),v=>v.toFixed(2),5,4);
+    shade(o,x=>dt(x,df),s3.k,5,C("--ochre"),0.28);
+    shade(o,x=>dt(x,df),-5,-s3.k,C("--ochre"),0.28);
+    clip(o,()=>{line(o,xs,nv,C("--verm"),1.8,[5,4]);line(o,xs,tv,C("--blue"),2.2);});
+    vline(o,s3.k,C("--ochre"));vline(o,-s3.k,C("--ochre"));
+    /* the ratio of the tails, log scale */
+    const ks=[],rr=[];
+    for(let i=0;i<=160;i++){const k=1+4*i/160;ks.push(k);
+      rr.push(Math.log10(Math.max(tTail(k,df)/normTail(k),1e-6)));}
+    const o2=Fig(document.getElementById("cv3b"),
+      {h:200,x0:1,x1:5,y0:0,y1:Math.max(1,Math.max.apply(null,rr)*1.1),pad:{l:60,r:14,t:12}});
+    axes(o2,v=>v.toFixed(1)+"σ",v=>Math.pow(10,v).toFixed(0)+"×",5,3);
+    clip(o2,()=>line(o2,ks,rr,C("--blue"),2.2));
+    vline(o2,s3.k,C("--ochre"));
+    document.getElementById("kv3").innerHTML=kvHTML([
+      ["Degrees of freedom",df.toFixed(1)],
+      ["Excess kurtosis",df>4?(6/(df-4)).toFixed(3):"infinite"],
+      ["Threshold",s3.k.toFixed(2)+" σ"],
+      ["t tail beyond it",(tTail(s3.k,df)*100).toFixed(4)+"%"],
+      ["Normal tail",(normTail(s3.k)*100).toFixed(normTail(s3.k)<0.001?6:4)+"%"],
+      ["  ratio",(tTail(s3.k,df)/normTail(s3.k)).toFixed(2)+"×"],
+      ["Beyond 3σ, t",(tTail(3,df)*100).toFixed(4)+"%"],
+      ["Beyond 3σ, normal",(normTail(3)*100).toFixed(4)+"%"],
+      ["Variance exists when","ν > 2"],
+      ["Kurtosis exists when","ν > 4"]
+    ]);
+  }
+})();
+
+/* ══════════ 04 — the mixture ══════════ */
+const s4={w:0.90,v1:0.15,v2:0.45};
+(function(){
+  sliders(document.getElementById("ctl4"),[
+    {id:"a4",k:"w",lbl:"w",name:"Share of time calm",min:0.50,max:0.99,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"b4",k:"v1",lbl:"σ₁",name:"Calm volatility",min:0.05,max:0.40,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"c4v",k:"v2",lbl:"σ₂",name:"Stressed volatility",min:0.20,max:1.2,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"}
+  ],s4,()=>draw(),"c4");
+  window.draw4=draw;
+  window.__mix={mixVol,mixKurt,mixTail,normTail};
+  function draw(){
+    const w=s4.w,v1=s4.v1,v2=s4.v2;
+    const s=mixVol(w,v1,v2);
+    /* both densities in units of the mixture's own sd */
+    const xs=[],mx=[],nm=[];
+    for(let i=0;i<=400;i++){const x=-5+10*i/400;xs.push(x);
+      mx.push(w*dnorm(x*s,0,v1)*s+(1-w)*dnorm(x*s,0,v2)*s);
+      nm.push(dnorm(x));}
+    const o=Fig(document.getElementById("cv4"),
+      {h:300,x0:-5,x1:5,y0:0,y1:Math.max.apply(null,mx)*1.12,pad:{l:60,r:14,t:14}});
+    axes(o,v=>v.toFixed(0)+"σ",v=>v.toFixed(2),5,4);
+    clip(o,()=>{line(o,xs,nm,C("--verm"),1.8,[5,4]);line(o,xs,mx,C("--blue"),2.2);});
+    const ks=[],rr=[];
+    for(let i=0;i<=160;i++){const k=1+4*i/160;ks.push(k);
+      rr.push(Math.log10(Math.max(mixTail(k,w,v1,v2)/normTail(k),1e-4)));}
+    const o2=Fig(document.getElementById("cv4b"),
+      {h:200,x0:1,x1:5,y0:Math.min(-0.2,Math.min.apply(null,rr)*1.1),
+       y1:Math.max(1,Math.max.apply(null,rr)*1.1),pad:{l:64,r:14,t:12}});
+    axes(o2,v=>v.toFixed(1)+"σ",v=>Math.pow(10,v).toFixed(Math.pow(10,v)<10?1:0)+"×",5,3);
+    hline(o2,0,C("--verm"),"same as normal",[3,3]);
+    clip(o2,()=>line(o2,ks,rr,C("--blue"),2.2));
+    /* where the ratio crosses one — the shoulder/tail boundary */
+    let cross=NaN;
+    for(let i=1;i<ks.length;i++)
+      if(rr[i-1]<0&&rr[i]>=0){cross=ks[i-1]+(ks[i]-ks[i-1])*(-rr[i-1])/(rr[i]-rr[i-1]);break;}
+    if(isFinite(cross))vline(o2,cross,C("--ochre"),"crosses at "+cross.toFixed(2)+"σ");
+    document.getElementById("kv4").innerHTML=kvHTML([
+      ["Calm",(w*100).toFixed(0)+"% at "+(v1*100).toFixed(0)+"%"],
+      ["Stressed",((1-w)*100).toFixed(0)+"% at "+(v2*100).toFixed(0)+"%"],
+      ["Overall volatility",(s*100).toFixed(4)+"%"],
+      ["Excess kurtosis",mixKurt(w,v1,v2).toFixed(4)],
+      ["Beyond 2σ",(mixTail(2,w,v1,v2)*100).toFixed(4)+"% vs "+(normTail(2)*100).toFixed(3)+"%"],
+      ["  ratio",(mixTail(2,w,v1,v2)/normTail(2)).toFixed(2)+"×"],
+      ["Beyond 3σ, ratio",(mixTail(3,w,v1,v2)/normTail(3)).toFixed(1)+"×"],
+      ["Beyond 4σ, ratio",(mixTail(4,w,v1,v2)/normTail(4)).toFixed(0)+"×"],
+      ["Beyond 5σ, ratio",(mixTail(5,w,v1,v2)/normTail(5)).toFixed(0)+"×"],
+      ["Fat beyond",isFinite(cross)?cross.toFixed(2)+"σ":"everywhere"]
+    ]);
+  }
+})();
+
+/* ══════════ 05 — which one is this? ══════════ */
+const s5={which:0,n:4000};
+(function(){
+  const NAMES=["a lognormal","a Poisson count","a Student's t","a two-regime mixture","a plain normal"];
+  let revealed=false;
+  sliders(document.getElementById("ctl5"),[
+    {id:"a5",k:"which",lbl:"?",name:"Unlabeled sample",min:0,max:4,step:1,fmt:v=>"#"+(Math.round(v)+1)},
+    {id:"b5",k:"n",lbl:"N",name:"Sample size",min:500,max:20000,step:500,fmt:v=>v.toFixed(0)}
+  ],s5,()=>{revealed=false;draw();},"c5");
+  document.getElementById("reveal5").addEventListener("click",()=>{revealed=true;draw();});
+  window.draw5=draw;
+  window.__sample5=sample;
+  function sample(which,n){
+    const r=rng(31337+which*7);
+    const out=[];
+    for(let i=0;i<n;i++){
+      if(which===0)out.push(Math.exp(r.normal(0,0.4)));
+      else if(which===1){ /* Poisson by inversion, lambda 3 */
+        let k=0,p=Math.exp(-3),c=p,u=r();
+        while(u>c&&k<60){k++;p*=3/k;c+=p;}
+        out.push(k);
+      }
+      else if(which===2){ /* t with 5 df, as a normal over a chi scale */
+        let s=0;for(let j=0;j<5;j++){const z=r.normal(0,1);s+=z*z;}
+        out.push(r.normal(0,1)/Math.sqrt(s/5));
+      }
+      else if(which===3)out.push(r()<0.9?r.normal(0,0.15):r.normal(0,0.45));
+      else out.push(r.normal(0,1));
+    }
+    return out;
+  }
+  function draw(){
+    const which=Math.round(s5.which), n=Math.round(s5.n);
+    const a=sample(which,n);
+    const m=mean(a), sdv=sd(a), kt=kurtosis(a), sk=skewness(a);
+    const lo=Math.min.apply(null,a), hi=Math.max.apply(null,a);
+    const b=binned(a,lo,hi,50);
+    const o=Fig(document.getElementById("cv5"),
+      {h:310,x0:lo,x1:hi,y0:0,y1:Math.max.apply(null,Array.from(b.counts))*1.14,
+       pad:{l:60,r:14,t:14}});
+    axes(o,v=>v.toFixed(Math.abs(hi-lo)>20?0:2),v=>v.toFixed(0),5,4);
+    hist(o,b,C("--blue"),{alpha:0.75});
+    vline(o,m,C("--ochre"),"mean");
+    document.getElementById("leg5").innerHTML=
+      '<span><i class="sw" style="background:var(--blue)"></i>'+
+      (revealed?NAMES[which]:"sample #"+(which+1))+'</span>';
+    const allInt=a.every(v=>Number.isInteger(v));
+    const allPos=a.every(v=>v>0);
+    document.getElementById("kv5").innerHTML=kvHTML([
+      ["Sample size",n.toLocaleString()],
+      ["Mean",m.toFixed(4)],
+      ["Variance",variance(a).toFixed(4)],
+      ["  variance ÷ mean",(variance(a)/m).toFixed(3)],
+      ["Standard deviation",sdv.toFixed(4)],
+      ["Skewness",sk.toFixed(3)],
+      ["Excess kurtosis",kt.toFixed(3)],
+      ["All integers?",allInt?"yes":"no"],
+      ["All positive?",allPos?"yes":"no"],
+      ["Implied t df",kt>0.2?(4+6/kt).toFixed(1):"—"],
+      ["It was",revealed?NAMES[which]:"press to reveal"]
+    ]);
+  }
+})();
+
+/* ══════════ 06 — the drill ══════════ */
+(function(){
+  let tier=1,sc=0,asked=0,streak=0,best=0,cur=null;
+  const E=id=>document.getElementById(id);
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  function make(){
+    const R=Math.random;
+    if(tier===1){
+      const t=Math.floor(R()*3);
+      if(t===0){const lam=pick([0.5,1,2,3,5,8]);
+        const a=dpois(0,lam)*100;
+        return{kind:"Poisson: nothing happens",unit:"%",a:a,tol:Math.max(0.05,a*0.03),
+          q:"Events arrive at an average of <b>"+lam+"</b> per window. What is the chance of a window with none?",
+          w:"P(0) = e^(−λ) = e^(−"+lam+") = <b>"+a.toFixed(3)+"%</b>. The whole distribution hangs off that one exponential."};}
+      if(t===1){const lam=pick([1,4,9,16,25]);
+        const a=Math.sqrt(lam);
+        return{kind:"Poisson: its spread",unit:"",a:a,tol:0.03,
+          q:"A Poisson count averages <b>"+lam+"</b> per window. What is its standard deviation?",
+          w:"For a Poisson the variance equals the mean, so the standard deviation is √λ = √"+lam+
+            " = <b>"+a.toFixed(2)+"</b>. That equality is the distribution's signature."};}
+      const g=pick([5,10,20,25,50]);
+      const a=(1+g/100)*(1-g/100);
+      return{kind:"Up then down",unit:"×",a:a,tol:0.002,
+        q:"A stock rises <b>"+g+"%</b> and then falls <b>"+g+"%</b>. What multiple of the original price is it?",
+        w:"(1+"+(g/100).toFixed(2)+")(1−"+(g/100).toFixed(2)+") = 1 − "+(g/100).toFixed(2)+
+          "² = <b>"+a.toFixed(4)+"</b>. Percentage returns do not add; their logs do."};
+    }
+    const t=Math.floor(R()*3);
+    if(t===0){const df=pick([5,6,8,10,12,20]);
+      const a=6/(df-4);
+      return{kind:"Kurtosis of a Student's t",unit:"",a:a,tol:0.03,
+        q:"A Student's t has <b>"+df+"</b> degrees of freedom. What is its excess kurtosis?",
+        w:"6/(ν − 4) = 6/"+(df-4)+" = <b>"+a.toFixed(3)+
+          "</b>. A normal reads 0, and daily equity returns usually land between 3 and 8."};}
+    if(t===1){const kt=pick([1,1.5,2,3,6]);
+      const a=4+6/kt;
+      return{kind:"From kurtosis to degrees of freedom",unit:"",a:a,tol:0.15,
+        q:"A sample has excess kurtosis <b>"+kt+"</b>. Which Student's t matches it?",
+        w:"Invert 6/(ν−4) = "+kt+" to get ν = 4 + 6/"+kt+" = <b>"+a.toFixed(2)+
+          " degrees of freedom</b>."};}
+    const k=pick([2,2.5,3,3.5,4]);
+    const a=normTail(k)*100;
+    return{kind:"The normal tail",unit:"%",a:a,tol:Math.max(0.002,a*0.03),
+      q:"What percentage of a normal lies beyond <b>±"+k+"</b> standard deviations?",
+      w:"2(1 − Φ("+k+")) = <b>"+a.toFixed(a<0.01?5:4)+"%</b>, about one observation in "+
+        Math.round(100/a).toLocaleString()+"."};
+  }
+  function next(){
+    cur=make();
+    E("dKind").textContent=cur.kind;E("dText").innerHTML=cur.q;
+    E("dUnit").textContent=cur.unit;E("dInput").value="";
+    E("drill").classList.remove("done");
+    focusSoft(E("dInput"),E("drill"));
+  }
+  function submit(){
+    if(!cur||E("drill").classList.contains("done"))return;
+    const raw=parseFloat(String(E("dInput").value).replace(/[$,%\s×]/g,""));
+    asked++;
+    const ok=isFinite(raw)&&Math.abs(raw-cur.a)<=cur.tol;
+    if(ok){sc++;streak++;if(streak>best)best=streak;}else streak=0;
+    E("dVerdict").textContent=ok?"CORRECT":("NOT QUITE — the answer is "+cur.a.toFixed(4));
+    E("dVerdict").className="vd "+(ok?"ok":"no");
+    E("dWork").innerHTML=cur.w;
+    E("dScore").textContent=sc+" / "+asked;
+    E("dStreak").textContent=String(streak);E("dBest").textContent=String(best);
+    E("drill").classList.add("done");
+  }
+  E("dSubmit").addEventListener("click",submit);
+  E("dInput").addEventListener("keydown",e=>{if(e.key==="Enter")submit();});
+  E("dNext").addEventListener("click",next);
+  E("dSkip").addEventListener("click",()=>{streak=0;E("dStreak").textContent="0";next();});
+  [1,2].forEach(k=>E("dT"+k).addEventListener("click",()=>{
+    tier=k;[1,2].forEach(j=>E("dT"+j).setAttribute("aria-pressed",j===k?"true":"false"));
+    next();}));
+  window.drawDrill=next;
+  window.__drill=()=>{const o=[];for(let i=0;i<2;i++){tier=i+1;for(let j=0;j<400;j++)o.push(make());}tier=1;return o;};
+})();
+
+function drawAll(){
+  drawHero();draw1();draw2();draw3();draw4();draw5();drawDrill();
+}
+LAB.boot(drawAll);
+
+</script>
+</body>
+</html>

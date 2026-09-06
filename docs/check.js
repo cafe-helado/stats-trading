@@ -146,7 +146,8 @@ function check(file) {
 
 const args = process.argv.slice(2);
 const files = args.length ? args
-  : fs.readdirSync(ROOT).filter(f => f.endsWith(".html") && f !== "template.html");
+  : fs.readdirSync(ROOT).filter(f => f.endsWith(".html") && f !== "template.html"
+      && !f.endsWith("_body.html"));   // build fragments, not pages
 
 let total = 0;
 files.forEach(f => {

@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F4F1E8">
+<title>What a Sample Can Tell You — Chance, visually</title>
+<meta name="description" content="Standard errors, confidence intervals and the bootstrap. Why five years of daily returns leaves a stock&#x27;s drift uncertain by twenty-eight percentage points while pinning its volatility to within one.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="What a Sample Can Tell You — Chance, visually">
+<meta property="og:description" content="Standard errors, confidence intervals and the bootstrap. Why five years of daily returns leaves a stock&#x27;s drift uncertain by twenty-eight percentage points while pinning its volatility to within one.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F1E8'/><rect x='5' y='19' width='4' height='7' fill='%230B6E75'/><rect x='11' y='12' width='4' height='14' fill='%230B6E75'/><rect x='17' y='7' width='4' height='19' fill='%230B6E75'/><rect x='23' y='16' width='4' height='10' fill='%230B6E75'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lab.css">
+<link rel="stylesheet" href="assets/mobile.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chance">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+<header class="serieshead">
+  <div class="in">
+    <a class="home" href="index.html">← Chance, visually</a>
+    <span class="num">No. 05 · Samples</span>
+  </div>
+</header>
+
+<div class="progress" id="prog"></div>
+<nav class="chapnav" id="chapnav" aria-label="Chapters">
+  <a href="#c1"><span>The number you want</span><i></i></a>
+  <a href="#c2"><span>Drift is unmeasurable</span><i></i></a>
+  <a href="#c3"><span>Volatility is not</span><i></i></a>
+  <a href="#c4"><span>The bootstrap</span><i></i></a>
+  <a href="#c5"><span>What an interval means</span><i></i></a>
+  <a href="#c6"><span>Drills</span><i></i></a>
+</nav>
+
+<div class="hero">
+  <canvas id="heroCv" aria-hidden="true"></canvas>
+  <div class="heroInner">
+    <div class="eyebrow">An interactive derivation · No. 05</div>
+    <h1>What a sample is <em>allowed</em> to tell you</h1>
+    <p class="sub">You have a year of returns and want two numbers out of it. One of them you can have to a decimal place; the other you cannot have at all, and no amount of data will fix it. Knowing which is which is most of applied statistics.</p>
+  </div>
+  <div class="scrollcue">Scroll ↓</div>
+</div>
+
+<main>
+
+<div class="orient">
+  <h2>Start here</h2>
+  <p class="lede">Every number computed from data is an estimate with a size of error attached, and the error is usually invisible on the screen that reports it. This module is about attaching it — and about the striking asymmetry between two quantities that come out of exactly the same column of numbers.</p>
+  <ol>
+    <li><b>Chapters 02 and 03 are the pair to remember.</b> Five years of daily returns pins a stock's <em>average</em> return to within ±28 percentage points — useless — and its <em>volatility</em> to within ±0.8. Same data, same column, opposite verdicts.</li>
+    <li><b>Chapter 04 is the tool.</b> The bootstrap gets a confidence interval by resampling instead of by algebra, works when no formula exists, and agrees with the formula when one does.</li>
+    <li><b>Chapter 05 is the sentence everyone says wrong.</b> A 95% interval does not mean a 95% chance the truth is inside it.</li>
+  </ol>
+  <details class="drop">
+    <summary>Notation — every symbol used on this page</summary>
+    <table class="ntab">
+      <tr><td>Estimator</td><td>A recipe for turning data into a number. The sample mean is an estimator of the true mean.</td></tr>
+      <tr><td>Standard error</td><td>The standard deviation of an estimator across repeated samples. How much the number would wobble if you did it again.</td></tr>
+      <tr><td>σ / √n</td><td>The standard error of a sample mean. The most-used formula in statistics.</td></tr>
+      <tr><td>σ / √(2n)</td><td>The standard error of a sample standard deviation. Note the 2 — it is why volatility is easier to measure than drift.</td></tr>
+      <tr><td>Confidence interval</td><td>A range built by a procedure that captures the truth a stated fraction of the time. Not a probability about this particular range.</td></tr>
+      <tr><td>Bootstrap</td><td>Resampling your own data with replacement to see how much a statistic wobbles, without deriving anything.</td></tr>
+      <tr><td>Bias</td><td>A systematic error that does not shrink with more data. Different from noise, and worse.</td></tr>
+      <tr><td>n − 1</td><td>The divisor in the sample variance, which corrects a bias you can watch appear.</td></tr>
+    </table>
+  </details>
+</div>
+
+<!-- ══════════ 01 ══════════ -->
+<section class="chapter" id="c1">
+  <div class="chead">
+    <div class="cnum">01</div>
+    <h2>Every number from data is really two numbers</h2>
+    <p class="dek">The estimate, and how much it would move if you collected the data again. Reporting the first without the second is the default and it is a mistake.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Compute the average of a hundred numbers and you get an answer. Collect a different hundred from the same source and you get a different answer. The spread of those answers is the <span class="term" data-t="Standard error" data-def="The standard deviation of an estimate across hypothetical repeated samples. It measures how much your number would move if you ran the study again, and it is not the same as the standard deviation of the data.">standard error</span>, and it is the second number that should always travel with the first.</p>
+    <p>For a mean it is <b>σ/√n</b>. That formula does two things worth separating. It says more data helps — and it says more data helps <em>slowly</em>, because of the square root. Four times the data halves the error. A hundred times the data divides it by ten.</p>
+    <p>The figure below draws the estimate from repeated samples so the standard error is something you can see rather than compute. Take one sample and you get a number; take a thousand and you get the distribution that number was drawn from.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The same estimate, computed a thousand times</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>Estimates</span>
+            <span><i class="swl" style="background:var(--verm)"></i>The truth</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>±1 standard error</span>
+          </span>
+        </div>
+        <canvas id="cv1" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl1"></div>
+        <div class="kv" style="margin-top:20px" id="kv1"></div>
+      </div>
+    </div>
+    <figcaption>Notice the estimates are centered on the truth but individually can be far from it. Being unbiased is a property of the procedure, not a promise about your one sample.</figcaption>
+  </figure>
+
+  <div class="mline">standard error of the mean = σ / √n</div>
+  <p class="mread">Reads as: <b>the wobble in your average is the wobble in the data divided by the square root of how much you collected.</b> Quadruple the data to halve the error.</p>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">You want to halve the standard error of an estimate. How much more data do you need?</p>
+    <div class="opts">
+      <button>Twice as much</button>
+      <button data-ok="1">Four times as much, because the error falls with √n rather than with n</button>
+      <button>Half as much</button>
+      <button>It depends on the standard deviation</button>
+    </div>
+    <div class="ans"><b>Four times.</b> Which sets the economics of every data collection decision: the first hundred observations buy far more precision than the second hundred, and getting from "roughly right" to "precise" is usually not worth what it costs. The fourth answer is a real consideration for the <em>size</em> of the error but not for how it scales.</div>
+  </div>
+</section>
+
+<!-- ══════════ 02 ══════════ -->
+<section class="chapter" id="c2">
+  <div class="chead">
+    <div class="cnum">02</div>
+    <h2>A stock's average return cannot be measured</h2>
+    <p class="dek">Not "is hard to measure." Five years of daily data gives an annualized mean with a 95% range 55 points wide.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Take a stock whose daily returns have a standard deviation of 2% — an ordinary single name. You want its expected return. Compute the sample mean and attach the standard error.</p>
+    <p>One month of data, twenty observations: the standard error of the daily mean is <b>0.447%</b>, which annualizes to <b>113%</b>. A full year, 252 observations: <b>31.8%</b>. Five years, 1,260 observations: <b>14.2%</b>, so the 95% interval is roughly <b>±28 percentage points</b>.</p>
+    <p>Read that last one carefully. After five years of daily data, a stock whose true annual drift is 8% has a measured drift consistent with anything from −20% to +36%. The estimate is not merely imprecise — it carries essentially no information about the quantity you asked for.</p>
+    <p>This is not a flaw in the method. It is the ratio of signal to noise in financial returns: the drift is a fraction of a percent a day and the noise is two percent a day, so the noise is several hundred times larger. No estimator can extract what is not there, and every claim about expected returns built on a few years of history is weaker than it sounds.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The 95% interval for annualized drift, against how long you watch</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Interval width</span>
+            <span><i class="swl" style="background:var(--verm)"></i>The drift you are trying to measure</span>
+          </span>
+        </div>
+        <canvas id="cv2" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl2"></div>
+        <div class="kv" style="margin-top:20px" id="kv2"></div>
+      </div>
+    </div>
+    <figcaption>Notice where the blue band finally becomes narrower than the red line. For an ordinary stock it takes decades, which is longer than most stocks exist.</figcaption>
+  </figure>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Find the number of years at which the interval finally becomes narrower than the drift itself. Predict first whether it is closer to five years or fifty.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c2" data-patch='{"years":1}' data-focus="cv2">One year</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"years":5}' data-focus="cv2">Five</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"years":50}' data-focus="cv2">Fifty</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A fund reports a 12% annualized return over three years. What does that tell you about its expected return?</p>
+    <div class="opts">
+      <button>That it is about 12%</button>
+      <button data-ok="1">Very little on its own. At ordinary volatility the standard error over three years is large enough that 12% and 0% are hard to distinguish</button>
+      <button>That it beat the market</button>
+      <button>Nothing at all — past returns are irrelevant</button>
+    </div>
+    <div class="ans"><b>Very little, and the fourth answer overcorrects.</b> Three years is real evidence; it is just much weaker evidence than the headline suggests, and it should be combined with a prior about how common skill is — which is <a href="bayes.html">module 06</a>. The right response to a short track record is neither belief nor dismissal but a small update.</div>
+  </div>
+</section>
+
+<!-- ══════════ 03 ══════════ -->
+<section class="chapter" id="c3">
+  <div class="chead">
+    <div class="cnum">03</div>
+    <h2>Volatility, from the same data, is measurable</h2>
+    <p class="dek">One year pins it to within ±0.9 points. Same column of numbers, completely different answer.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Now ask the same data for the volatility instead. The standard error of a standard deviation is approximately <b>σ/√(2n)</b> — note the 2, which comes from the fact that you are estimating a second moment and there are twice as many degrees of freedom in it.</p>
+    <p>For a stock at 20% volatility: <b>20 days</b> of data gives a standard error of <b>3.16</b> volatility points, so a 95% range of 13.8% to 26.2% — wide. <b>252 days</b> gives <b>0.89</b> points, a range of <b>18.25% to 21.75%</b>. That is a genuinely useful number, from a single year of data.</p>
+    <p>Turn it around: to pin a 20% volatility to within <b>±1 point</b> at 95% confidence you need about <b>769</b> trading days, roughly three years. To within ±2 points, <b>193</b> days.</p>
+    <p>So the same year of returns that tells you nothing about drift tells you volatility to better than a point. That asymmetry is the reason options desks trade volatility rather than direction: one of those quantities can be estimated, hedged and checked, and the other cannot.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Both estimates, from the same sample, as it grows</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Volatility, ±2 se</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Drift, ±2 se</span>
+          </span>
+        </div>
+        <canvas id="cv3" height="320"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl3"></div>
+        <div class="kv" style="margin-top:20px" id="kv3"></div>
+      </div>
+    </div>
+    <figcaption>Both bands are drawn as a fraction of the quantity being estimated, so they are directly comparable. The volatility band closes; the drift band barely moves.</figcaption>
+  </figure>
+
+  <div class="mline">se(mean) ≈ σ/√n      se(σ̂) ≈ σ/√(2n)</div>
+  <p class="mread">Reads as: <b>both errors fall like 1/√n, but they are measuring quantities of wildly different size relative to the noise.</b> Drift is a fraction of a percent against 2% of noise; volatility is 20% against its own scale.</p>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Why can a year of data pin down volatility but not drift, when both come from the same returns?</p>
+    <div class="opts">
+      <button>Because volatility is more stable over time</button>
+      <button data-ok="1">Because of the ratio of signal to noise. Drift is a fraction of a percent a day against 2% of daily noise; volatility is being measured on its own scale, where the noise <em>is</em> the signal</button>
+      <button>Because the formula for volatility is more accurate</button>
+      <button>Because volatility is always positive</button>
+    </div>
+    <div class="ans"><b>Signal to noise, and the first answer is a separate true thing.</b> Volatility does cluster and persist, which helps forecasting — but even for a perfectly constant process the estimation problem is easier, because you are asking about the size of the noise rather than about a tiny drift buried inside it.</div>
+  </div>
+</section>
+
+<!-- ══════════ 04 ══════════ -->
+<section class="chapter" id="c4">
+  <div class="chead">
+    <div class="cnum">04</div>
+    <h2>The bootstrap: resample instead of deriving</h2>
+    <p class="dek">Draw from your own data with replacement, recompute, repeat. It works for statistics that have no formula, and matches the formula where one exists.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Every standard error above came from algebra. For a mean or a standard deviation that algebra exists; for a median, a ratio, a maximum drawdown or a Sharpe ratio it either does not or is unpleasant. The bootstrap sidesteps all of it.</p>
+    <p>The recipe: take your <em>n</em> observations, draw <em>n</em> of them <em>with replacement</em> to make a new sample, compute your statistic, and repeat a few thousand times. The spread of the results is the standard error. That is the entire method.</p>
+    <p>The reason it works is that your sample is the best available stand-in for the population, so resampling from it mimics collecting fresh data. It is not magic and it is not free — the bootstrap can only tell you about variation your sample already contains, so it understates tail uncertainty in exactly the situations where you most want it.</p>
+    <p>Test it against a case where the formula is known. One year of daily returns with an observed annualized volatility of <b>21.81%</b>: the bootstrap gives a 95% interval of <b>19.61% to 23.89%</b>, and the σ/√(2n) formula gives <b>19.90% to 23.71%</b>. Close enough that the choice does not matter — which is the point of checking.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Two thousand bootstrap resamples of the same year</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>Bootstrap estimates</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>Observed</span>
+            <span><i class="swl" style="background:var(--verm)"></i>The formula's interval</span>
+          </span>
+        </div>
+        <canvas id="cv4" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl4"></div>
+        <div class="kv" style="margin-top:20px" id="kv4"></div>
+      </div>
+    </div>
+    <figcaption>Notice the bootstrap interval and the formula's interval nearly coincide. When they do not, it is usually the formula's assumptions that broke, not the resampling.</figcaption>
+  </figure>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Switch the statistic to the maximum drawdown, which has no simple formula at all, and watch the bootstrap produce an interval anyway.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c4" data-patch='{"stat":0}' data-focus="cv4">Volatility</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"stat":1}' data-focus="cv4">Median return</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"stat":2}' data-focus="cv4">Worst drawdown</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">What is the bootstrap's main limitation?</p>
+    <div class="opts">
+      <button>It needs a very large sample</button>
+      <button data-ok="1">It can only reflect variation already present in your sample, so it understates uncertainty about events you have not observed — which is exactly the tail</button>
+      <button>It only works for means</button>
+      <button>It requires the data to be normal</button>
+    </div>
+    <div class="ans"><b>It cannot invent what it has not seen.</b> If your year of data contains no crash, no amount of resampling will produce one, and the bootstrap interval for a tail statistic will be confidently narrow and wrong. It is an excellent tool for the middle of a distribution and a dangerous one for the edges — the same warning that runs through <a href="dist.html">module 04</a>.</div>
+  </div>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section class="chapter" id="c5">
+  <div class="chead">
+    <div class="cnum">05</div>
+    <h2>What a confidence interval actually claims</h2>
+    <p class="dek">Not "95% chance the truth is in here." The 95% is a property of the procedure, and the difference matters.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">A 95% confidence interval is built by a recipe with this property: <em>if you ran the recipe on many samples, 95% of the intervals it produced would contain the true value.</em> That is a statement about the recipe, not about the particular interval on your screen.</p>
+    <p>Your interval either contains the truth or it does not; there is no probability left in it once it is computed. What you know is that it came from a machine that gets it right nineteen times in twenty.</p>
+    <p>The figure makes this concrete by running the machine repeatedly and coloring the misses. About one in twenty comes out red, and there is nothing to distinguish a red one from a blue one except knowing the answer — which is precisely what you do not have.</p>
+    <p>Is the distinction pedantic? Sometimes. It stops being pedantic the moment you have a reason to think this sample is unusual, because the guarantee is an average over samples and says nothing about the one in front of you. Getting a probability <em>about your interval</em> requires a prior, which is <a href="bayes.html">module 06</a>.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>A hundred intervals from a hundred samples</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Caught the truth</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Missed it</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>The truth</span>
+          </span>
+        </div>
+        <canvas id="cv5" height="330"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl5"></div>
+        <div class="kv" style="margin-top:20px" id="kv5"></div>
+      </div>
+    </div>
+    <figcaption>Notice you cannot tell the red intervals from the blue ones by looking at them. That is the whole content of the distinction — the guarantee attaches to the process, not to any one result.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">You compute a 95% confidence interval of [18.2%, 21.8%] for a volatility. Which statement is correct?</p>
+    <div class="opts">
+      <button>There is a 95% chance the true volatility is between 18.2% and 21.8%</button>
+      <button data-ok="1">The procedure that produced this interval captures the truth 95% of the time. This particular interval either contains it or does not</button>
+      <button>95% of daily volatilities fall in that range</button>
+      <button>The true volatility is 20%, plus or minus 1.8%</button>
+    </div>
+    <div class="ans"><b>A property of the procedure.</b> The third answer is a different error worth naming — confusing an interval for a <em>parameter</em> with an interval for future <em>observations</em>, which is much wider. And the first answer is what almost everyone means and is only strictly available in the Bayesian framing, where it requires you to have stated a prior first.</div>
+  </div>
+</section>
+
+<!-- ══════════ 06 ══════════ -->
+<section class="chapter" id="c6">
+  <div class="chead">
+    <div class="cnum">06</div>
+    <h2>Drill it</h2>
+    <p class="dek">Standard errors, sample sizes, and how long you would have to watch.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The first tier is standard errors. The second is inverting them — the question a desk actually asks, which is how much data would settle this.</p>
+  </div>
+
+  <figure>
+    <div class="drill" id="drill">
+      <div class="dstats">
+        <div class="c"><span class="k">Correct</span><span class="v" id="dScore">0 / 0</span></div>
+        <div class="c"><span class="k">Streak</span><span class="v" id="dStreak" style="color:var(--moss)">0</span></div>
+        <div class="c"><span class="k">Best</span><span class="v" id="dBest">0</span></div>
+        <div class="c" style="flex:1;min-width:170px"><span class="k">Tier</span>
+          <div class="seg" style="margin-top:5px;max-width:240px">
+            <button id="dT1" aria-pressed="true">Errors</button>
+            <button id="dT2" aria-pressed="false">Sample size</button>
+          </div>
+        </div>
+      </div>
+      <span class="qn" id="dKind">Question</span>
+      <p class="qt" id="dText">Loading…</p>
+      <div class="ansrow">
+        <input type="text" inputmode="decimal" id="dInput" placeholder="your answer" aria-label="Your answer">
+        <span class="unit" id="dUnit"></span>
+        <button class="act" id="dSubmit">Check</button>
+        <button class="act ghost" id="dSkip">Skip</button>
+      </div>
+      <div class="verdict">
+        <div class="vd" id="dVerdict"></div>
+        <div class="work" id="dWork"></div>
+        <div class="btnrow"><button class="act" id="dNext">Next question</button></div>
+      </div>
+    </div>
+    <figcaption>Sample-size answers are marked within a few percent — the useful skill is knowing whether the answer is a hundred days or a thousand.</figcaption>
+  </figure>
+
+  <div class="prose" style="margin-top:46px">
+    <p>Six questions across the page.</p>
+  </div>
+
+  <div class="score" id="scoreBox">
+    <span class="big" id="scoreNum">0 / 6</span>
+    <span class="txt" id="scoreTxt">Answered nothing yet. Questions are scored as you go.</span>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 1 · chapter 01</span>
+    <p class="q">To halve a standard error, how much more data do you need?</p>
+    <div class="opts">
+      <button>Twice as much</button>
+      <button data-ok="1">Four times, since the error falls like 1/√n</button>
+      <button>Ten times</button>
+      <button>It cannot be halved</button>
+    </div>
+    <div class="ans"><b>Four times.</b> Which makes precision expensive in a very specific way: going from a 2-point error to a 1-point error costs as much data as everything you already collected, three times over.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 2 · chapter 02</span>
+    <p class="q">Five years of daily returns on a 32%-volatility stock. How precisely do you know its annual drift?</p>
+    <div class="opts">
+      <button>To within a percentage point or two</button>
+      <button data-ok="1">To within about ±28 percentage points at 95% — which is to say, not at all</button>
+      <button>Exactly, since five years is a long sample</button>
+      <button>To within about 5 points</button>
+    </div>
+    <div class="ans"><b>±28 points, and that is with five years.</b> The drift is a fraction of a percent a day and the noise is 2% a day, so the noise is several hundred times bigger than the thing you are trying to see. This is the structural reason expected-return estimates are so much shakier than they look.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 3 · chapter 03</span>
+    <p class="q">One year of daily returns on a 20%-volatility stock. How precisely do you know the volatility?</p>
+    <div class="opts">
+      <button>About ±5 points</button>
+      <button data-ok="1">About ±1.75 points at 95% — a range of 18.25% to 21.75%</button>
+      <button>Exactly 20%</button>
+      <button>About ±0.1 points</button>
+    </div>
+    <div class="ans"><b>Under two points, from the same year that told you nothing about drift.</b> The formula is σ/√(2n): 20% over √504 is 0.89 points of standard error, so roughly ±1.75 at 95%. That asymmetry between the two estimates is the most useful thing in this module.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 4 · chapter 03</span>
+    <p class="q">How much data pins a 20% volatility to within ±1 point at 95%?</p>
+    <div class="opts">
+      <button>About 60 trading days</button>
+      <button data-ok="1">About 769 trading days — roughly three years</button>
+      <button>About 252 days</button>
+      <button>About 20 years</button>
+    </div>
+    <div class="ans"><b>Three years for a single point.</b> And 193 days for two points — the last point of precision costs four times what the first two did, which is √n doing its usual work.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 5 · chapter 04</span>
+    <p class="q">What is the bootstrap's main weakness?</p>
+    <div class="opts">
+      <button>It is computationally expensive</button>
+      <button data-ok="1">It can only reproduce variation your sample already contains, so it is confidently wrong about tails you have not observed</button>
+      <button>It requires normally distributed data</button>
+      <button>It only works for large samples</button>
+    </div>
+    <div class="ans"><b>It cannot invent an unobserved crash.</b> Which makes it excellent for the middle of a distribution — medians, ratios, drawdowns within the observed range — and unsuitable for exactly the tail questions people most want answered.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 6 · chapter 05</span>
+    <p class="q">What does a 95% confidence interval guarantee?</p>
+    <div class="opts">
+      <button>A 95% chance the truth is inside this interval</button>
+      <button data-ok="1">That the procedure producing it captures the truth 95% of the time across repeated samples</button>
+      <button>That 95% of observations fall inside it</button>
+      <button>That the estimate is accurate to 5%</button>
+    </div>
+    <div class="ans"><b>A property of the recipe, not of your one result.</b> The third answer describes a <em>prediction</em> interval, which is a different and much wider thing — the interval for where the next observation lands, rather than for where the parameter is.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="n">Every standard error here assumes independent observations, and financial returns are not independent — volatility clusters, so effective sample sizes are smaller than the raw counts and every interval on this page is optimistically narrow. The σ/√(2n) formula for a volatility's standard error additionally assumes the returns are normal; under the fat tails of <a href="dist.html">module 04</a> the estimator is noisier than that, and the discrepancy grows with the kurtosis. The bootstrap makes no distributional assumption but inherits the independence one, and a block bootstrap is the standard repair. And the whole module treats the true volatility as a fixed number to be estimated, which it is not — it moves, and the interesting question is usually forecasting it rather than measuring what it was.</p>
+</footer>
+
+<script src="assets/lab.js"></script>
+<script src="assets/stats.js"></script>
+<script src="assets/pwa.js" defer></script>
+<script>
+"use strict";
+
+/* The two standard errors this module is built around. The 2 in the second is
+   the whole reason volatility is measurable and drift is not. */
+const seMean = (sd, n) => sd / Math.sqrt(n);
+const seVol = (sig, n) => sig / Math.sqrt(2 * n);
+/* the sample size that pins a volatility to a given half-width at 95% */
+const daysForVol = (sig, halfWidth) => Math.ceil(Math.pow(1.96 * sig / halfWidth, 2) / 2);
+/* one year of daily returns, fixed seed so the prose can quote it */
+function yearOfReturns(seed, n, drift, vol) {
+  const r = rng(seed), out = [];
+  for (let i = 0; i < n; i++) out.push(r.normal(drift / n, vol / Math.sqrt(n)));
+  return out;
+}
+const annVol = (a, n) => sd(a) * Math.sqrt(n);
+function maxDrawdown(a) {
+  let w = 1, peak = 1, worst = 0;
+  for (let i = 0; i < a.length; i++) {
+    w *= (1 + a[i]);
+    if (w > peak) peak = w;
+    worst = Math.min(worst, w / peak - 1);
+  }
+  return -worst;
+}
+
+/* ══════════ hero ══════════ */
+(function(){
+  const cv=document.getElementById("heroCv");let w,h,g,raf,t0=0;
+  function size(){const dpr=window.devicePixelRatio||1;
+    w=cv.clientWidth;h=cv.clientHeight;cv.width=w*dpr;cv.height=h*dpr;
+    g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);}
+  const BARS=[];
+  (function(){const r=rng(808);
+    for(let i=0;i<26;i++){const est=r.normal(0,1);BARS.push({est,se:1.0});}})();
+  function draw(ph){
+    g.fillStyle=C("--chalk");g.fillRect(0,0,w,h);
+    const padX=w*0.07,padY=h*0.14,gw=w-padX*2,gh=h-padY*2;
+    const X=v=>padX+gw*(v+3.4)/6.8;
+    g.strokeStyle=C("--ochre");g.globalAlpha=0.5;g.lineWidth=1.4;
+    g.beginPath();g.moveTo(X(0),padY);g.lineTo(X(0),padY+gh);g.stroke();
+    BARS.forEach((b,i)=>{
+      const y=padY+gh*i/(BARS.length-1);
+      const pulse=Math.sin(ph*0.6+i*0.4)*0.5+0.5;
+      const half=b.se*(0.8+0.5*pulse);
+      const miss=(b.est-half>0)||(b.est+half<0);
+      g.strokeStyle=miss?C("--verm"):C("--blue");
+      g.globalAlpha=0.16+0.20*pulse;g.lineWidth=2;
+      g.beginPath();g.moveTo(X(b.est-half),y);g.lineTo(X(b.est+half),y);g.stroke();
+    });
+    g.globalAlpha=1;
+  }
+  function tick(t){if(!t0)t0=t;draw((t-t0)/2600);raf=requestAnimationFrame(tick);}
+  window.drawHero=function(){size();if(RM){draw(0);return;}
+    if(raf)cancelAnimationFrame(raf);t0=0;raf=requestAnimationFrame(tick);};
+})();
+
+/* ══════════ 01 — the sampling distribution ══════════ */
+const s1={n:30,reps:1500};
+(function(){
+  sliders(document.getElementById("ctl1"),[
+    {id:"a1",k:"n",lbl:"n",name:"Observations per sample",min:5,max:500,step:5,fmt:v=>v.toFixed(0)},
+    {id:"b1",k:"reps",lbl:"R",name:"How many times you repeat it",min:200,max:5000,step:100,fmt:v=>v.toFixed(0)}
+  ],s1,()=>draw(),"c1");
+  window.draw1=draw;
+  function draw(){
+    const n=Math.round(s1.n), R=Math.round(s1.reps), TRUE=0, SD=1;
+    const r=rng(2024);
+    const ests=[];
+    for(let k=0;k<R;k++){
+      let s=0;for(let i=0;i<n;i++)s+=r.normal(TRUE,SD);
+      ests.push(s/n);
+    }
+    const se=seMean(SD,n);
+    const b=binned(ests,-4*se,4*se,44);
+    const o=Fig(document.getElementById("cv1"),
+      {h:310,x0:-4*se,x1:4*se,y0:0,y1:Math.max.apply(null,Array.from(b.counts))*1.16,
+       pad:{l:60,r:14,t:14}});
+    axes(o,v=>v.toFixed(2),v=>v.toFixed(0),5,4);
+    hist(o,b,C("--blue"),{alpha:0.75});
+    vline(o,TRUE,C("--verm"),"truth");
+    vline(o,se,C("--ochre"),"+1 se");
+    vline(o,-se,C("--ochre"));
+    const inOne=ests.filter(v=>Math.abs(v-TRUE)<=se).length/R;
+    document.getElementById("kv1").innerHTML=kvHTML([
+      ["True mean",TRUE.toFixed(2)],
+      ["True sd of the data",SD.toFixed(2)],
+      ["Observations per sample",String(n)],
+      ["Formula: σ/√n",se.toFixed(5)],
+      ["Observed spread of estimates",sd(ests).toFixed(5)],
+      ["  they agree to",Math.abs(sd(ests)-se).toExponential(1)],
+      ["Mean of the estimates",mean(ests).toFixed(5)],
+      ["Within 1 se of truth",(inOne*100).toFixed(1)+"%"],
+      ["  a normal says","68.3%"],
+      ["Quadrupling n would give",seMean(SD,n*4).toFixed(5)]
+    ]);
+  }
+})();
+
+/* ══════════ 02 — drift is unmeasurable ══════════ */
+const s2={vol:0.32,drift:0.08,years:5};
+(function(){
+  sliders(document.getElementById("ctl2"),[
+    {id:"a2",k:"vol",lbl:"σ",name:"Annual volatility",min:0.08,max:0.80,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"b2",k:"drift",lbl:"μ",name:"True annual drift",min:0.0,max:0.25,step:0.005,fmt:v=>(v*100).toFixed(1)+"%"},
+    {id:"c2y",k:"years",lbl:"T",name:"Years of daily data",min:0.25,max:50,step:0.25,fmt:v=>v.toFixed(2)+"y"}
+  ],s2,()=>draw(),"c2");
+  window.draw2=draw;
+  function draw(){
+    const xs=[],hw=[];
+    for(let i=1;i<=300;i++){
+      const y=50*i/300;xs.push(y);
+      hw.push(1.96*s2.vol/Math.sqrt(y)*100);   /* annualized se of the mean */
+    }
+    const o=Fig(document.getElementById("cv2"),
+      {h:310,x0:0,x1:50,y0:0,y1:Math.min(200,1.96*s2.vol/Math.sqrt(0.25)*100)*0.55,
+       pad:{l:62,r:14,t:14}});
+    axes(o,v=>v.toFixed(0)+"y",v=>"±"+v.toFixed(0)+"%",5,4);
+    clip(o,()=>line(o,xs,hw,C("--blue"),2.2));
+    hline(o,s2.drift*100,C("--verm"),"the drift itself",[4,3]);
+    vline(o,s2.years,C("--ochre"),s2.years.toFixed(1)+"y");
+    /* when does the interval finally get narrower than the drift? */
+    const yNeed=Math.pow(1.96*s2.vol/s2.drift,2);
+    const half=1.96*s2.vol/Math.sqrt(s2.years)*100;
+    document.getElementById("kv2").innerHTML=kvHTML([
+      ["Annual volatility",(s2.vol*100).toFixed(1)+"%"],
+      ["True drift",(s2.drift*100).toFixed(2)+"%"],
+      ["Years watched",s2.years.toFixed(2)],
+      ["  trading days",Math.round(s2.years*252).toLocaleString()],
+      ["se of annualized mean",(s2.vol/Math.sqrt(s2.years)*100).toFixed(2)+"%"],
+      ["95% half-width","±"+half.toFixed(1)+"%"],
+      ["  the interval runs",(s2.drift*100-half).toFixed(1)+"% to "+(s2.drift*100+half).toFixed(1)+"%"],
+      ["Is zero inside it?",(s2.drift*100-half)<0?"yes":"no"],
+      ["Years to beat the drift",yNeed>200?"over 200":yNeed.toFixed(0)]
+    ]);
+  }
+})();
+
+/* ══════════ 03 — volatility is measurable ══════════ */
+const s3={vol:0.20,drift:0.08,days:252};
+(function(){
+  sliders(document.getElementById("ctl3"),[
+    {id:"a3",k:"vol",lbl:"σ",name:"True volatility",min:0.05,max:0.80,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"b3",k:"drift",lbl:"μ",name:"True drift",min:0.01,max:0.25,step:0.005,fmt:v=>(v*100).toFixed(1)+"%"},
+    {id:"c3d",k:"days",lbl:"n",name:"Trading days",min:10,max:5040,step:10,fmt:v=>v.toFixed(0)}
+  ],s3,()=>draw(),"c3");
+  window.draw3=draw;
+  function draw(){
+    /* both bands as a percentage of the quantity being estimated */
+    const xs=[],volB=[],drB=[];
+    for(let i=1;i<=300;i++){
+      const n=Math.round(10*Math.pow(504,i/300));
+      xs.push(Math.log10(n));
+      volB.push(2*seVol(s3.vol,n)/s3.vol*100);
+      drB.push(2*(s3.vol/Math.sqrt(n/252))/s3.drift*100);
+    }
+    const o=Fig(document.getElementById("cv3"),
+      {h:320,x0:1,x1:Math.log10(5040),y0:0,y1:250,pad:{l:64,r:14,t:14}});
+    axes(o,v=>{const n=Math.pow(10,v);return n>=1000?(n/1000).toFixed(1)+"k":n.toFixed(0);},
+      v=>"±"+v.toFixed(0)+"%",5,4);
+    clip(o,()=>{line(o,xs,drB,C("--verm"),2.2);line(o,xs,volB,C("--blue"),2.2);});
+    hline(o,100,C("--hair"),"as big as the quantity itself",[3,3]);
+    vline(o,Math.log10(s3.days),C("--ochre"),String(Math.round(s3.days))+"d");
+    const n=Math.round(s3.days);
+    const sv=seVol(s3.vol,n), sm=s3.vol/Math.sqrt(n/252);
+    document.getElementById("kv3").innerHTML=kvHTML([
+      ["Trading days",n.toLocaleString()],
+      ["True volatility",(s3.vol*100).toFixed(1)+"%"],
+      ["se of volatility",(sv*100).toFixed(3)+" pts"],
+      ["  95% band",((s3.vol-1.96*sv)*100).toFixed(2)+"% to "+((s3.vol+1.96*sv)*100).toFixed(2)+"%"],
+      ["  as % of the quantity","±"+(1.96*sv/s3.vol*100).toFixed(1)+"%"],
+      ["True drift",(s3.drift*100).toFixed(2)+"%"],
+      ["se of drift",(sm*100).toFixed(2)+" pts"],
+      ["  as % of the quantity","±"+(1.96*sm/s3.drift*100).toFixed(0)+"%"],
+      ["Days for ±1 vol pt",daysForVol(s3.vol,0.01).toLocaleString()],
+      ["Days for ±2 vol pts",daysForVol(s3.vol,0.02).toLocaleString()]
+    ]);
+  }
+})();
+
+/* ══════════ 04 — the bootstrap ══════════ */
+const s4={stat:0,B:2000,n:252};
+(function(){
+  const STATS=["annualized volatility","median daily return","worst drawdown"];
+  sliders(document.getElementById("ctl4"),[
+    {id:"a4",k:"stat",lbl:"ƒ",name:"Statistic",min:0,max:2,step:1,fmt:v=>STATS[Math.round(v)]},
+    {id:"b4",k:"B",lbl:"B",name:"Resamples",min:500,max:6000,step:250,fmt:v=>v.toFixed(0)},
+    {id:"c4n",k:"n",lbl:"n",name:"Days of data",min:60,max:1260,step:20,fmt:v=>v.toFixed(0)}
+  ],s4,()=>draw(),"c4");
+  window.draw4=draw;
+  window.__boot=run;
+  function statOf(a,which){
+    if(which===0)return annVol(a,252)*100;
+    if(which===1)return median(a)*100;
+    return maxDrawdown(a)*100;
+  }
+  function run(which,B,n){
+    const data=yearOfReturns(1234,n,0.08,0.22);
+    const obs=statOf(data,which);
+    const r=rng(555);
+    const boots=[];
+    for(let b=0;b<B;b++){
+      const s=[];for(let i=0;i<n;i++)s.push(data[Math.floor(r()*n)]);
+      boots.push(statOf(s,which));
+    }
+    boots.sort((a,b2)=>a-b2);
+    return {data,obs,boots,
+      lo:boots[Math.floor(B*0.025)],hi:boots[Math.floor(B*0.975)],
+      seBoot:sd(boots)};
+  }
+  function draw(){
+    const which=Math.round(s4.stat), B=Math.round(s4.B), n=Math.round(s4.n);
+    const R=run(which,B,n);
+    const lo=Math.min.apply(null,R.boots),hi=Math.max.apply(null,R.boots);
+    const b=binned(R.boots,lo,hi,46);
+    const o=Fig(document.getElementById("cv4"),
+      {h:310,x0:lo,x1:hi,y0:0,y1:Math.max.apply(null,Array.from(b.counts))*1.16,
+       pad:{l:60,r:14,t:14}});
+    axes(o,v=>v.toFixed(2)+"%",v=>v.toFixed(0),5,4);
+    hist(o,b,C("--blue"),{alpha:0.75});
+    vline(o,R.obs,C("--ochre"),"observed");
+    if(which===0){
+      const se=seVol(R.obs/100,n)*100;
+      vline(o,R.obs-1.96*se,C("--verm"),null,[3,3]);
+      vline(o,R.obs+1.96*se,C("--verm"),"formula",[3,3]);
+    }
+    const fse=which===0?seVol(R.obs/100,n)*100:NaN;
+    document.getElementById("kv4").innerHTML=kvHTML([
+      ["Statistic",STATS[which]],
+      ["Days of data",String(n)],
+      ["Resamples",B.toLocaleString()],
+      ["Observed",R.obs.toFixed(4)+"%"],
+      ["Bootstrap se",R.seBoot.toFixed(4)],
+      ["Bootstrap 95%",R.lo.toFixed(3)+"% to "+R.hi.toFixed(3)+"%"],
+      ["Formula se",isFinite(fse)?fse.toFixed(4):"none exists"],
+      ["Formula 95%",isFinite(fse)?(R.obs-1.96*fse).toFixed(3)+"% to "+(R.obs+1.96*fse).toFixed(3)+"%":"—"],
+      ["They differ by",isFinite(fse)?Math.abs(R.seBoot-fse).toFixed(4):"—"]
+    ]);
+  }
+})();
+
+/* ══════════ 05 — what an interval claims ══════════ */
+const s5={conf:0.95,n:40,runs:100};
+(function(){
+  sliders(document.getElementById("ctl5"),[
+    {id:"a5",k:"conf",lbl:"c",name:"Confidence level",min:0.50,max:0.99,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"b5",k:"n",lbl:"n",name:"Observations per sample",min:10,max:200,step:5,fmt:v=>v.toFixed(0)},
+    {id:"c5r",k:"runs",lbl:"R",name:"Samples drawn",min:20,max:200,step:10,fmt:v=>v.toFixed(0)}
+  ],s5,()=>draw(),"c5");
+  window.draw5=draw;
+  window.__cover=cover;
+  function cover(conf,n,runs){
+    const r=rng(777), z=qnorm(0.5+conf/2), out=[];
+    for(let k=0;k<runs;k++){
+      const a=[];for(let i=0;i<n;i++)a.push(r.normal(0,1));
+      const m=mean(a), se=sd(a)/Math.sqrt(n);
+      out.push({m,lo:m-z*se,hi:m+z*se,hit:(m-z*se<=0&&m+z*se>=0)});
+    }
+    return out;
+  }
+  function draw(){
+    const runs=Math.round(s5.runs);
+    const ints=cover(s5.conf,Math.round(s5.n),runs);
+    const w=Math.max.apply(null,ints.map(i=>Math.abs(i.hi)))*1.15;
+    const o=Fig(document.getElementById("cv5"),
+      {h:330,x0:-w,x1:w,y0:0,y1:runs,pad:{l:56,r:14,t:14}});
+    axes(o,v=>v.toFixed(2),v=>v.toFixed(0),5,4);
+    const g=o.g;g.save();g.lineWidth=1.6;
+    ints.forEach((it,i)=>{
+      g.strokeStyle=it.hit?C("--blue"):C("--verm");
+      g.globalAlpha=it.hit?0.55:0.95;
+      const y=o.Y(i+0.5);
+      g.beginPath();g.moveTo(o.X(it.lo),y);g.lineTo(o.X(it.hi),y);g.stroke();
+    });
+    g.restore();
+    vline(o,0,C("--ochre"),"the truth");
+    const hits=ints.filter(i=>i.hit).length;
+    document.getElementById("kv5").innerHTML=kvHTML([
+      ["Confidence level",(s5.conf*100).toFixed(0)+"%"],
+      ["Samples drawn",String(runs)],
+      ["Caught the truth",hits+" / "+runs],
+      ["  which is",(hits/runs*100).toFixed(1)+"%"],
+      ["Missed",(runs-hits)+" / "+runs],
+      ["Expected misses",((1-s5.conf)*runs).toFixed(1)],
+      ["z for this level",qnorm(0.5+s5.conf/2).toFixed(4)],
+      ["Typical half-width",(qnorm(0.5+s5.conf/2)/Math.sqrt(s5.n)).toFixed(4)],
+      ["Can you tell which missed?","not without the truth"]
+    ]);
+  }
+})();
+
+/* ══════════ 06 — the drill ══════════ */
+(function(){
+  let tier=1,sc=0,asked=0,streak=0,best=0,cur=null;
+  const E=id=>document.getElementById(id);
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  function make(){
+    const R=Math.random;
+    if(tier===1){
+      const t=Math.floor(R()*3);
+      if(t===0){const sdv=pick([1,2,5,10,20]),n=pick([25,100,400,900]);
+        const a=sdv/Math.sqrt(n);
+        return{kind:"Standard error of a mean",unit:"",a:a,tol:Math.max(0.005,a*0.02),
+          q:"Data with a standard deviation of <b>"+sdv+"</b>, sample size <b>"+n+"</b>. What is the standard error of the mean?",
+          w:"σ/√n = "+sdv+"/√"+n+" = "+sdv+"/"+Math.sqrt(n)+" = <b>"+a.toFixed(3)+"</b>."};}
+      if(t===1){const sig=pick([0.10,0.15,0.20,0.30,0.45]),n=pick([60,126,252,504]);
+        const a=seVol(sig,n)*100;
+        return{kind:"Standard error of a volatility",unit:"pts",a:a,tol:Math.max(0.01,a*0.02),
+          q:"A stock at <b>"+(sig*100).toFixed(0)+"%</b> volatility, estimated from <b>"+n+
+            "</b> daily returns. What is the standard error, in volatility points?",
+          w:"σ/√(2n) = "+(sig*100).toFixed(0)+"%/√"+(2*n)+" = <b>"+a.toFixed(3)+
+            " points</b>. Note the 2 — it is why volatility is easier to measure than drift."};}
+      const sdv=pick([2,5,10]),n=pick([100,400]);
+      const a=1.96*sdv/Math.sqrt(n);
+      return{kind:"A 95% half-width",unit:"",a:a,tol:Math.max(0.005,a*0.02),
+        q:"Standard deviation <b>"+sdv+"</b>, sample size <b>"+n+"</b>. What is the half-width of a 95% interval for the mean?",
+        w:"1.96 × σ/√n = 1.96 × "+(sdv/Math.sqrt(n)).toFixed(4)+" = <b>"+a.toFixed(3)+"</b>."};
+    }
+    const t=Math.floor(R()*3);
+    if(t===0){const sig=pick([0.15,0.20,0.25,0.35]),hw=pick([0.01,0.02,0.03]);
+      const a=daysForVol(sig,hw);
+      return{kind:"Days to pin a volatility",unit:"days",a:a,tol:Math.max(2,a*0.02),
+        q:"How many trading days pin a <b>"+(sig*100).toFixed(0)+"%</b> volatility to within <b>±"+
+          (hw*100).toFixed(0)+" point"+(hw>0.01?"s":"")+"</b> at 95%?",
+        w:"Solve 1.96·σ/√(2n) = "+(hw*100).toFixed(0)+"pts: n = (1.96×"+(sig*100).toFixed(0)+
+          "/"+(hw*100).toFixed(0)+")²/2 = <b>"+a.toLocaleString()+" days</b>."};}
+    if(t===1){const factor=pick([2,3,4,5,10]);
+      const a=factor*factor;
+      return{kind:"Data needed to sharpen an estimate",unit:"×",a:a,tol:0.05,
+        q:"You want to cut a standard error by a factor of <b>"+factor+"</b>. How much more data?",
+        w:"The error falls like 1/√n, so cutting it by "+factor+" needs "+factor+
+          "² = <b>"+a+"×</b> the data."};}
+    const sig=pick([0.20,0.32,0.45]),yrs=pick([1,3,5,10]);
+    const a=1.96*sig/Math.sqrt(yrs)*100;
+    return{kind:"How well you know the drift",unit:"%",a:a,tol:Math.max(0.2,a*0.02),
+      q:"A <b>"+(sig*100).toFixed(0)+"%</b>-volatility stock watched for <b>"+yrs+
+        "</b> year"+(yrs>1?"s":"")+". What is the 95% half-width on its annualized drift?",
+      w:"1.96 × σ/√T = 1.96 × "+(sig*100).toFixed(0)+"%/√"+yrs+" = <b>±"+a.toFixed(1)+
+        " points</b> — which is usually larger than any drift worth arguing about."};
+  }
+  function next(){
+    cur=make();
+    E("dKind").textContent=cur.kind;E("dText").innerHTML=cur.q;
+    E("dUnit").textContent=cur.unit;E("dInput").value="";
+    E("drill").classList.remove("done");
+    focusSoft(E("dInput"),E("drill"));
+  }
+  function submit(){
+    if(!cur||E("drill").classList.contains("done"))return;
+    const raw=parseFloat(String(E("dInput").value).replace(/[$,%\s×]/g,""));
+    asked++;
+    const ok=isFinite(raw)&&Math.abs(raw-cur.a)<=cur.tol;
+    if(ok){sc++;streak++;if(streak>best)best=streak;}else streak=0;
+    E("dVerdict").textContent=ok?"CORRECT":("NOT QUITE — the answer is "+cur.a.toFixed(3));
+    E("dVerdict").className="vd "+(ok?"ok":"no");
+    E("dWork").innerHTML=cur.w;
+    E("dScore").textContent=sc+" / "+asked;
+    E("dStreak").textContent=String(streak);E("dBest").textContent=String(best);
+    E("drill").classList.add("done");
+  }
+  E("dSubmit").addEventListener("click",submit);
+  E("dInput").addEventListener("keydown",e=>{if(e.key==="Enter")submit();});
+  E("dNext").addEventListener("click",next);
+  E("dSkip").addEventListener("click",()=>{streak=0;E("dStreak").textContent="0";next();});
+  [1,2].forEach(k=>E("dT"+k).addEventListener("click",()=>{
+    tier=k;[1,2].forEach(j=>E("dT"+j).setAttribute("aria-pressed",j===k?"true":"false"));
+    next();}));
+  window.drawDrill=next;
+  window.__drill=()=>{const o=[];for(let i=0;i<2;i++){tier=i+1;for(let j=0;j<400;j++)o.push(make());}tier=1;return o;};
+})();
+
+function drawAll(){
+  drawHero();draw1();draw2();draw3();draw4();draw5();drawDrill();
+}
+LAB.boot(drawAll);
+
+</script>
+</body>
+</html>

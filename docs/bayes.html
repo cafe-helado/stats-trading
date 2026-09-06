@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F4F1E8">
+<title>Updating on Evidence — Chance, visually</title>
+<meta name="description" content="Bayes as a rectangle rather than a formula. Why a 99%-accurate test on a rare condition gives a 9% answer, why one 6% day flips a volatility view, and why a good backtest leaves a strategy more likely dead than alive.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Updating on Evidence — Chance, visually">
+<meta property="og:description" content="Bayes as a rectangle rather than a formula. Why a 99%-accurate test on a rare condition gives a 9% answer, why one 6% day flips a volatility view, and why a good backtest leaves a strategy more likely dead than alive.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F1E8'/><rect x='5' y='19' width='4' height='7' fill='%230B6E75'/><rect x='11' y='12' width='4' height='14' fill='%230B6E75'/><rect x='17' y='7' width='4' height='19' fill='%230B6E75'/><rect x='23' y='16' width='4' height='10' fill='%230B6E75'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lab.css">
+<link rel="stylesheet" href="assets/mobile.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chance">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+<header class="serieshead">
+  <div class="in">
+    <a class="home" href="index.html">← Chance, visually</a>
+    <span class="num">No. 06 · Updating</span>
+  </div>
+</header>
+
+<div class="progress" id="prog"></div>
+<nav class="chapnav" id="chapnav" aria-label="Chapters">
+  <a href="#c1"><span>The 99% test</span><i></i></a>
+  <a href="#c2"><span>Bayes, as a rectangle</span><i></i></a>
+  <a href="#c3"><span>A second look</span><i></i></a>
+  <a href="#c4"><span>Was that four sigma?</span><i></i></a>
+  <a href="#c5"><span>Does the strategy work?</span><i></i></a>
+  <a href="#c6"><span>Drills</span><i></i></a>
+</nav>
+
+<div class="hero">
+  <canvas id="heroCv" aria-hidden="true"></canvas>
+  <div class="heroInner">
+    <div class="eyebrow">An interactive derivation · No. 06</div>
+    <h1>A test that is right <em>99%</em> of the time</h1>
+    <p class="sub">It comes back positive. The chance you have the disease is nine percent. Nothing about the test is broken — the missing ingredient is how common the disease was before anyone tested, and forgetting it is the most expensive habit in applied probability.</p>
+  </div>
+  <div class="scrollcue">Scroll ↓</div>
+</div>
+
+<main>
+
+<div class="orient">
+  <h2>Start here</h2>
+  <p class="lede">Module 05 showed how weak the evidence in a small sample is. This module is about what to do with weak evidence: combine it with what you already believed, in the only way that is arithmetically consistent. That is all Bayes' rule is.</p>
+  <ol>
+    <li><b>Chapter 01 is the classic, and it is worth being surprised by.</b> A 99%-accurate test on a 1-in-1000 disease gives a 9% chance of being sick when it comes back positive.</li>
+    <li><b>Chapter 02 draws the rule as a rectangle</b>, because the formula hides what the picture makes obvious: you are comparing two areas, and the base rate sets how big they start.</li>
+    <li><b>Chapters 04 and 05 are the trading versions.</b> A 6% day flips your view of a stock's volatility from 90% confident to 0.4% in one observation — and a good backtest on a strategy you had no prior reason to believe leaves it under a third likely to be real.</li>
+  </ol>
+  <details class="drop">
+    <summary>Notation — every symbol used on this page</summary>
+    <table class="ntab">
+      <tr><td>Prior</td><td>What you believed before the evidence. Usually a base rate, and usually the thing people skip.</td></tr>
+      <tr><td>Likelihood</td><td>How probable the evidence is under each hypothesis. Not the probability of the hypothesis.</td></tr>
+      <tr><td>Posterior</td><td>What you believe after. The output of the rule.</td></tr>
+      <tr><td>Base rate</td><td>How common something is in the population before you looked at this case.</td></tr>
+      <tr><td>Sensitivity</td><td>The chance a test catches a true case. P(positive | sick).</td></tr>
+      <tr><td>Specificity</td><td>The chance a test clears a healthy one. P(negative | not sick).</td></tr>
+      <tr><td>False positive</td><td>A positive result on a case that is not real. On a rare condition these outnumber the true ones.</td></tr>
+      <tr><td>Likelihood ratio</td><td>One hypothesis's likelihood divided by another's. How much the evidence moves you, independent of what you believed.</td></tr>
+    </table>
+  </details>
+</div>
+
+<!-- ══════════ 01 ══════════ -->
+<section class="chapter" id="c1">
+  <div class="chead">
+    <div class="cnum">01</div>
+    <h2>The test is right 99% of the time and you are probably fine</h2>
+    <p class="dek">Both statements are true at once. Reconciling them is the whole module.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">A disease affects one person in a thousand. A test catches <b>99%</b> of those who have it and correctly clears <b>99%</b> of those who do not. You test positive. What is the chance you are sick?</p>
+    <p>Most people say 99%, some say 95%, and the answer is <b>9.02%</b>.</p>
+    <p>Count it out on a hundred thousand people. <b>100</b> of them are sick, and the test flags <b>99</b> of those. The other <b>99,900</b> are healthy, and the test wrongly flags <b>1%</b> of them — <b>999</b> people. So there are 1,098 positive results and only 99 of them are real: <b>99 / 1,098 = 9.02%</b>.</p>
+    <p>Nothing is wrong with the test. The problem is that the healthy group is a thousand times larger, so even a 1% error rate applied to it produces ten times more false positives than there are true cases to find. <b>When a condition is rare, most positives are false</b>, and that is arithmetic rather than a criticism.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>A hundred thousand people, sorted by what the test said</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--verm)"></i>Sick and flagged</span>
+            <span><i class="sw" style="background:var(--ochre)"></i>Healthy and flagged</span>
+            <span><i class="sw" style="background:var(--hair)"></i>Cleared</span>
+          </span>
+        </div>
+        <canvas id="cv1" height="320"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl1"></div>
+        <div class="kv" style="margin-top:20px" id="kv1"></div>
+      </div>
+    </div>
+    <figcaption>Notice how small the red block is next to the orange one. That ratio <em>is</em> the answer, and no amount of improving the test changes the fact that the healthy population is enormous.</figcaption>
+  </figure>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Raise the prevalence to 10% and predict the answer before you look. Then drop the test's specificity to 95% at 0.1% prevalence and see which lever matters more.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c1" data-patch='{"prev":0.001,"spec":0.99}' data-focus="cv1">One in a thousand</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"prev":0.10,"spec":0.99}' data-focus="cv1">One in ten</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"prev":0.001,"spec":0.999}' data-focus="cv1">A ten-times better test</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Which change helps more on a rare condition: raising sensitivity from 99% to 99.9%, or raising specificity from 99% to 99.9%?</p>
+    <div class="opts">
+      <button>Sensitivity — catching more true cases</button>
+      <button data-ok="1">Specificity, overwhelmingly. It takes 9.02% to 49.8%, because false positives come from the huge healthy group and true positives cannot go above 100 out of 100</button>
+      <button>They help equally</button>
+      <button>Neither helps much</button>
+    </div>
+    <div class="ans"><b>Specificity, and it is not close.</b> Sensitivity can only recover the one true case in a hundred you were missing; specificity removes nine hundred of the false ones. On rare conditions the false positive rate is the entire ballgame, which is why screening programs are judged on it and why "the test is 99% accurate" is a sentence that hides the number that matters.</div>
+  </div>
+</section>
+
+<!-- ══════════ 02 ══════════ -->
+<section class="chapter" id="c2">
+  <div class="chead">
+    <div class="cnum">02</div>
+    <h2>The rule, drawn as a rectangle</h2>
+    <p class="dek">Bayes' theorem is a formula for comparing two areas. The picture is easier to hold than the algebra and harder to get backwards.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Draw a square for the whole population. Split it left-to-right by whether the thing is true — the left slice is the <span class="term" data-t="Prior" data-def="What you believed before seeing the evidence. In a screening problem it is the base rate; in a trading problem it is how often the thing you are testing for is real.">prior</span>. Then split each side top-to-bottom by whether the test came back positive.</p>
+    <p>You now have four boxes. A positive result tells you that you are in one of the two top boxes and nothing more. The answer is simply the true-positive box divided by the two of them together.</p>
+  </div>
+
+  <div class="mline">P(sick | positive) = P(positive | sick)·P(sick) / P(positive)</div>
+  <p class="mread">Reads as: <b>the true-positive area divided by the total positive area.</b> Everything in the formula is a box in the rectangle, which is why the picture is worth learning first.</p>
+
+  <div class="prose">
+    <p>The most useful thing the picture shows is what happens when you drag the prior. At a 50% base rate the two columns are equal and a 99% test gives a 99% answer, exactly as intuition demands. Slide the prior to 1% and the right-hand column becomes 99 times wider, so its 1% error stripe outgrows the left column's entire true-positive box. The test never changed.</p>
+    <p>There is a shortcut worth carrying. The evidence's strength is the <b>likelihood ratio</b> — here 99 to 1 — and it multiplies your <em>odds</em>, not your probability. Prior odds of 1:999, times 99, gives posterior odds of 99:999, which is 9.02%. Working in odds turns Bayes into a single multiplication.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The population, split twice</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--verm)"></i>True positive</span>
+            <span><i class="sw" style="background:var(--ochre)"></i>False positive</span>
+            <span><i class="sw" style="background:var(--moss)"></i>True negative</span>
+            <span><i class="sw" style="background:var(--hair)"></i>False negative</span>
+          </span>
+        </div>
+        <canvas id="cv2" height="330"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl2"></div>
+        <div class="kv" style="margin-top:20px" id="kv2"></div>
+      </div>
+    </div>
+    <figcaption>Drag the prior and watch the vertical split move. Everything else on the page is this one picture with different labels.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Which quantity does the likelihood ratio multiply?</p>
+    <div class="opts">
+      <button>The probability</button>
+      <button data-ok="1">The odds. Prior odds of 1:999 times a likelihood ratio of 99 gives posterior odds of 99:999, which converts to 9.02%</button>
+      <button>The base rate</button>
+      <button>The sample size</button>
+    </div>
+    <div class="ans"><b>The odds, which is why odds are the natural currency of evidence.</b> In odds form Bayes is a multiplication and nothing else, and independent pieces of evidence just multiply in sequence. It is also why <a href="odds.html">module 01</a>'s notations were worth learning — betting odds and evidential odds are the same object.</div>
+  </div>
+</section>
+
+<!-- ══════════ 03 ══════════ -->
+<section class="chapter" id="c3">
+  <div class="chead">
+    <div class="cnum">03</div>
+    <h2>The second test does what the first could not</h2>
+    <p class="dek">9% to 91% on one more look, because the prior has moved and the evidence has not.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">You test positive and the answer is 9.02%. Now take the test again, independently, and it comes back positive a second time.</p>
+    <p>The rule handles this without any new machinery: yesterday's posterior becomes today's prior. Starting from 9.02% rather than 0.1%, the same 99-to-1 likelihood ratio takes you to <b>90.75%</b>. A third positive gets you to <b>99.90%</b>.</p>
+    <p>This is the answer to the most common objection to chapter 01 — that a 9% result makes the test sound useless. It is not useless; it moved you from 0.1% to 9%, which is a <b>ninety-fold</b> increase in your belief. The problem is only that ninety times a very small number is still a small number, and the fix is more evidence rather than a better test.</p>
+    <p>It is also why screening protocols are built as sequences. The first test is cheap and casts a wide net; the second is expensive and only gets run on a population whose base rate the first test has already raised by two orders of magnitude.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Belief, after each independent positive</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>P(sick)</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>Where you started</span>
+          </span>
+        </div>
+        <canvas id="cv3" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl3"></div>
+        <div class="kv" style="margin-top:20px" id="kv3"></div>
+      </div>
+    </div>
+    <figcaption>Notice the curve is steepest in the middle. Evidence moves you fastest when you are genuinely uncertain and barely at all when you are already convinced — which is a property of the arithmetic, not of stubbornness.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Two positive tests take you from 0.1% to 90.75%. What does that say about the first result?</p>
+    <div class="opts">
+      <button>That it was useless</button>
+      <button data-ok="1">That it was informative but starting from a very low base. It multiplied the odds by 99 — the issue was the base rate, not the evidence</button>
+      <button>That the tests are not independent</button>
+      <button>That the second test is better than the first</button>
+    </div>
+    <div class="ans"><b>Informative, from a bad starting point.</b> The third answer is the right thing to <em>worry</em> about in practice — repeat tests on the same person often share a failure mode, and if they do, the second positive is worth far less than the arithmetic here assumes. Independence is the load-bearing assumption in every sequential update.</div>
+  </div>
+</section>
+
+<!-- ══════════ 04 ══════════ -->
+<section class="chapter" id="c4">
+  <div class="chead">
+    <div class="cnum">04</div>
+    <h2>Was that a four-sigma day, or was your volatility wrong?</h2>
+    <p class="dek">The trading version, and the update is violent: one observation takes a 90% belief to under one percent.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">You believe a stock's volatility is <b>20%</b>, with maybe a <b>10%</b> chance it is really <b>40%</b>. Then it moves <b>6%</b> in a day.</p>
+    <p>Under the 20% story a 6% day is a <b>4.76-sigma</b> event — the daily standard deviation is 1.26%, so 6% is nearly five of them. Under the 40% story it is 2.38 sigma, unusual but ordinary. The likelihoods are <b>0.0004</b> and <b>0.9297</b>, a ratio of about <b>2,470 to 1</b> in favor of high volatility.</p>
+    <p>Multiply that into prior odds of 9 to 1 and the posterior is <b>0.36%</b> for the low-volatility story. One day has taken you from 90% confident to essentially certain you were wrong.</p>
+    <p>That is the correct response and it feels wrong, which is the lesson. Extreme observations are much more informative than ordinary ones, precisely because they are so unlikely under one hypothesis and unremarkable under another. The instinct to call a 6% day "an outlier" and carry on is the instinct to throw away the most informative data point you have.</p>
+    <p>The honest caveat: this calculation assumed the only two possibilities were 20% and 40%. Real hypothesis spaces are wider, and a genuine third option — "the volatility is 20% but the return distribution has fat tails" — would absorb some of that update. <a href="dist.html">Module 04</a> is exactly that hypothesis, and distinguishing it from a volatility change takes more than one day.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>What you believe about volatility, after one day's move</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>P(low volatility)</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>The move you saw</span>
+          </span>
+        </div>
+        <canvas id="cv4" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl4"></div>
+        <div class="kv" style="margin-top:20px" id="kv4"></div>
+      </div>
+    </div>
+    <figcaption>Notice the curve is flat for ordinary moves and then falls off a cliff. Days inside two sigma barely move you; the update is almost entirely carried by the rare ones.</figcaption>
+  </figure>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Find the size of move that leaves you exactly 50/50. It is smaller than most people expect.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c4" data-patch='{"move":0.01}' data-focus="cv4">An ordinary 1% day</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"move":0.035}' data-focus="cv4">A 3.5% day</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"move":0.06}' data-focus="cv4">A 6% day</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Why does a single extreme day move your belief so much more than a hundred ordinary ones?</p>
+    <div class="opts">
+      <button>Because recent data matters more</button>
+      <button data-ok="1">Because the likelihood ratio is enormous. An ordinary day is nearly equally likely under both hypotheses, so it barely discriminates; a 6% day is nearly 2,500 times more likely under one than the other</button>
+      <button>Because extreme days are more accurately measured</button>
+      <button>They do not — a hundred days is always more informative</button>
+    </div>
+    <div class="ans"><b>Discrimination, not recency.</b> Evidence is only worth what it can distinguish between. A day inside one sigma has a likelihood ratio close to one and therefore tells you almost nothing, however many of them you collect — which is why volatility estimates barely move through calm periods and lurch during crises.</div>
+  </div>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section class="chapter" id="c5">
+  <div class="chead">
+    <div class="cnum">05</div>
+    <h2>Your backtest looked great. Now what?</h2>
+    <p class="dek">The base rate for trading strategies is brutal, and it is the number nobody puts in the deck.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">You test a strategy and the backtest is good. What is the chance the edge is real?</p>
+    <p>You cannot answer without three numbers, and only one of them is on the page in front of you. <b>How often is a tested idea genuinely profitable?</b> Optimistically, one in twenty. <b>How often does a real edge produce a good backtest?</b> Call it 80%. <b>How often does a dead strategy produce a good backtest anyway?</b> With enough parameters and enough attempts, at least 10%.</p>
+    <p>Run those through: <b>0.05 × 0.80 = 0.04</b> of real strategies pass, and <b>0.95 × 0.10 = 0.095</b> of dead ones do. So <b>P(real | good backtest) = 0.04 / 0.135 = 29.6%</b>.</p>
+    <p>A good backtest on a strategy you had no prior reason to believe leaves it <em>more likely dead than alive</em>. And the number is fragile in the wrong direction: it is the prior that dominates. At a 1% base rate a good backtest gets you to 7.5%; at 20% it gets you to 67%.</p>
+    <p>Which is why "I had a reason to look here" is not a soft consideration — it is the largest term in the calculation. A strategy motivated by a structural argument starts from a higher prior and needs far less evidence to become believable than one found by search.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The chance the edge is real, against how plausible it was to begin with</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>P(real | good backtest)</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Where the prior is</span>
+          </span>
+        </div>
+        <canvas id="cv5" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl5"></div>
+        <div class="kv" style="margin-top:20px" id="kv5"></div>
+      </div>
+    </div>
+    <figcaption>Notice how much of the answer is set by the horizontal axis rather than by anything about the test. The backtest is the small term; the prior is the big one.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Two strategies produce identical backtests. One came from a structural argument about market microstructure; the other from searching ten thousand parameter combinations. Are they equally credible?</p>
+    <div class="opts">
+      <button>Yes — the evidence is identical</button>
+      <button data-ok="1">No. They have different priors and the prior dominates. The searched one also has a much higher false-positive rate, so both terms move against it</button>
+      <button>Yes, if the backtests used the same data</button>
+      <button>No, but only because the searched one used more data</button>
+    </div>
+    <div class="ans"><b>Both terms move, and they compound.</b> The searched strategy starts from a lower prior <em>and</em> has a far higher chance of producing a good backtest while being dead — ten thousand attempts at a 10% false-positive rate produces a thousand good-looking dead strategies. That is not a reason never to search; it is a reason to hold searched results to enormously more evidence than reasoned ones.</div>
+  </div>
+</section>
+
+<!-- ══════════ 06 ══════════ -->
+<section class="chapter" id="c6">
+  <div class="chead">
+    <div class="cnum">06</div>
+    <h2>Drill it</h2>
+    <p class="dek">Posteriors from base rates, and likelihood ratios in odds form.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The first tier is the screening calculation. The second is odds form, which is how anyone does this quickly.</p>
+  </div>
+
+  <figure>
+    <div class="drill" id="drill">
+      <div class="dstats">
+        <div class="c"><span class="k">Correct</span><span class="v" id="dScore">0 / 0</span></div>
+        <div class="c"><span class="k">Streak</span><span class="v" id="dStreak" style="color:var(--moss)">0</span></div>
+        <div class="c"><span class="k">Best</span><span class="v" id="dBest">0</span></div>
+        <div class="c" style="flex:1;min-width:170px"><span class="k">Tier</span>
+          <div class="seg" style="margin-top:5px;max-width:240px">
+            <button id="dT1" aria-pressed="true">Posteriors</button>
+            <button id="dT2" aria-pressed="false">Odds form</button>
+          </div>
+        </div>
+      </div>
+      <span class="qn" id="dKind">Question</span>
+      <p class="qt" id="dText">Loading…</p>
+      <div class="ansrow">
+        <input type="text" inputmode="decimal" id="dInput" placeholder="your answer" aria-label="Your answer">
+        <span class="unit" id="dUnit"></span>
+        <button class="act" id="dSubmit">Check</button>
+        <button class="act ghost" id="dSkip">Skip</button>
+      </div>
+      <div class="verdict">
+        <div class="vd" id="dVerdict"></div>
+        <div class="work" id="dWork"></div>
+        <div class="btnrow"><button class="act" id="dNext">Next question</button></div>
+      </div>
+    </div>
+    <figcaption>Odds form turns every one of these into a single multiplication. It is worth doing the first tier the long way once and then never again.</figcaption>
+  </figure>
+
+  <div class="prose" style="margin-top:46px">
+    <p>Six questions across the page.</p>
+  </div>
+
+  <div class="score" id="scoreBox">
+    <span class="big" id="scoreNum">0 / 6</span>
+    <span class="txt" id="scoreTxt">Answered nothing yet. Questions are scored as you go.</span>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 1 · chapter 01</span>
+    <p class="q">A disease affects 1 in 1,000. A test is 99% sensitive and 99% specific. You test positive. What is the chance you are sick?</p>
+    <div class="opts">
+      <button>99%</button>
+      <button data-ok="1">9.02% — 99 true positives against 999 false ones out of 100,000 people</button>
+      <button>50%</button>
+      <button>1%</button>
+    </div>
+    <div class="ans"><b>Nine percent.</b> The healthy population is a thousand times larger, so its 1% error rate produces ten times more positives than the sick population's 99% hit rate does. On rare conditions, most positives are false — and no improvement in sensitivity fixes that.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 2 · chapter 01</span>
+    <p class="q">Which improvement helps more on a rare condition?</p>
+    <div class="opts">
+      <button>Sensitivity, from 99% to 99.9%</button>
+      <button data-ok="1">Specificity, from 99% to 99.9% — it takes the answer from 9.0% to 49.8%</button>
+      <button>They are equivalent</button>
+      <button>Neither, without raising the prevalence</button>
+    </div>
+    <div class="ans"><b>Specificity, by a mile.</b> Sensitivity can recover at most the one true case you were missing; specificity removes nine hundred false ones. This is the whole design principle behind screening: cast the wide net first, then confirm with something specific.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 3 · chapter 02</span>
+    <p class="q">Bayes' rule in odds form multiplies your prior odds by what?</p>
+    <div class="opts">
+      <button>The posterior probability</button>
+      <button data-ok="1">The likelihood ratio — how much more probable the evidence is under one hypothesis than the other</button>
+      <button>The base rate</button>
+      <button>The sample size</button>
+    </div>
+    <div class="ans"><b>The likelihood ratio, and it is the cleanest way to think about evidence.</b> It separates cleanly into "what I believed" and "how much this observation discriminates," and independent observations just multiply their ratios together.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 4 · chapter 03</span>
+    <p class="q">After two independent positive tests, the 9.02% becomes what?</p>
+    <div class="opts">
+      <button>18%, roughly doubled</button>
+      <button data-ok="1">90.75%. Yesterday's posterior becomes today's prior, and the same 99-to-1 ratio applies again</button>
+      <button>99%</button>
+      <button>It cannot be computed without new information</button>
+    </div>
+    <div class="ans"><b>Over ninety percent, from the same test twice.</b> Which shows the first result was informative all along — it multiplied the odds by 99. The catch in practice is independence: two runs of the same test on the same sample often fail the same way, and then the second result is worth far less.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 5 · chapter 04</span>
+    <p class="q">You are 90% sure a stock's volatility is 20% rather than 40%. It moves 6% in a day. Now what?</p>
+    <div class="opts">
+      <button>Still about 85% — one day is one day</button>
+      <button data-ok="1">0.36%. A 6% day is 4.76 sigma under the low-volatility story and ordinary under the high one, a likelihood ratio of about 2,470 to 1</button>
+      <button>About 50%</button>
+      <button>Unchanged, since one observation cannot move a strong prior</button>
+    </div>
+    <div class="ans"><b>Under half a percent, from one day.</b> Extreme observations carry enormous likelihood ratios precisely because they are so improbable under one hypothesis. Calling a 6% day "an outlier" and dropping it discards the single most informative data point available.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 6 · chapter 05</span>
+    <p class="q">One in twenty tested strategies is real; good strategies backtest well 80% of the time and dead ones 10%. Your strategy backtests well. Chance it is real?</p>
+    <div class="opts">
+      <button>80%</button>
+      <button data-ok="1">29.6% — more likely dead than alive</button>
+      <button>5%</button>
+      <button>50%</button>
+    </div>
+    <div class="ans"><b>Under a third.</b> And the term doing the work is the prior: at a 1% base rate the same backtest gets you to 7.5%, at 20% it gets you to 67%. Which is why the reason you looked matters more than the result you found.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="n">Every sequential update on this page assumes the pieces of evidence are independent given the hypothesis, and that assumption is usually the weakest link. Two runs of the same medical test on the same sample share failure modes; two backtests on overlapping data share the same lucky period; two days of returns during the same crisis are not two independent observations of volatility. Where the independence fails, these calculations overstate how much you have learned, sometimes enormously. Chapter 04 additionally restricts the hypothesis space to exactly two volatilities, which makes the update sharper than an honest continuous prior would — and it excludes the third explanation, that volatility is unchanged and the return distribution has fat tails, which <a href="dist.html">module 04</a> argues is often the better story. Chapter 05's numbers are illustrative rather than measured: nobody knows the true base rate for trading strategies, and the point of the chapter is that the answer depends on it far more than on the backtest.</p>
+</footer>
+
+<script src="assets/lab.js"></script>
+<script src="assets/stats.js"></script>
+<script src="assets/pwa.js" defer></script>
+<script>
+"use strict";
+
+/* Bayes, in the two forms the page uses. The odds form is the one worth
+   internalizing: prior odds times likelihood ratio, and nothing else. */
+const posterior = (prior, sens, spec) =>
+  prior * sens / (prior * sens + (1 - prior) * (1 - spec));
+const toOdds = p => p / (1 - p);
+const fromOdds = o => o / (1 + o);
+const likRatio = (sens, spec) => sens / (1 - spec);
+/* the trading version: which of two volatilities explains today's move? */
+function volPosterior(move, prior, vLo, vHi, days) {
+  const sLo = vLo / Math.sqrt(days), sHi = vHi / Math.sqrt(days);
+  const lLo = dnorm(move, 0, sLo), lHi = dnorm(move, 0, sHi);
+  return { post: prior * lLo / (prior * lLo + (1 - prior) * lHi),
+           lLo, lHi, ratio: lHi / lLo, sigmaLo: move / sLo, sigmaHi: move / sHi };
+}
+
+/* ══════════ hero ══════════ */
+(function(){
+  const cv=document.getElementById("heroCv");let w,h,g,raf,t0=0;
+  function size(){const dpr=window.devicePixelRatio||1;
+    w=cv.clientWidth;h=cv.clientHeight;cv.width=w*dpr;cv.height=h*dpr;
+    g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);}
+  function draw(ph){
+    g.fillStyle=C("--chalk");g.fillRect(0,0,w,h);
+    const padX=w*0.08,padY=h*0.16,gw=w-padX*2,gh=h-padY*2;
+    /* the rectangle, breathing across base rates */
+    const prev=0.03+0.30*(Math.sin(ph*0.4)*0.5+0.5);
+    const split=padX+gw*prev;
+    g.globalAlpha=0.16;
+    g.fillStyle=C("--verm");g.fillRect(padX,padY,split-padX,gh*0.99);
+    g.fillStyle=C("--ochre");g.fillRect(split,padY,padX+gw-split,gh*0.01+2);
+    g.fillStyle=C("--moss");g.fillRect(split,padY+gh*0.03,padX+gw-split,gh*0.97);
+    g.globalAlpha=0.55;g.strokeStyle=C("--ink");g.lineWidth=1;
+    g.beginPath();g.moveTo(split,padY);g.lineTo(split,padY+gh);g.stroke();
+    g.globalAlpha=1;
+  }
+  function tick(t){if(!t0)t0=t;draw((t-t0)/2600);raf=requestAnimationFrame(tick);}
+  window.drawHero=function(){size();if(RM){draw(0);return;}
+    if(raf)cancelAnimationFrame(raf);t0=0;raf=requestAnimationFrame(tick);};
+})();
+
+/* ══════════ 01 — the screening problem ══════════ */
+const s1={prev:0.001,sens:0.99,spec:0.99,N:100000};
+(function(){
+  sliders(document.getElementById("ctl1"),[
+    {id:"a1",k:"prev",lbl:"π",name:"How common it is",min:0.0002,max:0.5,step:0.0002,
+      fmt:v=>v<0.01?"1 in "+Math.round(1/v):(v*100).toFixed(1)+"%"},
+    {id:"b1",k:"sens",lbl:"↑",name:"Sensitivity",min:0.80,max:0.9999,step:0.0005,fmt:v=>(v*100).toFixed(2)+"%"},
+    {id:"c1s",k:"spec",lbl:"↓",name:"Specificity",min:0.80,max:0.9999,step:0.0005,fmt:v=>(v*100).toFixed(2)+"%"}
+  ],s1,()=>draw(),"c1");
+  window.draw1=draw;
+  function draw(){
+    const N=s1.N, sick=N*s1.prev, well=N-sick;
+    const tp=sick*s1.sens, fn=sick-tp;
+    const fp=well*(1-s1.spec), tn=well-fp;
+    /* one bar per outcome, on a log count scale so all four are visible */
+    const cats=[["Sick, flagged",tp,"--verm"],["Healthy, flagged",fp,"--ochre"],
+                ["Healthy, cleared",tn,"--hair"],["Sick, missed",fn,"--grey"]];
+    const o=Fig(document.getElementById("cv1"),
+      {h:320,x0:-0.6,x1:3.6,y0:0,y1:Math.log10(N)*1.12,pad:{l:66,r:14,t:14}});
+    axes(o,v=>["true +","false +","true −","false −"][Math.round(v)]||"",
+      v=>Math.pow(10,v)>=1000?(Math.pow(10,v)/1000).toFixed(0)+"k":Math.pow(10,v).toFixed(0),4,4);
+    const g=o.g;
+    cats.forEach((c,i)=>{
+      const v=Math.log10(Math.max(c[1],1));
+      g.save();g.fillStyle=C(c[2]);g.globalAlpha=0.85;
+      const bw=o.pw/5.4;
+      g.fillRect(o.X(i)-bw/2,o.Y(v),bw,o.Y(0)-o.Y(v));
+      g.restore();
+      g.fillStyle=C("--ink2");g.font="10px 'IBM Plex Mono', monospace";
+      g.textAlign="center";g.textBaseline="bottom";
+      g.fillText(Math.round(c[1]).toLocaleString(),o.X(i),o.Y(v)-5);
+    });
+    const post=posterior(s1.prev,s1.sens,s1.spec);
+    document.getElementById("kv1").innerHTML=kvHTML([
+      ["Population",N.toLocaleString()],
+      ["Actually sick",Math.round(sick).toLocaleString()],
+      ["True positives",Math.round(tp).toLocaleString()],
+      ["False positives",Math.round(fp).toLocaleString()],
+      ["  false ÷ true",(fp/tp).toFixed(2)+"×"],
+      ["P(sick | positive)",(post*100).toFixed(3)+"%"],
+      ["P(sick | negative)",((fn/(fn+tn))*100).toFixed(4)+"%"],
+      ["Likelihood ratio",likRatio(s1.sens,s1.spec).toFixed(1)+" : 1"],
+      ["Prior odds","1 : "+Math.round(1/s1.prev-1).toLocaleString()],
+      ["Posterior odds",toOdds(post).toFixed(4)+" : 1"]
+    ]);
+  }
+})();
+
+/* ══════════ 02 — the rectangle ══════════ */
+const s2={prev:0.10,sens:0.99,spec:0.99};
+(function(){
+  sliders(document.getElementById("ctl2"),[
+    {id:"a2",k:"prev",lbl:"π",name:"Prior",min:0.005,max:0.95,step:0.005,fmt:v=>(v*100).toFixed(1)+"%"},
+    {id:"b2",k:"sens",lbl:"↑",name:"Sensitivity",min:0.50,max:0.999,step:0.001,fmt:v=>(v*100).toFixed(1)+"%"},
+    {id:"c2s",k:"spec",lbl:"↓",name:"Specificity",min:0.50,max:0.999,step:0.001,fmt:v=>(v*100).toFixed(1)+"%"}
+  ],s2,()=>draw(),"c2");
+  window.draw2=draw;
+  function draw(){
+    const o=Fig(document.getElementById("cv2"),
+      {h:330,x0:0,x1:1,y0:0,y1:1,pad:{l:56,r:14,t:14}});
+    axes(o,v=>(v*100).toFixed(0)+"%",v=>(v*100).toFixed(0)+"%",5,4);
+    const g=o.g;g.save();
+    g.beginPath();g.rect(o.P.l,o.P.t,o.pw,o.ph);g.clip();
+    const p=s2.prev;
+    const box=(x0,x1,y0,y1,col,a)=>{
+      g.fillStyle=C(col);g.globalAlpha=a;
+      g.fillRect(o.X(x0),o.Y(y1),o.X(x1)-o.X(x0),o.Y(y0)-o.Y(y1));
+    };
+    /* left column = the thing is true; top of each column = test positive */
+    box(0,p,1-s2.sens,1,"--verm",0.80);          /* true positive  */
+    box(0,p,0,1-s2.sens,"--hair",0.80);          /* false negative */
+    box(p,1,s2.spec,1,"--ochre",0.80);           /* false positive */
+    box(p,1,0,s2.spec,"--moss",0.55);            /* true negative  */
+    g.restore();
+    g.save();g.strokeStyle=C("--ink");g.globalAlpha=0.5;g.lineWidth=1.2;
+    g.beginPath();g.moveTo(o.X(p),o.P.t);g.lineTo(o.X(p),o.P.t+o.ph);g.stroke();
+    g.restore();
+    vline(o,p,C("--ink"),"prior");
+    const tp=p*s2.sens, fp=(1-p)*(1-s2.spec);
+    document.getElementById("kv2").innerHTML=kvHTML([
+      ["Prior",(p*100).toFixed(2)+"%"],
+      ["  as odds","1 : "+((1-p)/p).toFixed(2)],
+      ["True positive area",tp.toFixed(5)],
+      ["False positive area",fp.toFixed(5)],
+      ["Total positive",(tp+fp).toFixed(5)],
+      ["P(true | positive)",(tp/(tp+fp)*100).toFixed(3)+"%"],
+      ["Likelihood ratio",likRatio(s2.sens,s2.spec).toFixed(2)],
+      ["Prior odds × ratio",(toOdds(p)*likRatio(s2.sens,s2.spec)).toFixed(4)],
+      ["  which converts to",(fromOdds(toOdds(p)*likRatio(s2.sens,s2.spec))*100).toFixed(3)+"%"],
+      ["  same as the areas",Math.abs(fromOdds(toOdds(p)*likRatio(s2.sens,s2.spec))-tp/(tp+fp))<1e-12?"yes":"no"]
+    ]);
+  }
+})();
+
+/* ══════════ 03 — repeated tests ══════════ */
+const s3={prev:0.001,sens:0.99,spec:0.99,tests:2};
+(function(){
+  sliders(document.getElementById("ctl3"),[
+    {id:"a3",k:"prev",lbl:"π",name:"Starting base rate",min:0.0002,max:0.3,step:0.0002,
+      fmt:v=>v<0.01?"1 in "+Math.round(1/v):(v*100).toFixed(1)+"%"},
+    {id:"b3",k:"sens",lbl:"↑",name:"Sensitivity",min:0.80,max:0.999,step:0.001,fmt:v=>(v*100).toFixed(1)+"%"},
+    {id:"c3s",k:"spec",lbl:"↓",name:"Specificity",min:0.80,max:0.999,step:0.001,fmt:v=>(v*100).toFixed(1)+"%"},
+    {id:"d3",k:"tests",lbl:"#",name:"Positives so far",min:0,max:6,step:1,fmt:v=>v.toFixed(0)}
+  ],s3,()=>draw(),"c3");
+  window.draw3=draw;
+  window.__chain=chain;
+  function chain(prev,sens,spec,k){
+    const out=[prev];
+    let p=prev;
+    for(let i=0;i<k;i++){p=posterior(p,sens,spec);out.push(p);}
+    return out;
+  }
+  function draw(){
+    const seq=chain(s3.prev,s3.sens,s3.spec,6);
+    const xs=[],ys=[];
+    for(let i=0;i<seq.length;i++){xs.push(i);ys.push(seq[i]);}
+    const o=Fig(document.getElementById("cv3"),
+      {h:310,x0:0,x1:6,y0:0,y1:1.05,pad:{l:58,r:14,t:14}});
+    axes(o,v=>v.toFixed(0),v=>(v*100).toFixed(0)+"%",7,4);
+    clip(o,()=>{
+      line(o,xs,ys,C("--blue"),2.4);
+      dots(o,xs,ys,C("--blue"),4);
+    });
+    hline(o,s3.prev,C("--ochre"),"the base rate",[3,3]);
+    vline(o,s3.tests,C("--moss"),String(Math.round(s3.tests)));
+    document.getElementById("kv3").innerHTML=kvHTML(
+      seq.slice(0,5).map((p,i)=>[i===0?"Before any test":("After "+i+" positive"+(i>1?"s":"")),
+        (p*100).toFixed(p<0.01?4:3)+"%"])
+      .concat([["Likelihood ratio",likRatio(s3.sens,s3.spec).toFixed(1)],
+               ["Odds multiply by that","each time"],
+               ["Odds after "+Math.round(s3.tests),
+                 (toOdds(s3.prev)*Math.pow(likRatio(s3.sens,s3.spec),s3.tests)).toFixed(4)]]));
+  }
+})();
+
+/* ══════════ 04 — updating a volatility ══════════ */
+const s4={move:0.06,prior:0.90,vLo:0.20,vHi:0.40};
+(function(){
+  sliders(document.getElementById("ctl4"),[
+    {id:"a4",k:"move",lbl:"Δ",name:"Today's move",min:0.002,max:0.12,step:0.001,fmt:v=>(v*100).toFixed(1)+"%"},
+    {id:"b4",k:"prior",lbl:"π",name:"Prior on low volatility",min:0.05,max:0.99,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"c4l",k:"vLo",lbl:"σ₁",name:"The calm hypothesis",min:0.05,max:0.40,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"d4",k:"vHi",lbl:"σ₂",name:"The stressed hypothesis",min:0.20,max:1.0,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"}
+  ],s4,()=>draw(),"c4");
+  window.draw4=draw;
+  window.__volPost=volPosterior;
+  function draw(){
+    const xs=[],ys=[];
+    for(let i=0;i<=300;i++){
+      const m=0.0005+0.12*i/300;xs.push(m*100);
+      ys.push(volPosterior(m,s4.prior,s4.vLo,s4.vHi,252).post);
+    }
+    const o=Fig(document.getElementById("cv4"),
+      {h:310,x0:0,x1:12,y0:0,y1:1.05,pad:{l:58,r:14,t:14}});
+    axes(o,v=>v.toFixed(0)+"%",v=>(v*100).toFixed(0)+"%",5,4);
+    clip(o,()=>line(o,xs,ys,C("--blue"),2.2));
+    vline(o,s4.move*100,C("--ochre"),(s4.move*100).toFixed(1)+"% day");
+    hline(o,s4.prior,C("--hair"),"prior",[3,3]);
+    hline(o,0.5,C("--verm"),"50/50",[2,4]);
+    const R=volPosterior(s4.move,s4.prior,s4.vLo,s4.vHi,252);
+    /* the move that leaves you exactly 50/50 */
+    let lo=0.0005,hi=0.2;
+    for(let i=0;i<80;i++){const m=(lo+hi)/2;
+      if(volPosterior(m,s4.prior,s4.vLo,s4.vHi,252).post>0.5)lo=m;else hi=m;}
+    let p2=s4.prior;
+    for(let d=0;d<2;d++)p2=volPosterior(s4.move,p2,s4.vLo,s4.vHi,252).post;
+    document.getElementById("kv4").innerHTML=kvHTML([
+      ["Today's move",(s4.move*100).toFixed(2)+"%"],
+      ["Daily sd if calm",(s4.vLo/Math.sqrt(252)*100).toFixed(3)+"%"],
+      ["  that is",R.sigmaLo.toFixed(2)+" σ"],
+      ["Daily sd if stressed",(s4.vHi/Math.sqrt(252)*100).toFixed(3)+"%"],
+      ["  that is",R.sigmaHi.toFixed(2)+" σ"],
+      ["Likelihood ratio",R.ratio.toFixed(1)+" : 1 for stressed"],
+      ["Prior on calm",(s4.prior*100).toFixed(1)+"%"],
+      ["Posterior on calm",(R.post*100).toFixed(R.post<0.01?4:2)+"%"],
+      ["After two such days",(p2*100).toFixed(p2<0.01?4:2)+"%"],
+      ["The 50/50 move",((lo+hi)/2*100).toFixed(2)+"%"]
+    ]);
+  }
+})();
+
+/* ══════════ 05 — the backtest base rate ══════════ */
+const s5={prior:0.05,power:0.80,fpr:0.10};
+(function(){
+  sliders(document.getElementById("ctl5"),[
+    {id:"a5",k:"prior",lbl:"π",name:"How often a tested idea is real",min:0.005,max:0.60,step:0.005,fmt:v=>(v*100).toFixed(1)+"%"},
+    {id:"b5",k:"power",lbl:"↑",name:"A real edge backtests well",min:0.40,max:0.99,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"c5f",k:"fpr",lbl:"↓",name:"A dead one backtests well",min:0.01,max:0.50,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"}
+  ],s5,()=>draw(),"c5");
+  window.draw5=draw;
+  function draw(){
+    const xs=[],ys=[];
+    for(let i=1;i<=300;i++){
+      const pr=0.6*i/300;xs.push(pr*100);
+      ys.push(pr*s5.power/(pr*s5.power+(1-pr)*s5.fpr));
+    }
+    const o=Fig(document.getElementById("cv5"),
+      {h:310,x0:0,x1:60,y0:0,y1:1.05,pad:{l:58,r:14,t:14}});
+    axes(o,v=>v.toFixed(0)+"%",v=>(v*100).toFixed(0)+"%",5,4);
+    clip(o,()=>line(o,xs,ys,C("--blue"),2.2));
+    vline(o,s5.prior*100,C("--verm"),"your prior");
+    hline(o,0.5,C("--hair"),"more likely than not",[3,3]);
+    const post=s5.prior*s5.power/(s5.prior*s5.power+(1-s5.prior)*s5.fpr);
+    /* the prior you would need for the answer to reach a half */
+    const need=s5.fpr/(s5.power+s5.fpr);
+    document.getElementById("kv5").innerHTML=kvHTML([
+      ["Base rate",(s5.prior*100).toFixed(1)+"%"],
+      ["Real ones that pass",(s5.power*100).toFixed(0)+"%"],
+      ["Dead ones that pass",(s5.fpr*100).toFixed(0)+"%"],
+      ["Likelihood ratio",(s5.power/s5.fpr).toFixed(2)],
+      ["P(real | good backtest)",(post*100).toFixed(2)+"%"],
+      ["  more likely than not?",post>0.5?"yes":"no"],
+      ["Prior needed for 50%",(need*100).toFixed(2)+"%"],
+      ["At a 1% prior",(0.01*s5.power/(0.01*s5.power+0.99*s5.fpr)*100).toFixed(1)+"%"],
+      ["At a 20% prior",(0.20*s5.power/(0.20*s5.power+0.80*s5.fpr)*100).toFixed(1)+"%"],
+      ["Out of 1,000 tested",Math.round(1000*(s5.prior*s5.power+(1-s5.prior)*s5.fpr))+" pass, "+
+        Math.round(1000*s5.prior*s5.power)+" real"]
+    ]);
+  }
+})();
+
+/* ══════════ 06 — the drill ══════════ */
+(function(){
+  let tier=1,sc=0,asked=0,streak=0,best=0,cur=null;
+  const E=id=>document.getElementById(id);
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  function make(){
+    const R=Math.random;
+    if(tier===1){
+      const t=Math.floor(R()*3);
+      if(t===0){const inv=pick([100,200,500,1000,5000]),sens=pick([0.95,0.99]),spec=pick([0.95,0.99]);
+        const a=posterior(1/inv,sens,spec)*100;
+        return{kind:"P(real | positive)",unit:"%",a:a,tol:Math.max(0.05,a*0.02),
+          q:"A condition affects <b>1 in "+inv.toLocaleString()+"</b>. A test is <b>"+
+            (sens*100).toFixed(0)+"%</b> sensitive and <b>"+(spec*100).toFixed(0)+
+            "%</b> specific. A positive comes back. What is the chance it is real?",
+          w:"True positives: (1/"+inv+")×"+sens.toFixed(2)+". False positives: ("+
+            (1-1/inv).toFixed(5)+")×"+(1-spec).toFixed(2)+". Their ratio gives <b>"+
+            a.toFixed(2)+"%</b>."};}
+      if(t===1){const pr=pick([0.05,0.10,0.25,0.50]),sens=0.90,spec=pick([0.90,0.95]);
+        const a=posterior(pr,sens,spec)*100;
+        return{kind:"Posterior from a moderate prior",unit:"%",a:a,tol:Math.max(0.1,a*0.02),
+          q:"Prior <b>"+(pr*100).toFixed(0)+"%</b>, sensitivity <b>90%</b>, specificity <b>"+
+            (spec*100).toFixed(0)+"%</b>. Positive result. Posterior?",
+          w:(pr.toFixed(2)+"×0.90) / ("+pr.toFixed(2)+"×0.90 + "+(1-pr).toFixed(2)+"×"+
+            (1-spec).toFixed(2)+") = <b>"+a.toFixed(2)+"%</b>.")};}
+      const inv=pick([100,1000]),sens=0.99,spec=0.99;
+      const p1=posterior(1/inv,sens,spec);
+      const a=posterior(p1,sens,spec)*100;
+      return{kind:"After a second positive",unit:"%",a:a,tol:Math.max(0.1,a*0.02),
+        q:"Base rate <b>1 in "+inv+"</b>, a <b>99/99</b> test, and <b>two</b> independent positives. Posterior?",
+        w:"First takes it to "+(p1*100).toFixed(3)+"%; that becomes the prior for the second, giving <b>"+
+          a.toFixed(2)+"%</b>."};
+    }
+    const t=Math.floor(R()*3);
+    if(t===0){const sens=pick([0.90,0.95,0.99]),spec=pick([0.90,0.95,0.99]);
+      const a=likRatio(sens,spec);
+      return{kind:"The likelihood ratio",unit:"",a:a,tol:Math.max(0.05,a*0.02),
+        q:"A test is <b>"+(sens*100).toFixed(0)+"%</b> sensitive and <b>"+(spec*100).toFixed(0)+
+          "%</b> specific. What is the likelihood ratio of a positive?",
+        w:"sensitivity / (1 − specificity) = "+sens.toFixed(2)+"/"+(1-spec).toFixed(2)+
+          " = <b>"+a.toFixed(1)+"</b>. Multiply your prior ODDS by that."};}
+    if(t===1){const p=pick([0.01,0.05,0.10,0.25,0.50,0.75]);
+      const a=toOdds(p);
+      return{kind:"Probability to odds",unit:"",a:a,tol:Math.max(0.005,a*0.02),
+        q:"A probability of <b>"+(p*100).toFixed(0)+"%</b>. What are the odds?",
+        w:"p/(1−p) = "+p.toFixed(2)+"/"+(1-p).toFixed(2)+" = <b>"+a.toFixed(4)+
+          "</b> to 1. Odds are what Bayes multiplies."};}
+    const p=pick([0.01,0.02,0.05,0.10]),lr=pick([5,10,20,99]);
+    const a=fromOdds(toOdds(p)*lr)*100;
+    return{kind:"One multiplication in odds form",unit:"%",a:a,tol:Math.max(0.05,a*0.02),
+      q:"Prior <b>"+(p*100).toFixed(0)+"%</b>, likelihood ratio <b>"+lr+"</b>. What is the posterior?",
+      w:"Prior odds "+toOdds(p).toFixed(4)+" × "+lr+" = "+(toOdds(p)*lr).toFixed(4)+
+        ", which converts back to <b>"+a.toFixed(2)+"%</b>."};
+  }
+  function next(){
+    cur=make();
+    E("dKind").textContent=cur.kind;E("dText").innerHTML=cur.q;
+    E("dUnit").textContent=cur.unit;E("dInput").value="";
+    E("drill").classList.remove("done");
+    focusSoft(E("dInput"),E("drill"));
+  }
+  function submit(){
+    if(!cur||E("drill").classList.contains("done"))return;
+    const raw=parseFloat(String(E("dInput").value).replace(/[$,%\s]/g,""));
+    asked++;
+    const ok=isFinite(raw)&&Math.abs(raw-cur.a)<=cur.tol;
+    if(ok){sc++;streak++;if(streak>best)best=streak;}else streak=0;
+    E("dVerdict").textContent=ok?"CORRECT":("NOT QUITE — the answer is "+cur.a.toFixed(3));
+    E("dVerdict").className="vd "+(ok?"ok":"no");
+    E("dWork").innerHTML=cur.w;
+    E("dScore").textContent=sc+" / "+asked;
+    E("dStreak").textContent=String(streak);E("dBest").textContent=String(best);
+    E("drill").classList.add("done");
+  }
+  E("dSubmit").addEventListener("click",submit);
+  E("dInput").addEventListener("keydown",e=>{if(e.key==="Enter")submit();});
+  E("dNext").addEventListener("click",next);
+  E("dSkip").addEventListener("click",()=>{streak=0;E("dStreak").textContent="0";next();});
+  [1,2].forEach(k=>E("dT"+k).addEventListener("click",()=>{
+    tier=k;[1,2].forEach(j=>E("dT"+j).setAttribute("aria-pressed",j===k?"true":"false"));
+    next();}));
+  window.drawDrill=next;
+  window.__drill=()=>{const o=[];for(let i=0;i<2;i++){tier=i+1;for(let j=0;j<400;j++)o.push(make());}tier=1;return o;};
+})();
+
+function drawAll(){
+  drawHero();draw1();draw2();draw3();draw4();draw5();drawDrill();
+}
+LAB.boot(drawAll);
+
+</script>
+</body>
+</html>
