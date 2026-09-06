@@ -4,18 +4,33 @@
    Page-specific styles, if any, go in a <style> block on the page.
    ═══════════════════════════════════════════════════════════════ */
 
+/* ── palette ────────────────────────────────────────────────────────────
+   Deliberately not the options series'. That one is a cool bone ground with
+   an electric blue; this is a warm ivory with deep teal, so the two are
+   distinguishable at a glance on a phone home screen and in a browser tab.
+
+   The token NAMES are inherited from the sibling series and are now role
+   names rather than color names — the shared engine calls C("--blue") for
+   its primary and C("--verm") for its counterpoint, so renaming them would
+   mean touching every figure on every page. Read them as:
+
+     --blue   primary            (here: deep teal)
+     --verm   counterpoint, risk (here: terracotta)
+     --moss   positive, proof    (here: leaf green)
+     --ochre  markers, attention (here: mustard)
+   ──────────────────────────────────────────────────────────────────────── */
 :root{
-  --chalk:#EDF0EC;
-  --chalk2:#E4E8E3;
-  --card:#F7F9F6;
-  --ink:#14181A;
-  --ink2:#3A4245;
-  --grey:#8B928C;
-  --hair:#CDD4CD;
-  --blue:#1F4CE8;
-  --verm:#E5432C;
-  --moss:#0E9463;
-  --ochre:#E0A215;
+  --chalk:#F4F1E8;
+  --chalk2:#EAE5D8;
+  --card:#FBF9F3;
+  --ink:#1A1714;
+  --ink2:#463F38;
+  --grey:#8E867A;
+  --hair:#D8D0BF;
+  --blue:#0B6E75;
+  --verm:#C4452D;
+  --moss:#4A7C2F;
+  --ochre:#B8850C;
   --disp:"Fraunces",Georgia,serif;
   --body:"Newsreader",Georgia,serif;
   --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;

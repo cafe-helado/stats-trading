@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<meta name="theme-color" content="#EDF0EC">
+<meta name="theme-color" content="#F4F1E8">
 <title>Odds, Probability and Price — Chance, visually</title>
 <meta name="description" content="A probability, a set of odds and a price are one object in three notations. Fractional, decimal and American; the overround and what it costs; de-vigging and why the obvious method is wrong; and the same arithmetic read off an option chain.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Odds, Probability and Price — Chance, visually">
 <meta property="og:description" content="A probability, a set of odds and a price are one object in three notations. Fractional, decimal and American; the overround and what it costs; de-vigging and why the obvious method is wrong; and the same arithmetic read off an option chain.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23EDF0EC'/><circle cx='16' cy='16' r='7' fill='none' stroke='%231F4CE8' stroke-width='3'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F1E8'/><rect x='5' y='19' width='4' height='7' fill='%230B6E75'/><rect x='11' y='12' width='4' height='14' fill='%230B6E75'/><rect x='17' y='7' width='4' height='19' fill='%230B6E75'/><rect x='23' y='16' width='4' height='10' fill='%230B6E75'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -56,7 +56,7 @@
 
 <div class="orient">
   <h2>Start here</h2>
-  <p class="lede">This is the first page of the series and it assumes nothing — no statistics, no probability, no options. It starts from a single question anyone can answer: <em>what would you pay for a ticket that pays a pound if a coin lands heads?</em> Everything else on this page, and a fair amount of everything else in the series, is that question asked in harder clothes.</p>
+  <p class="lede">This is the first page of the series and it assumes nothing — no statistics, no probability, no options. It starts from a single question anyone can answer: <em>what would you pay for a ticket that pays a dollar if a coin lands heads?</em> Everything else on this page, and a fair amount of everything else in the series, is that question asked in harder clothes.</p>
   <ol>
     <li><b>Move things before you read the explanation.</b> Every figure here is live. The number in the text is the number the figure computes, and if you drag the slider the sentence changes with it.</li>
     <li><b>Chapters 01 to 04 are betting.</b> They are the cleanest place to learn this, because a bookmaker's margin is visible arithmetic rather than a spread you have to infer.</li>
@@ -86,9 +86,9 @@
   </div>
 
   <div class="prose">
-    <p class="lead">Here is a ticket. If the coin lands heads it pays you £1. If it lands tails it pays nothing. What is it worth?</p>
-    <p>Fifty pence, and you did not need any statistics to say so. What you did was multiply: half a chance of a pound is fifty pence. That multiplication has a name — <span class="term" data-t="Expected value" data-def="The average of every outcome, each weighted by how likely it is. Not what will happen; what would happen on average across a great many repetitions of the same situation.">expected value</span> — and it is the entire foundation of the subject.</p>
-    <p>Now run it backwards, because that is the direction that matters. Somebody offers you 62p for the ticket. They have not told you what they think the coin is; they have told you anyway. <b>A price for a one-unit payoff <em>is</em> a probability.</b> There is nothing else it can be.</p>
+    <p class="lead">Here is a ticket. If the coin lands heads it pays you $1. If it lands tails it pays nothing. What is it worth?</p>
+    <p>Fifty cents, and you did not need any statistics to say so. What you did was multiply: half a chance of a dollar is fifty cents. That multiplication has a name — <span class="term" data-t="Expected value" data-def="The average of every outcome, each weighted by how likely it is. Not what will happen; what would happen on average across a great many repetitions of the same situation.">expected value</span> — and it is the entire foundation of the subject.</p>
+    <p>Now run it backwards, because that is the direction that matters. Somebody offers you 62 cents for the ticket. They have not told you what they think the coin is; they have told you anyway. <b>A price for a one-unit payoff <em>is</em> a probability.</b> There is nothing else it can be.</p>
     <p>That is why this page comes first. Options, betting markets, insurance and prediction markets are all the same machine, and the machine takes beliefs in and hands prices out. Everything in this series is about reading it in the other direction.</p>
   </div>
 
@@ -113,15 +113,15 @@
     <figcaption>Notice the blue line is straight. A claim paying one unit is worth its probability, exactly and with no curvature — which is why every distortion later in this series has to come from somewhere other than the arithmetic.</figcaption>
   </figure>
 
-  <div class="mline">price of a £1-if-it-happens ticket = p</div>
+  <div class="mline">price of a $1-if-it-happens ticket = p</div>
   <p class="mread">Reads as: <b>the price is the probability.</b> Read left to right it prices a belief; read right to left it extracts one from a market. The second direction is the useful one.</p>
 
   <div class="try">
     <span class="lab">Try this</span>
-    <p>Set the offered price to 62p and predict, before you look, what edge you have if the coin really is fair. Then set the payout to £10 and watch what happens to the same edge.</p>
+    <p>Set the offered price to 62 cents and predict, before you look, what edge you have if the coin really is fair. Then set the payout to $10 and watch what happens to the same edge.</p>
     <div class="btnrow">
-      <button class="act ghost" data-preset="c1" data-patch='{"price":0.62,"payout":1}' data-focus="cv1">Offered 62p</button>
-      <button class="act ghost" data-preset="c1" data-patch='{"price":0.62,"payout":10}' data-focus="cv1">Same price, £10 payout</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"price":0.62,"payout":1}' data-focus="cv1">Offered 62 cents</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"price":0.62,"payout":10}' data-focus="cv1">Same price, $10 payout</button>
       <button class="act ghost" data-preset="c1" data-patch='{"price":0.5,"payout":1,"p":0.5}' data-focus="cv1">Back to fair</button>
     </div>
   </div>
@@ -148,8 +148,8 @@
   </div>
 
   <div class="prose">
-    <p class="lead">The same 25% chance is written <b>3/1</b> in Britain, <b>4.00</b> in Europe, and <b>+300</b> in America. Nothing about the underlying claim differs. What differs is what each notation counts.</p>
-    <p><b>Fractional</b> quotes profit against stake: 3/1 wins three for one risked. <b>Decimal</b> quotes the total coming back including your own money: 4.00 means the one you staked plus the three you won. <b>American</b> quotes profit on a hundred if the price is a longshot (+300 wins 300 on 100) and the stake needed to win a hundred if it is a favourite (−150 risks 150 to win 100).</p>
+    <p class="lead">The same 25% chance is written <b>+300</b> on a US sportsbook, <b>4.00</b> in decimal, and <b>3/1</b> in the fractional notation the horse tracks still use. Nothing about the underlying claim differs. What differs is what each notation counts.</p>
+    <p><b>American</b> quotes profit on a hundred if the price is a longshot — +300 wins 300 on a 100 stake — and the stake needed to win a hundred if it is a favorite, so −150 risks 150 to win 100. <b>Decimal</b>, which is what every exchange and most models use, quotes the total coming back <em>including your own money</em>: 4.00 means the one you staked plus the three you won. <b>Fractional</b> quotes profit against stake, so 3/1 wins three for one risked.</p>
     <p>Decimal is the one that includes your stake, and forgetting that is the single most common error in the whole subject. It is also the notation to think in, because the conversion to a probability is a reciprocal and nothing else.</p>
   </div>
 
@@ -280,7 +280,7 @@
   <div class="prose">
     <p class="lead">A two-way book quotes <b>1.20</b> and <b>4.50</b>. Raw, those imply 83.333% and 22.222%, summing to <b>105.556%</b>. To recover what the market believes you have to take 5.556 points out — and how you take them out changes the answer.</p>
     <p>The obvious method is to scale everything down proportionally, which gives <b>78.947%</b> and <b>21.053%</b>. Clean, fast, and used everywhere. It also assumes the bookmaker applied its margin evenly across both outcomes, and bookmakers do not.</p>
-    <p>They take more margin on longshots. This is the <span class="term" data-t="Favourite–longshot bias" data-def="The long-observed tendency for low-probability bets to be worse value than high-probability ones. Whether it comes from bettor preferences or from how books are built, its practical effect is that margin is not spread evenly across the outcomes.">favourite–longshot bias</span>, and it is one of the oldest documented regularities in betting markets. Fit the margin as a power instead — raise each implied probability to a common exponent chosen so they sum to one — and the same book gives <b>81.501%</b> and <b>18.499%</b>. The longshot is <b>2.554 points</b> lower than proportional said.</p>
+    <p>They take more margin on longshots. This is the <span class="term" data-t="Favorite–longshot bias" data-def="The long-observed tendency for low-probability bets to be worse value than high-probability ones. Whether it comes from bettor preferences or from how books are built, its practical effect is that margin is not spread evenly across the outcomes.">favorite–longshot bias</span>, and it is one of the oldest documented regularities in betting markets. Fit the margin as a power instead — raise each implied probability to a common exponent chosen so they sum to one — and the same book gives <b>81.501%</b> and <b>18.499%</b>. The longshot is <b>2.554 points</b> lower than proportional said.</p>
   </div>
 
   <figure class="bleed">
@@ -315,11 +315,11 @@
 
   <div class="try">
     <span class="lab">Try this</span>
-    <p>Drag the favourite's price toward even money and watch the two methods converge. Then push it out to 1.05 — a heavy favourite — and see how far apart they get.</p>
+    <p>Drag the favorite's price toward even money and watch the two methods converge. Then push it out to 1.05 — a heavy favorite — and see how far apart they get.</p>
     <div class="btnrow">
       <button class="act ghost" data-preset="c4" data-patch='{"a":1.20,"b":4.50}' data-focus="cv4">The example</button>
       <button class="act ghost" data-preset="c4" data-patch='{"a":1.91,"b":1.91}' data-focus="cv4">An even book</button>
-      <button class="act ghost" data-preset="c4" data-patch='{"a":1.05,"b":11.0}' data-focus="cv4">A heavy favourite</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"a":1.05,"b":11.0}' data-focus="cv4">A heavy favorite</button>
     </div>
   </div>
 
@@ -504,7 +504,7 @@
 
   <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
     <span class="lab">Question 1 · chapter 01</span>
-    <p class="q">A contract pays £1 if it rains tomorrow. It trades at 0.35. What is the market saying?</p>
+    <p class="q">A contract pays $1 if it rains tomorrow. It trades at 0.35. What is the market saying?</p>
     <div class="opts">
       <button>That rain is unlikely</button>
       <button data-ok="1">A 35% chance. For a one-unit payoff the price and the probability are the same number</button>
@@ -540,7 +540,7 @@
 
   <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
     <span class="lab">Question 4 · chapter 03</span>
-    <p class="q">A three-way market is quoted at 2.10, 3.40 and 3.80. What is the overround?</p>
+    <p class="q">A soccer match is quoted at 2.10, 3.40 and 3.80 — home, draw, away. What is the overround?</p>
     <div class="opts">
       <button>Zero — the three outcomes are exhaustive</button>
       <button data-ok="1">3.35%. The implied probabilities are 47.62%, 29.41% and 26.32%, which sum to 103.35%</button>
@@ -911,7 +911,7 @@ const s6={mu:0.08,K:110,T:1,v:0.25,r:0.03};
     const dec=[pick([1.30,1.50,1.80,2.10,2.40]),pick([2.60,3.20,3.80,4.50]),pick([3.00,4.20,5.50,8.00])];
     const ps=dec.map(d=>1/d), s=ps.reduce((a,b)=>a+b,0);
     return{kind:"Overround on a three-way",unit:"%",a:(s-1)*100,tol:0.08,
-      q:"A three-way market quotes <b>"+dec.map(d=>d.toFixed(2)).join("</b>, <b>")+"</b>. What is the overround?",
+      q:"A three-way market (home, draw, away) quotes <b>"+dec.map(d=>d.toFixed(2)).join("</b>, <b>")+"</b>. What is the overround?",
       w:"Implied: "+ps.map(p=>(p*100).toFixed(2)+"%").join(", ")+". They sum to "+(s*100).toFixed(3)+
         "%, so the overround is <b>"+((s-1)*100).toFixed(3)+"%</b>."};
   }

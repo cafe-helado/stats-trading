@@ -216,14 +216,14 @@ function dots(o, xs, ys, col, r, alpha) {
   }
   g.restore();
 }
-/* bins a sample and returns counts, so the caller can label and colour them */
+/* bins a sample and returns counts, so the caller can label and color them */
 function binned(values, lo, hi, n) {
   const w = (hi - lo) / n, counts = new Float64Array(n);
   for (let i = 0; i < values.length; i++) {
     const k = Math.floor((values[i] - lo) / w);
     if (k >= 0 && k < n) counts[k]++;
   }
-  return { counts, w, lo, hi, n, centres: Array.from(counts, (_, i) => lo + (i + 0.5) * w) };
+  return { counts, w, lo, hi, n, centers: Array.from(counts, (_, i) => lo + (i + 0.5) * w) };
 }
 /* a histogram, drawn from a binned() result. `norm` true scales to a density
    so it can be compared against a pdf on the same axes. */

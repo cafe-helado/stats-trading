@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
-<meta name="theme-color" content="#EDF0EC">
+<meta name="theme-color" content="#F4F1E8">
 <title>Chance, visually — probability and statistics for people who price risk</title>
 <meta name="description" content="Probability and statistics built from simulation rather than asserted. Odds and price, expectation, distributions, sampling, Bayes, correlation and tails — every idea earned on the way to something a trading desk actually does.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Chance, visually">
 <meta property="og:description" content="Probability and statistics built from simulation, for people who price risk.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23EDF0EC'/><rect x='5' y='19' width='4' height='7' fill='%231F4CE8'/><rect x='11' y='12' width='4' height='14' fill='%231F4CE8'/><rect x='17' y='7' width='4' height='19' fill='%231F4CE8'/><rect x='23' y='16' width='4' height='10' fill='%231F4CE8'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F1E8'/><rect x='5' y='19' width='4' height='7' fill='%230B6E75'/><rect x='11' y='12' width='4' height='14' fill='%230B6E75'/><rect x='17' y='7' width='4' height='19' fill='%230B6E75'/><rect x='23' y='16' width='4' height='10' fill='%230B6E75'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -41,7 +41,7 @@
   display:grid;grid-template-columns:74px 1fr 128px;gap:0 24px;align-items:start;
   padding:26px 0;border-bottom:1px solid var(--hair);text-decoration:none;color:inherit;
 }
-.entry:hover{background:rgba(31,76,232,.035)}
+.entry:hover{background:rgba(11,110,117,.045)}
 .entry .n{font-family:var(--mono);font-size:12px;color:var(--blue);padding-top:6px;letter-spacing:.08em}
 .entry h3{font-family:var(--disp);font-weight:700;font-size:clamp(23px,3vw,32px);
   line-height:1.1;letter-spacing:-.018em;margin:0}
@@ -99,34 +99,34 @@
     <span class="st live">Live →</span>
   </a>
 
-  <div class="entry planned">
+  <a class="entry" href="ev.html">
     <span class="n">02</span>
     <div>
-      <h3>Expectation, and Why It Is Not What Happens</h3>
-      <p class="subj">Expected value, variance, and the long run that never arrives</p>
-      <p>The average of a thing you only get to do once. Expected value and variance built from a payoff table, the law of large numbers watched converging rather than stated, why a positive-edge bettor spends most of a career behind, and how much to stake — Kelly, derived from the fact that money compounds and averages do not.</p>
-      <div class="tags"><span>Expected value</span><span>Variance</span><span>Law of large numbers</span><span>Kelly</span><span>Ruin</span></div>
+      <h3>The Average of a Thing You Do Once</h3>
+      <p class="subj">Expected value, variance, and how much to bet</p>
+      <p>Two roulette bets with identical house edges and standard deviations 5.8&times; apart &mdash; expectation is what a bet is worth, variance is what it is like to hold. Then the uncomfortable arithmetic: a genuine 55% bettor is still behind after a hundred wagers three times in ten. Ends with bet sizing done properly &mdash; Kelly derived from the fact that money compounds, why staking twice it compounds at exactly zero, and why half Kelly keeps three quarters of the growth.</p>
+      <div class="tags"><span>Expected value</span><span>Variance</span><span>Law of large numbers</span><span>Kelly</span><span>Overbetting</span><span>Drawdown</span></div>
     </div>
-    <span class="st soon">Planned</span>
-  </div>
+    <span class="st live">Live &rarr;</span>
+  </a>
 
-  <div class="entry planned">
+  <a class="entry" href="shape.html">
     <span class="n">03</span>
     <div>
-      <h3>Randomness Has a Shape</h3>
-      <p class="subj">Coin flips to the normal distribution, and the √n that runs everything</p>
-      <p>Add up enough independent small things and you always get the same curve. Built by simulation from coin flips, so the central limit theorem is something watched rather than asserted. Then the consequence that matters most: standard deviation grows with the square root of the count, which is why a year of volatility is not twelve months of it.</p>
-      <div class="tags"><span>Binomial</span><span>Central limit</span><span>The normal</span><span>√n scaling</span><span>Standard deviation</span></div>
+      <h3>Add Enough of Anything</h3>
+      <p class="subj">The central limit theorem, and the square root of time</p>
+      <p>Sum enough independent small things and you always get the same curve, whatever you started with &mdash; watched happening from coin flips and from a distribution built to look nothing like a bell. Then the confusion almost everyone carries: as you flip more, the <em>count</em> of heads spreads out while the <em>proportion</em> tightens. Ends with the conversion that runs through all of finance, and the factor of 15.87 that gets it wrong.</p>
+      <div class="tags"><span>Binomial</span><span>Central limit</span><span>√T scaling</span><span>68-95-99.7</span><span>Tail probabilities</span></div>
     </div>
-    <span class="st soon">Planned</span>
-  </div>
+    <span class="st live">Live &rarr;</span>
+  </a>
 
   <div class="entry planned">
     <span class="n">04</span>
     <div>
       <h3>The Distributions You Actually Meet</h3>
       <p class="subj">Lognormal, Poisson, Student's t — and which one options assume</p>
-      <p>Five distributions, what each one is for, and how to tell them apart from a sample. Why prices are modelled lognormal and returns normal; why counting things gets a Poisson; why Student's t is the honest default for anything financial; and what a mixture is, which turns out to be the cheapest way to make a fat tail.</p>
+      <p>Five distributions, what each one is for, and how to tell them apart from a sample. Why prices are modeled lognormal and returns normal; why counting things gets a Poisson; why Student's t is the honest default for anything financial; and what a mixture is, which turns out to be the cheapest way to make a fat tail.</p>
       <div class="tags"><span>Lognormal</span><span>Poisson</span><span>Student's t</span><span>Mixtures</span><span>Fat tails</span></div>
     </div>
     <span class="st soon">Planned</span>
@@ -163,7 +163,7 @@
     <div>
       <h3>Two Things Moving Together</h3>
       <p class="subj">Covariance, correlation, regression and beta</p>
-      <p>Correlation is a single number summarising a cloud of points, and it hides more than it shows. Built from covariance, drawn as a fitted line, and then broken on purpose: four datasets with identical correlations and completely different shapes, the difference between correlation and beta, and why a portfolio's risk is not the average of its parts.</p>
+      <p>Correlation is a single number summarizing a cloud of points, and it hides more than it shows. Built from covariance, drawn as a fitted line, and then broken on purpose: four datasets with identical correlations and completely different shapes, the difference between correlation and beta, and why a portfolio's risk is not the average of its parts.</p>
       <div class="tags"><span>Covariance</span><span>Correlation</span><span>Regression</span><span>Beta</span><span>R²</span></div>
     </div>
     <span class="st soon">Planned</span>

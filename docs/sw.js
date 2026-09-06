@@ -22,7 +22,7 @@
    this file — the inlined dist/ copies are meant to be opened from disk and
    register nothing.
    ═══════════════════════════════════════════════════════════════════════ */
-const CACHE = "chance-visually-v1";
+const CACHE = "chance-visually-v4";
 const FONTS = "chance-visually-fonts";
 
 /* Every URL is relative, so the worker works at / on a dev server and at
@@ -31,6 +31,8 @@ const PRECACHE = [
   "./",
   "index.html",
   "odds.html",
+  "ev.html",
+  "shape.html",
   "assets/lab.css",
   "assets/mobile.css",
   "assets/lab.js",
@@ -156,7 +158,7 @@ self.addEventListener("fetch", e => {
                new Response(
                  "<!doctype html><meta charset=utf-8><title>Offline</title>" +
                  "<style>body{font:16px/1.6 system-ui;margin:12vh auto;max-width:32ch;" +
-                 "padding:0 24px;background:#EDF0EC;color:#14181A}</style>" +
+                 "padding:0 24px;background:#F4F1E8;color:#1A1714}</style>" +
                  "<h1>Not cached yet</h1><p>Open this page once with a connection " +
                  "and it will be available offline from then on.</p>",
                  { headers: { "Content-Type": "text/html; charset=utf-8" } });

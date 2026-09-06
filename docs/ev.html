@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F4F1E8">
+<title>Expectation and Bet Sizing — Chance, visually</title>
+<meta name="description" content="Expected value, variance, and how much to bet. Why two bets with identical house edges feel nothing alike, why a genuine 55% bettor is behind after a hundred wagers a third of the time, and why staking twice Kelly compounds at exactly zero.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Expectation and Bet Sizing — Chance, visually">
+<meta property="og:description" content="Expected value, variance, and how much to bet. Why two bets with identical house edges feel nothing alike, why a genuine 55% bettor is behind after a hundred wagers a third of the time, and why staking twice Kelly compounds at exactly zero.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F1E8'/><rect x='5' y='19' width='4' height='7' fill='%230B6E75'/><rect x='11' y='12' width='4' height='14' fill='%230B6E75'/><rect x='17' y='7' width='4' height='19' fill='%230B6E75'/><rect x='23' y='16' width='4' height='10' fill='%230B6E75'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lab.css">
+<link rel="stylesheet" href="assets/mobile.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chance">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+<header class="serieshead">
+  <div class="in">
+    <a class="home" href="index.html">← Chance, visually</a>
+    <span class="num">No. 02 · Expectation</span>
+  </div>
+</header>
+
+<div class="progress" id="prog"></div>
+<nav class="chapnav" id="chapnav" aria-label="Chapters">
+  <a href="#c1"><span>A weighted average</span><i></i></a>
+  <a href="#c2"><span>Same edge, different life</span><i></i></a>
+  <a href="#c3"><span>The long run is long</span><i></i></a>
+  <a href="#c4"><span>How much to bet</span><i></i></a>
+  <a href="#c5"><span>Overbetting</span><i></i></a>
+  <a href="#c6"><span>Drawdown</span><i></i></a>
+  <a href="#c7"><span>Drills</span><i></i></a>
+</nav>
+
+<div class="hero">
+  <canvas id="heroCv" aria-hidden="true"></canvas>
+  <div class="heroInner">
+    <div class="eyebrow">An interactive derivation · No. 02</div>
+    <h1>The average of a thing you do <em>once</em></h1>
+    <p class="sub">Expected value is the most useful number in the subject and the most misleading. It tells you what a bet is worth and nothing about what will happen — and the gap between those is where bet sizing, drawdowns and most blown-up accounts live.</p>
+  </div>
+  <div class="scrollcue">Scroll ↓</div>
+</div>
+
+<main>
+
+<div class="orient">
+  <h2>Start here</h2>
+  <p class="lede">Module 01 turned prices into probabilities. This one asks what to <em>do</em> with a probability once you have it: what a bet is worth, how differently two bets with identical worth can feel, how long it takes to find out whether you were right, and how much of your money to put on it.</p>
+  <ol>
+    <li><b>Chapters 01 and 02 are a pair.</b> Two roulette bets with exactly the same house edge and standard deviations 5.8× apart. Expectation is what a bet is worth; variance is what it is like to make.</li>
+    <li><b>Chapter 03 is the uncomfortable one.</b> A genuine 55% bettor is still behind after a hundred bets three times in ten. Nothing is wrong; that is just what the arithmetic says.</li>
+    <li><b>Chapters 04 to 06 are bet sizing</b>, which is the practical payoff of the whole module. Kelly, why double Kelly makes exactly nothing, and why almost nobody who knows the formula uses it at full size.</li>
+  </ol>
+  <details class="drop">
+    <summary>Notation — every symbol used on this page</summary>
+    <table class="ntab">
+      <tr><td>E[X]</td><td>Expected value: every outcome multiplied by its probability, added up. What the bet is worth.</td></tr>
+      <tr><td>Var, σ</td><td>Variance and its square root, the standard deviation. How far outcomes typically land from the average.</td></tr>
+      <tr><td>Edge</td><td>Expected profit per dollar risked. A 5% edge means every dollar risked returns an average of five cents.</td></tr>
+      <tr><td>b</td><td>Net odds received on a win — the profit per dollar staked. A bet at −110 has b = 100/110 = 0.909.</td></tr>
+      <tr><td>p, q</td><td>The chance of winning and of losing, q = 1 − p.</td></tr>
+      <tr><td>f*</td><td>The Kelly fraction: the share of the bankroll that maximizes long-run growth.</td></tr>
+      <tr><td>Growth rate</td><td>E[ln(wealth multiplier)] per bet. The thing Kelly maximizes, and not the same as expected profit.</td></tr>
+      <tr><td>Drawdown</td><td>How far the bankroll falls below its high-water mark. The number that decides whether a strategy is survivable.</td></tr>
+    </table>
+  </details>
+</div>
+
+<!-- ══════════ 01 ══════════ -->
+<section class="chapter" id="c1">
+  <div class="chead">
+    <div class="cnum">01</div>
+    <h2>Expectation is a weighted average, and nothing more</h2>
+    <p class="dek">Every outcome times its probability, added up. The whole idea fits on one line, and the line is worth building by hand once.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">An American roulette wheel has 38 pockets: 1 through 36, plus a zero and a double zero. Bet a dollar on a single number and it pays 35 to 1. That sounds generous until you count the pockets.</p>
+    <p>You win with probability 1/38 and collect $35. You lose with probability 37/38 and give up $1. Multiply and add: <b>(1/38)(35) + (37/38)(−1) = −0.0526</b>. Every dollar you put on the table is worth about <b>94.7 cents</b> the moment you put it there, and the missing 5.26 cents is the house edge — which is exactly the two green pockets, expressed as money.</p>
+    <p>That is the entire concept. Expectation is arithmetic on a payoff table, and building the table is most of the work; the multiplication is trivial once the table is honest. The hard part in practice is never the sum, it is remembering an outcome you did not list.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The payoff table, and where the average lands</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--moss)"></i>Win</span>
+            <span><i class="sw" style="background:var(--verm)"></i>Lose</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>Expected value</span>
+          </span>
+        </div>
+        <canvas id="cv1" height="300"></canvas>
+        <div class="tblwrap" style="margin-top:18px">
+          <table class="rot" id="tab1"></table>
+        </div>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl1"></div>
+        <div class="kv" style="margin-top:20px" id="kv1"></div>
+      </div>
+    </div>
+    <figcaption>Notice the expected value sits at neither outcome. Nobody ever loses 5.26 cents at roulette — they win 35 or lose 1, and the average is a number that never happens.</figcaption>
+  </figure>
+
+  <div class="mline">E[X] = Σ (outcome × its probability)</div>
+  <p class="mread">Reads as: <b>list every way it can end, weight each by how likely it is, add them up.</b> Anything you forget to list is silently weighted at zero, which is the only way this goes wrong.</p>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A single-number roulette bet has an expected value of −5.26 cents per dollar. What does that predict about your next spin?</p>
+    <div class="opts">
+      <button>You will lose about five cents</button>
+      <button data-ok="1">Nothing at all. You will win 35 or lose 1; the average is a number that cannot occur on any single spin</button>
+      <button>You will lose, since the expectation is negative</button>
+      <button>You have a 5.26% chance of losing</button>
+    </div>
+    <div class="ans"><b>It predicts nothing about one spin, which is exactly why it is useful.</b> Expected value is a statement about the aggregate of many repetitions, and single outcomes are the only thing anyone experiences. Holding both ideas at once — the bet is worth −5.26 cents, and the next spin will be +35 or −1 — is the whole skill, and the rest of this page is what goes wrong when people hold only one.</div>
+  </div>
+</section>
+
+<!-- ══════════ 02 ══════════ -->
+<section class="chapter" id="c2">
+  <div class="chead">
+    <div class="cnum">02</div>
+    <h2>Same edge, completely different life</h2>
+    <p class="dek">Straight-up and red-black have identical house edges. Their standard deviations differ by a factor of 5.8, and that is what you actually feel.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Bet a dollar on red instead. You win with probability 18/38 and collect a dollar; you lose with probability 20/38. Expected value: <b>−0.0526</b>. Precisely the same as the single number, to every decimal place, because the house edge on an American wheel comes from the two green pockets and applies to every bet on the layout.</p>
+    <p>Now look at the standard deviations. Red-black is <b>$1.00</b>. Straight-up is <b>$5.76</b> — <b>5.8 times</b> larger. Two bets, identical worth, and one of them will bankrupt you in an evening while the other bleeds you slowly enough to feel like entertainment.</p>
+    <p>This is the first genuinely important idea in the module. <b>Expectation tells you what a bet is worth; variance tells you what it is like to hold.</b> Everything about position sizing, drawdown and risk of ruin lives in the second number, and the first number cannot see it at all.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>A thousand spins of each, same wheel, same edge</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Red / black</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Single number</span>
+            <span><i class="swl" style="background:var(--grey)"></i>Expected path</span>
+          </span>
+        </div>
+        <canvas id="cv2" height="320"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl2"></div>
+        <div class="kv" style="margin-top:20px" id="kv2"></div>
+      </div>
+    </div>
+    <figcaption>Notice both paths drift down along the same gray line, because the edge is identical. The red one just takes a very different route to get there — and a route is what a bankroll experiences.</figcaption>
+  </figure>
+
+  <div class="mline">Var(X) = Σ (outcome − E[X])² × its probability</div>
+  <p class="mread">Reads as: <b>average of the squared distances from the mean.</b> Squaring is what makes big misses dominate — one outcome twice as far away counts four times as much, which is why a single fat tail can set a whole variance.</p>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Predict what happens to the two paths when you raise the number of spins to 5,000. Does the gap between them widen or narrow, in dollars and in percent?</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c2" data-patch='{"n":200}' data-focus="cv2">Two hundred spins</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"n":5000}' data-focus="cv2">Five thousand</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"n":1000}' data-focus="cv2">Back to a thousand</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Which roulette bet should a player who wants to walk out ahead prefer?</p>
+    <div class="opts">
+      <button>Red — the lower variance protects the bankroll</button>
+      <button data-ok="1">The single number. Both have negative expectation, so more variance is the only thing that can beat the edge in a short session</button>
+      <button>Neither — they are identical in every way that matters</button>
+      <button>Red, because it wins more often</button>
+    </div>
+    <div class="ans"><b>The high-variance bet, and the logic inverts once the edge does.</b> With a negative edge, time is the enemy and noise is the only friend — the way to walk out ahead is one big swing before the average catches up. With a <em>positive</em> edge everything reverses: you want as many small bets as possible, because then the average is working for you and noise is the only thing that can beat you. Which is why casinos love high-variance bettors and professional bettors love volume.</div>
+  </div>
+</section>
+
+<!-- ══════════ 03 ══════════ -->
+<section class="chapter" id="c3">
+  <div class="chead">
+    <div class="cnum">03</div>
+    <h2>The long run is longer than anyone thinks</h2>
+    <p class="dek">A genuine 55% bettor is still behind after a hundred bets almost a third of the time. Nothing is broken; that is what the arithmetic says.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Take a bettor with a real edge: they win 55% of the time at −110, which is worth <b>$5.00</b> per hundred risked. That is an excellent number — better than almost anyone actually achieves. How long before it shows?</p>
+    <p>The single-bet standard deviation is <b>$94.98</b>, roughly nineteen times the edge. Averaging over <em>n</em> bets divides that by √n, so the noise falls slowly and the edge does not fall at all. After <b>100</b> bets the standard error is still $9.50 against a $5.00 edge, and the chance of being behind is <b>29.9%</b>. After <b>1,000</b> bets it is <b>4.8%</b>. After ten thousand it is effectively zero.</p>
+    <p>Read that middle number again. Three seasons of serious volume, a genuine and large edge, and there is a one-in-twenty chance you are still down. Anyone judging the strategy on that sample would conclude it does not work, and they would be wrong, and they would have no way to tell.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The chance of still being behind, against how many bets you have made</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>P(behind)</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>Where you are</span>
+          </span>
+        </div>
+        <canvas id="cv3" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl3"></div>
+        <div class="kv" style="margin-top:20px" id="kv3"></div>
+      </div>
+    </div>
+    <figcaption>Notice how flat this curve is on the left. The first few hundred bets barely move the probability, because √n grows so slowly — going from 100 bets to 400 only halves the noise.</figcaption>
+  </figure>
+
+  <div class="mline">standard error = σ / √n     ⟹     n ≈ (z · σ / edge)²</div>
+  <p class="mread">Reads as: <b>noise falls with the square root of the sample, so cutting it in half costs four times the bets.</b> Rearranged, the number of bets needed to prove an edge grows with the <em>square</em> of how small the edge is.</p>
+
+  <div class="prose">
+    <p>That last rearrangement is worth carrying. Halving the edge does not double the sample you need — it <em>quadruples</em> it. A 5% edge needs about 1,444 bets to stand two standard errors clear of zero. A 2.5% edge needs about 5,800. A 1% edge needs 36,000, which for most people is a career.</p>
+  </div>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Set the hit rate to 53% — still a real edge at this price — and see what happens to the sample you need. Predict whether it doubles or worse.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c3" data-patch='{"p":0.55}' data-focus="cv3">A 55% bettor</button>
+      <button class="act ghost" data-preset="c3" data-patch='{"p":0.53}' data-focus="cv3">A 53% bettor</button>
+      <button class="act ghost" data-preset="c3" data-patch='{"p":0.60}' data-focus="cv3">An unrealistic 60%</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A bettor is down after 200 wagers. What have you learned?</p>
+    <div class="opts">
+      <button>That they have no edge</button>
+      <button data-ok="1">Very little. Even a genuine 55% bettor is behind after 200 bets roughly a fifth of the time, so the observation barely moves the question</button>
+      <button>That they have a small edge but not a large one</button>
+      <button>That the sample is too small to be worth collecting</button>
+    </div>
+    <div class="ans"><b>Almost nothing, and the fourth answer is the interesting wrong one.</b> The sample is absolutely worth collecting — it just has to be combined with a prior rather than read on its own, which is <a href="index.html">module 06</a>. Two hundred bets is real evidence; it is simply much weaker evidence than it feels, and the feeling is the problem.</div>
+  </div>
+</section>
+
+<!-- ══════════ 04 ══════════ -->
+<section class="chapter" id="c4">
+  <div class="chead">
+    <div class="cnum">04</div>
+    <h2>How much to bet, when money compounds</h2>
+    <p class="dek">Maximizing expected profit says bet everything. That answer is wrong, and the reason is that you keep playing with what is left.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">You have an edge. How much of the bankroll goes on it? Maximize expected profit and the answer is <em>all of it</em>, every time, because expectation is linear: twice the stake is twice the expected profit, forever. Follow that advice and you are broke on the first loss.</p>
+    <p>The flaw is that money <span class="term" data-t="Compounding" data-def="Each result multiplies the bankroll rather than adding to it, so the order of wins and losses stops mattering but their product does not. A 50% loss followed by a 50% gain leaves you at 0.75, not 1.">compounds</span>. What you have after a sequence of bets is a <em>product</em> of multipliers, not a sum, and the quantity that governs a product is the average of the logarithms. Maximize that instead and a finite answer appears:</p>
+  </div>
+
+  <div class="mline">f* = (b·p − q) / b</div>
+  <p class="mread">Reads as: <b>bet the edge divided by the odds.</b> With b the net odds on a win, p the win chance and q = 1 − p, the numerator b·p − q is exactly the expected profit per dollar staked.</p>
+
+  <div class="prose">
+    <p>Run it on the 55% bettor at −110. The net odds are b = 100/110 = 0.909, so f* = (0.909 × 0.55 − 0.45) / 0.909 = <b>0.055</b>. Five and a half percent of the bankroll — no more, no matter how confident. At even money the same 55% edge would justify <b>10%</b>, and at 2-to-1 it would justify <b>32.5%</b>: the better the price, the more you can risk, because a win goes further toward repairing the losses.</p>
+    <p>The growth rate this buys is <b>0.138% per bet</b>. That sounds tiny and it compounds. The median wealth after <em>n</em> bets is e<sup>n·g</sup>, so a thousand bets is e<sup>1.378</sup> — a median multiple of about <b>4×</b>.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Growth rate against how much of the bankroll you stake</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Growth per bet</span>
+            <span><i class="swl" style="background:var(--moss)"></i>Kelly</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Double Kelly</span>
+          </span>
+        </div>
+        <canvas id="cv4" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl4"></div>
+        <div class="kv" style="margin-top:20px" id="kv4"></div>
+      </div>
+    </div>
+    <figcaption>Notice the curve is a hill, not a slope. There is a best stake, staking less costs you growth slowly, and staking more costs you growth fast — the two sides are nothing like symmetric.</figcaption>
+  </figure>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Push the price out to +200 while holding the win rate at 55%, and predict what happens to the optimal stake before you look.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c4" data-patch='{"p":0.55,"b":0.909}' data-focus="cv4">55% at −110</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"p":0.55,"b":2}' data-focus="cv4">55% at +200</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"p":0.52,"b":0.909}' data-focus="cv4">52% at −110</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Why does maximizing expected profit give the wrong stake?</p>
+    <div class="opts">
+      <button>Because expected profit ignores the probability of winning</button>
+      <button data-ok="1">Because outcomes multiply rather than add. Expectation is linear and so has no maximum in the stake, but the thing that actually accumulates is a product, whose driver is the average log</button>
+      <button>Because it assumes you can bet infinitely often</button>
+      <button>Because expected profit is negative for most bets</button>
+    </div>
+    <div class="ans"><b>Products, not sums.</b> If your results added, betting everything every time would be correct and there would be no such thing as bet sizing. They multiply, one zero ends the sequence permanently, and the average of a product is dominated by its worst factors. Kelly is what falls out of taking that seriously — nothing more exotic than noticing that you keep playing with what is left.</div>
+  </div>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section class="chapter" id="c5">
+  <div class="chead">
+    <div class="cnum">05</div>
+    <h2>Bet twice Kelly and you make exactly nothing</h2>
+    <p class="dek">Not less. Nothing. The growth rate returns to zero at precisely double the optimal stake, and goes negative past it.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The hill in the last figure has a property worth committing to memory. Staking <em>double</em> the Kelly fraction produces a long-run growth rate of <b>zero</b> — you have an edge, you are betting into it, and you compound at nothing.</p>
+    <p>Check it on the 55% bettor. Kelly is 5.5% and the growth rate is 0.1379% per bet. At 11.0% the growth rate is <b>−0.002%</b>: zero to three decimal places, and negative after that. Every dollar of edge has been converted into variance drag.</p>
+    <p>The asymmetry is the practical lesson. Betting <em>half</em> Kelly keeps <b>74.9%</b> of the growth. Betting <em>double</em> keeps none of it. The penalty for timidity is mild and the penalty for aggression is total, so when you are unsure of your edge — and you are always unsure of your edge — the error to make is the small one.</p>
+    <p>And that is before noticing the other half of the problem: your estimate of <em>p</em> is itself uncertain. If you think you are a 55% bettor and you are really 53%, full Kelly on the wrong number is already overbetting.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>A thousand bets, four staking rules, same edge</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--moss)"></i>Half Kelly</span>
+            <span><i class="swl" style="background:var(--blue)"></i>Full Kelly</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Double Kelly</span>
+          </span>
+        </div>
+        <canvas id="cv5" height="320"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl5"></div>
+        <div class="kv" style="margin-top:20px" id="kv5"></div>
+      </div>
+    </div>
+    <figcaption>Notice the vertical scale is logarithmic, because on a linear one the double-Kelly path would be invisible. Notice also that it sometimes finishes highest — that is the tail that makes overbetting feel like it works.</figcaption>
+  </figure>
+
+  <div class="mline">g(f) = p·ln(1 + b·f) + q·ln(1 − f)</div>
+  <p class="mread">Reads as: <b>the long-run growth rate is the average of the log multipliers.</b> Maximize it and you get Kelly; set it to zero and the other root is exactly 2f* for small edges, which is where the double-Kelly rule comes from.</p>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Over 1,000 bets the double-Kelly bettor sometimes finishes with more than the Kelly bettor. Does that vindicate the aggression?</p>
+    <div class="opts">
+      <button>Yes — the outcome is what matters</button>
+      <button data-ok="1">No. Its median is lower and its 5th percentile is catastrophic — a 98% loss. A strategy whose upside comes from a thin tail is not the same as a strategy that works</button>
+      <button>Yes, if you can tolerate the swings</button>
+      <button>No, because double Kelly always loses money</button>
+    </div>
+    <div class="ans"><b>The median is the honest summary, and the fourth answer overstates it.</b> Double Kelly does not always lose — it has zero expected growth, so it drifts nowhere while swinging violently, and individual paths land all over. The problem is the shape: a median below Kelly's, a fifth percentile near zero, and an upside that arrives too rarely to be a plan.</div>
+  </div>
+</section>
+
+<!-- ══════════ 06 ══════════ -->
+<section class="chapter" id="c6">
+  <div class="chead">
+    <div class="cnum">06</div>
+    <h2>Why almost nobody bets full Kelly</h2>
+    <p class="dek">Optimal growth comes with drawdowns most people cannot sit through, and the formula does not care how that feels.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Kelly maximizes long-run growth. It says nothing whatsoever about the route, and the route is brutal.</p>
+    <p>The classic result is that a full-Kelly bettor has, over a long enough horizon, a <b>50%</b> chance of the bankroll halving at some point, and a <b>10%</b> chance of it falling to a tenth. Over a finite thousand bets the simulation here shows the bankroll touching half its starting value <b>42%</b> of the time — with a median finish of about <b>4×</b> and a fifth percentile of <b>0.26×</b>, which is to say a three-quarters loss.</p>
+    <p>Halving the stake changes the picture completely. At half Kelly the chance of ever halving drops to <b>9.5%</b> over the same thousand bets — a quarter of full Kelly's rate — the fifth percentile rises from 0.26× to <b>0.72×</b>, and you still keep <b>three quarters</b> of the growth. That trade — a quarter of the growth for most of the pain — is why practitioners talk about fractional Kelly and hardly anyone runs the full number.</p>
+    <p>There is a deeper reason too. Kelly assumes you know p and b exactly. You do not. Every source of estimation error pushes the honest fraction down, and half Kelly is a rough way of admitting that your edge estimate has a standard error too.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Where a thousand bets leave you, under each staking rule</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>Distribution of finishes</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>Median</span>
+          </span>
+        </div>
+        <canvas id="cv6" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl6"></div>
+        <div class="kv" style="margin-top:20px" id="kv6"></div>
+      </div>
+    </div>
+    <figcaption>Notice how far the distribution stretches to the right on a log scale, and how much mass sits below 1× even for a bettor with a genuine edge. The average outcome and the typical outcome are not close.</figcaption>
+  </figure>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Set the fraction to a quarter of Kelly and predict what happens to the fifth percentile. Then check what it costs in median growth.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c6" data-patch='{"mult":1}' data-focus="cv6">Full Kelly</button>
+      <button class="act ghost" data-preset="c6" data-patch='{"mult":0.5}' data-focus="cv6">Half</button>
+      <button class="act ghost" data-preset="c6" data-patch='{"mult":0.25}' data-focus="cv6">A quarter</button>
+      <button class="act ghost" data-preset="c6" data-patch='{"mult":2}' data-focus="cv6">Double</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">You are confident your edge is 55% but you know the estimate is noisy. What should that do to your stake?</p>
+    <div class="opts">
+      <button>Nothing — Kelly already accounts for uncertainty through p</button>
+      <button data-ok="1">Push it down. Kelly assumes p is known exactly; uncertainty in the edge is an extra loss you have not modeled, and fractional Kelly is the standard way of paying for it</button>
+      <button>Raise it, since the true edge might be higher</button>
+      <button>Stop betting until the estimate is precise</button>
+    </div>
+    <div class="ans"><b>Down, and the asymmetry from chapter 05 is why.</b> If you are unsure whether the right fraction is 3% or 8%, betting 3% costs you a little growth and betting 8% can cost you everything. When the penalty for one error is mild and the other is ruinous, the point estimate is the wrong thing to bet — which is a general principle and not a fact about gambling.</div>
+  </div>
+</section>
+
+<!-- ══════════ 07 ══════════ -->
+<section class="chapter" id="c7">
+  <div class="chead">
+    <div class="cnum">07</div>
+    <h2>Drill it</h2>
+    <p class="dek">Expected value, edge and Kelly fractions, until they come without a calculator.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Two tiers. The first is expectation and edge from a payoff table; the second is bet sizing, which is the one that pays for itself.</p>
+  </div>
+
+  <figure>
+    <div class="drill" id="drill">
+      <div class="dstats">
+        <div class="c"><span class="k">Correct</span><span class="v" id="dScore">0 / 0</span></div>
+        <div class="c"><span class="k">Streak</span><span class="v" id="dStreak" style="color:var(--moss)">0</span></div>
+        <div class="c"><span class="k">Best</span><span class="v" id="dBest">0</span></div>
+        <div class="c" style="flex:1;min-width:170px"><span class="k">Tier</span>
+          <div class="seg" style="margin-top:5px;max-width:240px">
+            <button id="dT1" aria-pressed="true">Expectation</button>
+            <button id="dT2" aria-pressed="false">Sizing</button>
+          </div>
+        </div>
+      </div>
+      <span class="qn" id="dKind">Question</span>
+      <p class="qt" id="dText">Loading…</p>
+      <div class="ansrow">
+        <input type="text" inputmode="decimal" id="dInput" placeholder="your answer" aria-label="Your answer">
+        <span class="unit" id="dUnit"></span>
+        <button class="act" id="dSubmit">Check</button>
+        <button class="act ghost" id="dSkip">Skip</button>
+      </div>
+      <div class="verdict">
+        <div class="vd" id="dVerdict"></div>
+        <div class="work" id="dWork"></div>
+        <div class="btnrow"><button class="act" id="dNext">Next question</button></div>
+      </div>
+    </div>
+    <figcaption>Kelly fractions are marked to a tenth of a percent. Getting within a tenth by estimating is the skill; getting it exactly is a calculator's job.</figcaption>
+  </figure>
+
+  <div class="prose" style="margin-top:46px">
+    <p>Six questions across the page.</p>
+  </div>
+
+  <div class="score" id="scoreBox">
+    <span class="big" id="scoreNum">0 / 6</span>
+    <span class="txt" id="scoreTxt">Answered nothing yet. Questions are scored as you go.</span>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 1 · chapter 01</span>
+    <p class="q">An American roulette wheel pays 35 to 1 on a single number. What is the expected value per dollar?</p>
+    <div class="opts">
+      <button>Zero — 35 to 1 on a 1-in-36 shot is fair</button>
+      <button data-ok="1">−5.26 cents. There are 38 pockets, not 36: (1/38)(35) + (37/38)(−1) = −0.0526</button>
+      <button>−2.7 cents</button>
+      <button>+35 cents</button>
+    </div>
+    <div class="ans"><b>−5.26 cents, and the whole edge is the two green pockets.</b> The third answer is the European wheel, which has one zero instead of two and a house edge of exactly half as much — the same layout, the same payouts, and twice the value to the player.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 2 · chapter 02</span>
+    <p class="q">Red-black and straight-up have the same house edge. How do their standard deviations compare?</p>
+    <div class="opts">
+      <button>They are the same, since the edge is the same</button>
+      <button data-ok="1">Straight-up is 5.8 times larger — $5.76 against $1.00 per dollar staked</button>
+      <button>Red-black is larger, because it wins more often</button>
+      <button>About twice as large</button>
+    </div>
+    <div class="ans"><b>5.8 times.</b> Expectation and variance are independent facts about a bet, and a payoff table can hold one fixed while moving the other enormously. Almost everything that matters in practice — sizing, drawdown, how long an edge takes to show — depends on the second one.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 3 · chapter 03</span>
+    <p class="q">A genuine 55% bettor at −110 has made 100 bets. What is the chance they are behind?</p>
+    <div class="opts">
+      <button>Under 5% — the edge is large</button>
+      <button data-ok="1">About 30%. The per-bet standard deviation is $94.98 against a $5.00 edge, so 100 bets is nowhere near enough</button>
+      <button>About 45%, essentially a coin flip</button>
+      <button>Exactly 45%, since they lose 45% of bets</button>
+    </div>
+    <div class="ans"><b>Roughly 30%.</b> The noise is nineteen times the edge per bet, and averaging only divides it by √100 = 10. Judging a strategy on a hundred bets is judging it on a sample where the honest answer is still "no idea."</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 4 · chapter 04</span>
+    <p class="q">You win 55% of the time at even money. What does Kelly say to stake?</p>
+    <div class="opts">
+      <button>55% of the bankroll</button>
+      <button data-ok="1">10%. With b = 1, f* = (1 × 0.55 − 0.45) / 1 = 0.10 — the edge divided by the odds</button>
+      <button>5.5%</button>
+      <button>As much as you can afford to lose</button>
+    </div>
+    <div class="ans"><b>10%, and the shortcut is worth memorizing: at even money, Kelly is just the edge.</b> A 55% shot at even money has a 10% edge and a 10% Kelly fraction. At −110 the same win rate is only worth 5.5%, because the worse price both shrinks the edge and makes each win repair less.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 5 · chapter 05</span>
+    <p class="q">What is the long-run growth rate of a bettor staking exactly twice Kelly?</p>
+    <div class="opts">
+      <button>Half the Kelly growth rate</button>
+      <button data-ok="1">Zero. The growth curve returns to the axis at 2f*, so you carry all the variance and compound at nothing</button>
+      <button>Double the Kelly growth rate</button>
+      <button>Negative, and badly so</button>
+    </div>
+    <div class="ans"><b>Exactly zero.</b> Half Kelly, by contrast, keeps 74.9% of the growth. The curve is a hill and it is not symmetric — undershooting is nearly free and overshooting is not — which is the entire practical argument for fractional Kelly.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 6 · chapter 06</span>
+    <p class="q">Why do professionals bet a fraction of Kelly rather than the full amount?</p>
+    <div class="opts">
+      <button>Because Kelly is only an approximation</button>
+      <button data-ok="1">Because Kelly assumes the edge is known exactly, and the drawdowns at full size are severe — a 50% chance of halving the bankroll. Half Kelly keeps three quarters of the growth for a fraction of the pain</button>
+      <button>Because it is illegal to bet the full amount</button>
+      <button>Because Kelly maximizes the wrong thing</button>
+    </div>
+    <div class="ans"><b>Estimation error and drawdown, in that order.</b> The fourth answer is a real position some people hold — that maximizing log wealth is not everyone's objective — but it is a different argument. The everyday reason is simpler: you do not know p, and being wrong about p at full size is much more expensive than being conservative about it.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="n">Kelly here assumes bets are made one at a time, that the edge and odds are known exactly, and that the bankroll is infinitely divisible with no minimum stake — all three are false in practice and all three push the honest fraction down. Simultaneous or correlated bets need a different calculation entirely: two bets on the same game are one bet with a bigger stake, and treating them as independent Kelly bets overstakes badly. The drawdown figures are simulated over a thousand bets with a fixed seed, so they are reproducible rather than typical; the asymptotic results quoted alongside them — a 50% chance of ever halving at full Kelly — apply to an infinite horizon and are worse than what a finite run shows. And every number on this page assumes the edge is real, which is the assumption <a href="index.html">module 05</a> exists to interrogate.</p>
+</footer>
+
+<script src="assets/lab.js"></script>
+<script src="assets/stats.js"></script>
+<script src="assets/pwa.js" defer></script>
+<script>
+"use strict";
+
+/* Kelly and the growth rate, used by four chapters. b is the net odds on a
+   win, so an even-money bet is b = 1 and a −110 bet is b = 100/110. */
+const kelly = (p, b) => (b * p - (1 - p)) / b;
+const growth = (f, p, b) =>
+  (f >= 1 || f <= -1 / b) ? -Infinity : p * Math.log(1 + b * f) + (1 - p) * Math.log(1 - f);
+/* the standard normal CDF lives in lab.js as ncdf; this is the tail we want */
+const pBehind = (edge, sdev, n) => ncdf(-edge / (sdev / Math.sqrt(n)));
+
+/* ══════════ hero ══════════
+   Bankroll paths under a small edge: most drift up, some do not, and the
+   spread is the page's subject. */
+(function(){
+  const cv=document.getElementById("heroCv");let w,h,g,raf,t0=0;
+  function size(){const dpr=window.devicePixelRatio||1;
+    w=cv.clientWidth;h=cv.clientHeight;cv.width=w*dpr;cv.height=h*dpr;
+    g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);}
+  const PATHS=[];
+  (function build(){
+    const r=rng(20260905), p=0.55, b=1, f=0.10, n=170;
+    for(let k=0;k<16;k++){
+      const path=[1];
+      for(let i=1;i<=n;i++)path.push(path[i-1]*(r()<p?1+b*f:1-f));
+      PATHS.push(path);
+    }
+  })();
+  function draw(ph){
+    g.fillStyle=C("--chalk");g.fillRect(0,0,w,h);
+    const padX=w*0.05,padY=h*0.14,gw=w-padX*2,gh=h-padY*2;
+    let lo=Infinity,hi=-Infinity;
+    PATHS.forEach(a=>a.forEach(v=>{const y=Math.log(v);if(y<lo)lo=y;if(y>hi)hi=y;}));
+    const X=i=>padX+gw*i/(PATHS[0].length-1);
+    const Y=v=>padY+gh-(Math.log(v)-lo)/(hi-lo)*gh;
+    PATHS.forEach((a,k)=>{
+      const pulse=Math.sin(ph*0.55+k*0.6)*0.5+0.5;
+      g.strokeStyle=a[a.length-1]>=1?C("--blue"):C("--verm");
+      g.globalAlpha=0.07+0.15*pulse;g.lineWidth=1.5;
+      g.beginPath();
+      for(let i=0;i<a.length;i++)i?g.lineTo(X(i),Y(a[i])):g.moveTo(X(i),Y(a[i]));
+      g.stroke();
+    });
+    g.globalAlpha=1;
+  }
+  function tick(t){if(!t0)t0=t;draw((t-t0)/2600);raf=requestAnimationFrame(tick);}
+  window.drawHero=function(){size();if(RM){draw(0);return;}
+    if(raf)cancelAnimationFrame(raf);t0=0;raf=requestAnimationFrame(tick);};
+})();
+
+/* ══════════ 01 — expectation from a payoff table ══════════ */
+const s1={pockets:38,pays:35};
+(function(){
+  sliders(document.getElementById("ctl1"),[
+    {id:"a1",k:"pockets",lbl:"n",name:"Pockets on the wheel",min:36,max:40,step:1,fmt:v=>v.toFixed(0)},
+    {id:"b1",k:"pays",lbl:"×",name:"Payout on a single number",min:30,max:40,step:1,fmt:v=>v.toFixed(0)+" to 1"}
+  ],s1,()=>draw(),"c1");
+  window.draw1=draw;
+  function draw(){
+    const p=1/s1.pockets, ev=p*s1.pays+(1-p)*(-1);
+    const varr=p*Math.pow(s1.pays-ev,2)+(1-p)*Math.pow(-1-ev,2);
+    /* the payoff table as two bars, area = probability, height = payoff */
+    const o=Fig(document.getElementById("cv1"),
+      {h:300,x0:-2,x1:s1.pays+3,y0:0,y1:1.08,pad:{l:56,r:14,t:14}});
+    axes(o,v=>(v>=0?"+":"")+v.toFixed(0),v=>(v*100).toFixed(0)+"%",5,4);
+    const g=o.g;
+    [[-1,1-p,"--verm"],[s1.pays,p,"--moss"]].forEach(([x,pr,col])=>{
+      g.save();g.fillStyle=C(col);g.globalAlpha=0.82;
+      const bw=Math.max(6,o.pw/26);
+      g.fillRect(o.X(x)-bw/2,o.Y(pr),bw,o.Y(0)-o.Y(pr));
+      g.restore();
+      g.fillStyle=C(col);g.font="10px 'IBM Plex Mono', monospace";
+      g.textAlign="center";g.textBaseline="bottom";
+      g.fillText((pr*100).toFixed(2)+"%",o.X(x),o.Y(pr)-5);
+    });
+    vline(o,ev,C("--ochre"),"E[X] = "+ev.toFixed(4));
+    document.getElementById("tab1").innerHTML=
+      "<tr><th style='text-align:left'>Outcome</th><th>Payoff</th><th>Probability</th><th>Contribution</th></tr>"+
+      [["Win","+"+s1.pays,p],["Lose","−1",1-p]].map(([n,pay,pr])=>
+        "<tr><td style='text-align:left'>"+n+"</td><td>"+pay+"</td><td>"+(pr*100).toFixed(4)+"%</td><td>"+
+        (parseFloat(pay.replace("−","-"))*pr).toFixed(5)+"</td></tr>").join("")+
+      "<tr><td style='text-align:left'><b>Expected value</b></td><td></td><td></td><td><b>"+ev.toFixed(5)+"</b></td></tr>";
+    document.getElementById("kv1").innerHTML=kvHTML([
+      ["Pockets",s1.pockets.toFixed(0)],
+      ["Chance of winning","1 in "+s1.pockets.toFixed(0)],
+      ["  as a percent",(p*100).toFixed(4)+"%"],
+      ["Payout",s1.pays.toFixed(0)+" to 1"],
+      ["Expected value","$"+ev.toFixed(5)],
+      ["  in cents",(ev*100).toFixed(3)+"¢"],
+      ["House edge",(-ev*100).toFixed(4)+"%"],
+      ["Standard deviation","$"+Math.sqrt(varr).toFixed(3)],
+      ["Fair payout would be",(s1.pockets-1).toFixed(0)+" to 1"]
+    ]);
+  }
+})();
+
+/* ══════════ 02 — same edge, different variance ══════════ */
+const s2={n:1000,seed:7};
+(function(){
+  sliders(document.getElementById("ctl2"),[
+    {id:"a2",k:"n",lbl:"n",name:"Spins",min:100,max:5000,step:50,fmt:v=>v.toFixed(0)},
+    {id:"b2",k:"seed",lbl:"#",name:"Which run you are watching",min:1,max:40,step:1,fmt:v=>v.toFixed(0)}
+  ],s2,()=>draw(),"c2");
+  window.draw2=draw;
+  function draw(){
+    const n=Math.round(s2.n);
+    const r1=rng(1000+s2.seed), r2=rng(7000+s2.seed);
+    const red=[0],num=[0],exp=[0];
+    const evPer=-2/38;
+    for(let i=1;i<=n;i++){
+      red.push(red[i-1]+(r1()<18/38?1:-1));
+      num.push(num[i-1]+(r2()<1/38?35:-1));
+      exp.push(evPer*i);
+    }
+    const xs=[];for(let i=0;i<=n;i++)xs.push(i);
+    const all=red.concat(num,exp);
+    const lo=Math.min.apply(null,all),hi=Math.max.apply(null,all);
+    const pad=(hi-lo)*0.08||1;
+    const o=Fig(document.getElementById("cv2"),
+      {h:320,x0:0,x1:n,y0:lo-pad,y1:hi+pad,pad:{l:60,r:14,t:14}});
+    axes(o,v=>v.toFixed(0),v=>(v>=0?"+":"")+v.toFixed(0),5,4);
+    hline(o,0,C("--hair"),null,[2,4]);
+    clip(o,()=>{
+      line(o,xs,exp,C("--grey"),1.6,[5,4]);
+      line(o,xs,num,C("--verm"),1.8);
+      line(o,xs,red,C("--blue"),2.0);
+    });
+    const p1=18/38,p2=1/38;
+    const sd1=Math.sqrt(p1*Math.pow(1+2/38,2)+(1-p1)*Math.pow(-1+2/38,2));
+    const sd2=Math.sqrt(p2*Math.pow(35+2/38,2)+(1-p2)*Math.pow(-1+2/38,2));
+    document.getElementById("kv2").innerHTML=kvHTML([
+      ["Spins",n.toLocaleString()],
+      ["Expected loss","$"+(evPer*n).toFixed(2)],
+      ["Red/black finished","$"+red[n].toFixed(0)],
+      ["Single number finished","$"+num[n].toFixed(0)],
+      ["Edge, both bets",(2/38*100).toFixed(4)+"%"],
+      ["sd, red/black","$"+sd1.toFixed(4)],
+      ["sd, single number","$"+sd2.toFixed(3)],
+      ["  ratio",(sd2/sd1).toFixed(2)+"×"],
+      ["Expected sd over "+n,"$"+(sd1*Math.sqrt(n)).toFixed(1)+" / $"+(sd2*Math.sqrt(n)).toFixed(1)]
+    ]);
+  }
+})();
+
+/* ══════════ 03 — the long run is long ══════════ */
+const s3={p:0.55,line:-110,n:100};
+(function(){
+  sliders(document.getElementById("ctl3"),[
+    {id:"a3",k:"p",lbl:"p",name:"Your true hit rate",min:0.50,max:0.65,step:0.005,fmt:v=>(v*100).toFixed(1)+"%"},
+    {id:"b3",k:"line",lbl:"±",name:"Price",min:-300,max:-101,step:1,fmt:v=>v.toFixed(0)},
+    {id:"c3n",k:"n",lbl:"n",name:"Bets made",min:10,max:5000,step:10,fmt:v=>v.toFixed(0)}
+  ],s3,()=>draw(),"c3");
+  window.draw3=draw;
+  function draw(){
+    const win=100/(-s3.line)*100;
+    const ev=s3.p*win-(1-s3.p)*100;
+    const sdev=Math.sqrt(s3.p*Math.pow(win-ev,2)+(1-s3.p)*Math.pow(-100-ev,2));
+    const xs=[],ys=[];
+    for(let n=5;n<=5000;n+=5){xs.push(n);ys.push(ev>0?pBehind(ev,sdev,n):1);}
+    const o=Fig(document.getElementById("cv3"),
+      {h:310,x0:5,x1:5000,y0:0,y1:0.55,pad:{l:56,r:14,t:14}});
+    axes(o,v=>v>=1000?(v/1000).toFixed(0)+"k":v.toFixed(0),v=>(v*100).toFixed(0)+"%",5,4);
+    clip(o,()=>line(o,xs,ys,C("--blue"),2.2));
+    vline(o,s3.n,C("--ochre"),s3.n+" bets");
+    hline(o,0.05,C("--moss"),"5%",[3,3]);
+    const need=ev>0?Math.ceil(Math.pow(2*sdev/ev,2)):Infinity;
+    document.getElementById("kv3").innerHTML=kvHTML([
+      ["Hit rate",(s3.p*100).toFixed(2)+"%"],
+      ["Breakeven hit rate",(100/(100+win)*100).toFixed(3)+"%"],
+      ["Edge per 100 risked","$"+ev.toFixed(3)],
+      ["  as a percent",(ev).toFixed(2)+"%"],
+      ["sd per bet","$"+sdev.toFixed(2)],
+      ["  noise ÷ edge",(sdev/Math.abs(ev)).toFixed(1)+"×"],
+      ["After "+s3.n+" bets, se","$"+(sdev/Math.sqrt(s3.n)).toFixed(2)],
+      ["P(still behind)",ev>0?(pBehind(ev,sdev,s3.n)*100).toFixed(2)+"%":"—"],
+      ["Bets for 2 s.e.",isFinite(need)?need.toLocaleString():"never"]
+    ]);
+  }
+})();
+
+/* ══════════ 04 — the Kelly hill ══════════ */
+const s4={p:0.55,b:0.909};
+(function(){
+  sliders(document.getElementById("ctl4"),[
+    {id:"a4",k:"p",lbl:"p",name:"Chance of winning",min:0.30,max:0.90,step:0.005,fmt:v=>(v*100).toFixed(1)+"%"},
+    {id:"b4",k:"b",lbl:"b",name:"Net odds on a win",min:0.2,max:5,step:0.01,fmt:v=>v.toFixed(3)}
+  ],s4,()=>draw(),"c4");
+  window.draw4=draw;
+  function draw(){
+    const fk=kelly(s4.p,s4.b);
+    const hi=Math.max(0.05,Math.min(0.95,Math.max(fk*2.6,0.15)));
+    const xs=[],ys=[];
+    for(let i=0;i<=300;i++){const f=hi*i/300;xs.push(f);ys.push(growth(f,s4.p,s4.b));}
+    const fin=ys.filter(isFinite);
+    const top=Math.max.apply(null,fin);
+    const o=Fig(document.getElementById("cv4"),
+      {h:310,x0:0,x1:hi,y0:Math.min(-top*1.6,-1e-4),y1:top*1.35,pad:{l:66,r:14,t:14}});
+    axes(o,v=>(v*100).toFixed(0)+"%",v=>v.toFixed(4),5,4);
+    hline(o,0,C("--hair"),null,[2,4]);
+    clip(o,()=>line(o,xs,ys,C("--blue"),2.2));
+    if(fk>0){
+      vline(o,fk,C("--moss"),"f* = "+(fk*100).toFixed(2)+"%");
+      if(2*fk<hi)vline(o,2*fk,C("--verm"),"2f*");
+    }
+    const gk=growth(fk,s4.p,s4.b);
+    document.getElementById("kv4").innerHTML=kvHTML([
+      ["Chance of winning",(s4.p*100).toFixed(2)+"%"],
+      ["Net odds b",s4.b.toFixed(4)],
+      ["  as American",(s4.b>=1?"+"+Math.round(s4.b*100):String(Math.round(-100/s4.b)))],
+      ["Edge per dollar",(s4.b*s4.p-(1-s4.p)).toFixed(5)],
+      ["Kelly fraction f*",fk>0?(fk*100).toFixed(3)+"%":"no bet"],
+      ["Growth at f*",fk>0?gk.toFixed(6):"—"],
+      ["  compounded",fk>0?((Math.exp(gk)-1)*100).toFixed(4)+"% per bet":"—"],
+      ["Growth at 2f*",fk>0?growth(2*fk,s4.p,s4.b).toFixed(6):"—"],
+      ["Growth at f*/2",fk>0?growth(fk/2,s4.p,s4.b).toFixed(6):"—"],
+      ["  half Kelly keeps",fk>0?(growth(fk/2,s4.p,s4.b)/gk*100).toFixed(2)+"%":"—"]
+    ]);
+  }
+})();
+
+/* ══════════ 05 — overbetting ══════════ */
+const s5={p:0.55,b:0.909,n:1000,seed:3};
+(function(){
+  sliders(document.getElementById("ctl5"),[
+    {id:"a5",k:"p",lbl:"p",name:"Chance of winning",min:0.50,max:0.70,step:0.005,fmt:v=>(v*100).toFixed(1)+"%"},
+    {id:"b5",k:"n",lbl:"n",name:"Bets",min:100,max:2000,step:50,fmt:v=>v.toFixed(0)},
+    {id:"c5s",k:"seed",lbl:"#",name:"Which run",min:1,max:40,step:1,fmt:v=>v.toFixed(0)}
+  ],s5,()=>draw(),"c5");
+  window.draw5=draw;
+  function draw(){
+    const fk=kelly(s5.p,s5.b), n=Math.round(s5.n);
+    /* one shared sequence of results, so the three rules face the same world */
+    const r=rng(500+s5.seed);
+    const wins=[];for(let i=0;i<n;i++)wins.push(r()<s5.p);
+    const runs=[[fk/2,"--moss"],[fk,"--blue"],[2*fk,"--verm"]].map(([f,col])=>{
+      const path=[1];
+      for(let i=0;i<n;i++)path.push(path[i]*(wins[i]?1+s5.b*f:1-f));
+      return {f,col,path};
+    });
+    const xs=[];for(let i=0;i<=n;i++)xs.push(i);
+    let lo=Infinity,hi=-Infinity;
+    runs.forEach(rr=>rr.path.forEach(v=>{const y=Math.log(Math.max(v,1e-9));
+      if(y<lo)lo=y;if(y>hi)hi=y;}));
+    const o=Fig(document.getElementById("cv5"),
+      {h:320,x0:0,x1:n,y0:lo-0.2,y1:hi+0.2,pad:{l:66,r:14,t:14}});
+    axes(o,v=>v.toFixed(0),v=>{const m=Math.exp(v);
+      return m>=1?m.toFixed(m>=10?0:1)+"×":m.toFixed(2)+"×";},5,4);
+    hline(o,0,C("--hair"),"start",[2,4]);
+    clip(o,()=>runs.forEach(rr=>
+      line(o,xs,rr.path.map(v=>Math.log(Math.max(v,1e-9))),C(rr.col),2.0)));
+    document.getElementById("kv5").innerHTML=kvHTML([
+      ["Kelly fraction",(fk*100).toFixed(3)+"%"],
+      ["Growth at f*",growth(fk,s5.p,s5.b).toFixed(6)],
+      ["Growth at 2f*",growth(2*fk,s5.p,s5.b).toFixed(6)],
+      ["  which is",Math.abs(growth(2*fk,s5.p,s5.b))<1e-4?"zero":"not zero"],
+      ["Half Kelly keeps",(growth(fk/2,s5.p,s5.b)/growth(fk,s5.p,s5.b)*100).toFixed(2)+"%"],
+      ["Half Kelly finished",runs[0].path[n].toFixed(3)+"×"],
+      ["Full Kelly finished",runs[1].path[n].toFixed(3)+"×"],
+      ["Double Kelly finished",runs[2].path[n].toFixed(4)+"×"],
+      ["Wins in this run",wins.filter(Boolean).length+" / "+n]
+    ]);
+  }
+})();
+
+/* ══════════ 06 — drawdown ══════════ */
+const s6={mult:1,p:0.55,b:0.909,n:1000};
+(function(){
+  sliders(document.getElementById("ctl6"),[
+    {id:"a6",k:"mult",lbl:"×",name:"Multiple of Kelly",min:0.1,max:2.5,step:0.05,fmt:v=>v.toFixed(2)+"× f*"},
+    {id:"b6",k:"p",lbl:"p",name:"Chance of winning",min:0.50,max:0.70,step:0.005,fmt:v=>(v*100).toFixed(1)+"%"},
+    {id:"c6n",k:"n",lbl:"n",name:"Bets",min:100,max:2000,step:50,fmt:v=>v.toFixed(0)}
+  ],s6,()=>draw(),"c6");
+  window.draw6=draw;
+  window.__sim6=sim;
+  function sim(mult,p,b,n,trials){
+    const f=kelly(p,b)*mult;
+    const r=rng(99);
+    const ends=[];let halved=0;
+    for(let t=0;t<trials;t++){
+      let w=1,minw=1;
+      for(let i=0;i<n;i++){w*=(r()<p)?(1+b*f):(1-f);if(w<minw)minw=w;}
+      if(minw<=0.5)halved++;
+      ends.push(w);
+    }
+    ends.sort((x,y)=>x-y);
+    return {f,ends,halved:halved/trials,
+      med:ends[trials>>1],p05:ends[Math.floor(trials*0.05)],
+      p95:ends[Math.floor(trials*0.95)],
+      below1:ends.filter(v=>v<1).length/trials};
+  }
+  function draw(){
+    const n=Math.round(s6.n), TR=2000;
+    const r=sim(s6.mult,s6.p,s6.b,n,TR);
+    const logs=r.ends.map(v=>Math.log(Math.max(v,1e-12)));
+    const lo=Math.min.apply(null,logs),hi=Math.max.apply(null,logs);
+    const bins=binned(logs,lo,hi,44);
+    const o=Fig(document.getElementById("cv6"),
+      {h:310,x0:lo,x1:hi,y0:0,y1:Math.max.apply(null,Array.from(bins.counts))*1.14,
+       pad:{l:56,r:14,t:14}});
+    axes(o,v=>{const m=Math.exp(v);
+      return m>=1?m.toFixed(m>=10?0:1)+"×":m.toFixed(m<0.1?3:2)+"×";},v=>v.toFixed(0),5,4);
+    hist(o,bins,C("--blue"),{alpha:0.72});
+    vline(o,Math.log(r.med),C("--ochre"),"median "+r.med.toFixed(2)+"×");
+    vline(o,0,C("--verm"),"start",[2,4]);
+    document.getElementById("kv6").innerHTML=kvHTML([
+      ["Multiple of Kelly",s6.mult.toFixed(2)+"×"],
+      ["  stake",(r.f*100).toFixed(3)+"%"],
+      ["Growth per bet",growth(r.f,s6.p,s6.b).toFixed(6)],
+      ["Median after "+n,r.med.toFixed(3)+"×"],
+      ["5th percentile",r.p05.toFixed(4)+"×"],
+      ["95th percentile",r.p95.toFixed(1)+"×"],
+      ["Ever halved",(r.halved*100).toFixed(1)+"%"],
+      ["Finished below start",(r.below1*100).toFixed(1)+"%"],
+      ["Asymptotic P(halve)",s6.mult<=1?(Math.pow(0.5,1/s6.mult)*100).toFixed(1)+"%":"—"],
+      ["Trials",TR.toLocaleString()]
+    ]);
+  }
+})();
+
+/* ══════════ 07 — the drill ══════════ */
+(function(){
+  let tier=1,sc=0,asked=0,streak=0,best=0,cur=null;
+  const E=id=>document.getElementById(id);
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  function make(){
+    const R=Math.random;
+    if(tier===1){
+      const t=Math.floor(R()*3);
+      if(t===0){const n=pick([37,38]),pay=pick([35,34,36]);
+        const a=((1/n)*pay+(1-1/n)*(-1))*100;
+        return{kind:"Expected value per dollar",unit:"¢",a:a,tol:0.15,
+          q:"A wheel with <b>"+n+"</b> pockets pays <b>"+pay+" to 1</b> on a single number. What is the expected value per dollar, in cents?",
+          w:"(1/"+n+")("+pay+") + ("+(n-1)+"/"+n+")(−1) = "+((1/n)*pay).toFixed(5)+" − "+
+            ((n-1)/n).toFixed(5)+" = <b>"+(a/100).toFixed(5)+"</b> per dollar, or <b>"+a.toFixed(2)+"¢</b>."};}
+      if(t===1){const p=pick([0.30,0.40,0.55,0.65,0.75]),win=pick([2,3,5,10]);
+        const a=p*win-(1-p);
+        return{kind:"Edge from a payoff",unit:"$",a:a,tol:0.02,
+          q:"You win <b>"+(p*100).toFixed(0)+"%</b> of the time, and a win pays <b>"+win+"</b> for every <b>1</b> risked. What is the edge per dollar?",
+          w:(p).toFixed(2)+" × "+win+" − "+(1-p).toFixed(2)+" × 1 = "+(p*win).toFixed(3)+" − "+
+            (1-p).toFixed(2)+" = <b>$"+a.toFixed(3)+"</b> per dollar staked."};}
+      const p=pick([0.50,0.55,0.60]),win=pick([1,2,3]);
+      const ev=p*win-(1-p);
+      const a=Math.sqrt(p*Math.pow(win-ev,2)+(1-p)*Math.pow(-1-ev,2));
+      return{kind:"Standard deviation of a bet",unit:"$",a:a,tol:0.03,
+        q:"A bet wins <b>"+(p*100).toFixed(0)+"%</b> of the time paying <b>"+win+"</b> to 1. What is its standard deviation per dollar?",
+        w:"EV is "+ev.toFixed(3)+". Var = "+p.toFixed(2)+"("+win+"−"+ev.toFixed(3)+")² + "+
+          (1-p).toFixed(2)+"(−1−"+ev.toFixed(3)+")² = "+(a*a).toFixed(4)+", so sd = <b>$"+a.toFixed(3)+"</b>."};
+    }
+    const t=Math.floor(R()*3);
+    if(t===0){const p=pick([0.52,0.55,0.58,0.60,0.65]),b=pick([1,0.909,2,1.5,0.5]);
+      const a=kelly(p,b)*100;
+      return{kind:"The Kelly fraction",unit:"%",a:a,tol:0.15,
+        q:"You win <b>"+(p*100).toFixed(0)+"%</b> of the time at net odds of <b>"+b.toFixed(3)+
+          "</b> to 1. What fraction of the bankroll does Kelly say to stake?",
+        w:"f* = (bp − q)/b = ("+b.toFixed(3)+"×"+p.toFixed(2)+" − "+(1-p).toFixed(2)+")/"+b.toFixed(3)+
+          " = <b>"+a.toFixed(2)+"%</b>."+(a<0?" Negative means no bet.":"")};}
+    if(t===1){const p=pick([0.55,0.58,0.60,0.62]);
+      const a=kelly(p,1)*100;
+      return{kind:"Kelly at even money",unit:"%",a:a,tol:0.1,
+        q:"You win <b>"+(p*100).toFixed(0)+"%</b> of the time at <b>even money</b>. What does Kelly say?",
+        w:"At b = 1 the formula collapses to f* = 2p − 1, which is just the edge: <b>"+
+          a.toFixed(1)+"%</b>. Worth memorizing — at even money, bet your edge."};}
+    const p=pick([0.55,0.58,0.60]),b=pick([1,0.909,2]);
+    const fk=kelly(p,b);
+    const a=growth(fk/2,p,b)/growth(fk,p,b)*100;
+    return{kind:"What half Kelly keeps",unit:"%",a:a,tol:1.2,
+      q:"At <b>"+(p*100).toFixed(0)+"%</b> and net odds <b>"+b.toFixed(3)+
+        "</b>, what percentage of the full-Kelly growth rate does <b>half</b> Kelly keep?",
+      w:"Growth at f* is "+growth(fk,p,b).toFixed(6)+" and at f*/2 it is "+
+        growth(fk/2,p,b).toFixed(6)+", so half Kelly keeps <b>"+a.toFixed(1)+
+        "%</b> of the growth for half the stake — which is the whole argument for fractional Kelly."};
+  }
+  function next(){
+    cur=make();
+    E("dKind").textContent=cur.kind;E("dText").innerHTML=cur.q;
+    E("dUnit").textContent=cur.unit;E("dInput").value="";
+    E("drill").classList.remove("done");
+    focusSoft(E("dInput"),E("drill"));
+  }
+  function submit(){
+    if(!cur||E("drill").classList.contains("done"))return;
+    const raw=parseFloat(String(E("dInput").value).replace(/[$,%\s¢]/g,""));
+    asked++;
+    const ok=isFinite(raw)&&Math.abs(raw-cur.a)<=cur.tol;
+    if(ok){sc++;streak++;if(streak>best)best=streak;}else streak=0;
+    E("dVerdict").textContent=ok?"CORRECT":("NOT QUITE — the answer is "+cur.a.toFixed(2));
+    E("dVerdict").className="vd "+(ok?"ok":"no");
+    E("dWork").innerHTML=cur.w;
+    E("dScore").textContent=sc+" / "+asked;
+    E("dStreak").textContent=String(streak);E("dBest").textContent=String(best);
+    E("drill").classList.add("done");
+  }
+  E("dSubmit").addEventListener("click",submit);
+  E("dInput").addEventListener("keydown",e=>{if(e.key==="Enter")submit();});
+  E("dNext").addEventListener("click",next);
+  E("dSkip").addEventListener("click",()=>{streak=0;E("dStreak").textContent="0";next();});
+  [1,2].forEach(k=>E("dT"+k).addEventListener("click",()=>{
+    tier=k;[1,2].forEach(j=>E("dT"+j).setAttribute("aria-pressed",j===k?"true":"false"));
+    next();}));
+  window.drawDrill=next;
+  window.__drill=()=>{const o=[];for(let i=0;i<2;i++){tier=i+1;for(let j=0;j<400;j++)o.push(make());}tier=1;return o;};
+})();
+
+function drawAll(){
+  drawHero();draw1();draw2();draw3();draw4();draw5();draw6();drawDrill();
+}
+LAB.boot(drawAll);
+
+</script>
+</body>
+</html>

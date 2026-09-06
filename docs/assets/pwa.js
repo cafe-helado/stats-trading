@@ -1,6 +1,6 @@
 /* Register the service worker, and say something honest about it.
 
-   Two visible behaviours, both small:
+   Two visible behaviors, both small:
 
    · The first time the series is opened online, a quiet line appears once the
      whole thing is cached, so the reader knows it will work on the train.

@@ -1,4 +1,4 @@
-# Chance, visually — the eight modules
+# Chance, visually — the nine modules
 
 Ordered so that each one needs only what came before it. The audience is a
 person who can already read an option chain and has never taken a statistics
@@ -25,7 +25,7 @@ cents, and standing two standard errors clear of zero takes 1,444 bets. Backing
 both sides costs 4.5455% of the stake. A three-way at 2.10/3.40/3.80 sums to
 103.347%. A 1.20/4.50 book sums to 105.556%; proportional de-vigging gives
 78.947%/21.053%, the power method (k = 1.1219) gives 81.501%/18.499%, so the
-longshot sits 2.554 points lower — the favourite–longshot bias, and the two
+longshot sits 2.554 points lower — the favorite–longshot bias, and the two
 methods agree exactly on an even book. On a chain at S=100, K=110, T=0.25,
 σ=25%, r=3%: P = 22.214%, the digital costs 0.22048, a 1-wide call spread prices
 it at 0.22054, and quoting it 2c wide is a 2.015% overround. At the financing
@@ -79,3 +79,16 @@ moves it most.
 Skewness, kurtosis, extreme values, value at risk and expected shortfall. How
 much of a portfolio's variance lives in its worst five days. Signature: the
 same standard deviation drawn three ways, with wildly different worst cases.
+
+## 09 · Putting It to Work  🔲
+
+The capstone. Everything before it is machinery; this is the machinery pointed
+at things people actually do with money. Odds setting from the market-maker's
+side, bet sizing done properly, and then four applications side by side:
+sports betting, blackjack, poker and options trading — which are the same
+problem with different variance and different edges.
+
+Examples across the series are American and are deliberately not all financial:
+coins, dice, card decks, medical tests, basketball free throws and weather sit
+next to option chains, because a reader who has never taken a statistics course
+should not have to learn finance and probability in the same sentence.

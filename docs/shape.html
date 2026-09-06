@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F4F1E8">
+<title>Randomness Has a Shape — Chance, visually</title>
+<meta name="description" content="The central limit theorem built from coin flips rather than asserted, why the count of heads spreads out while the proportion tightens, and the square root of time that runs through all of finance.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Randomness Has a Shape — Chance, visually">
+<meta property="og:description" content="The central limit theorem built from coin flips rather than asserted, why the count of heads spreads out while the proportion tightens, and the square root of time that runs through all of finance.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F1E8'/><rect x='5' y='19' width='4' height='7' fill='%230B6E75'/><rect x='11' y='12' width='4' height='14' fill='%230B6E75'/><rect x='17' y='7' width='4' height='19' fill='%230B6E75'/><rect x='23' y='16' width='4' height='10' fill='%230B6E75'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lab.css">
+<link rel="stylesheet" href="assets/mobile.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chance">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+<header class="serieshead">
+  <div class="in">
+    <a class="home" href="index.html">← Chance, visually</a>
+    <span class="num">No. 03 · Shape</span>
+  </div>
+</header>
+
+<div class="progress" id="prog"></div>
+<nav class="chapnav" id="chapnav" aria-label="Chapters">
+  <a href="#c1"><span>One coin, then many</span><i></i></a>
+  <a href="#c2"><span>Always the same curve</span><i></i></a>
+  <a href="#c3"><span>Two things called spread</span><i></i></a>
+  <a href="#c4"><span>Volatility and √T</span><i></i></a>
+  <a href="#c5"><span>68-95-99.7</span><i></i></a>
+  <a href="#c6"><span>Drills</span><i></i></a>
+</nav>
+
+<div class="hero">
+  <canvas id="heroCv" aria-hidden="true"></canvas>
+  <div class="heroInner">
+    <div class="eyebrow">An interactive derivation · No. 03</div>
+    <h1>Add enough of <em>anything</em></h1>
+    <p class="sub">Sum up enough independent small things and you always get the same curve — no matter what you started with. Watch it happen from coin flips, then take the one consequence that runs through all of finance: spread grows with the square root of time, and never with time.</p>
+  </div>
+  <div class="scrollcue">Scroll ↓</div>
+</div>
+
+<main>
+
+<div class="orient">
+  <h2>Start here</h2>
+  <p class="lede">This is the module where the bell curve stops being a thing you were told about and becomes a thing you watched appear. It arrives out of coin flips, then out of dice, then out of a distribution deliberately built to look nothing like it — and the point is that the starting shape does not matter.</p>
+  <ol>
+    <li><b>Chapter 02 is the payoff.</b> Add five draws from a flat distribution and you are already close to normal; add thirty and nothing short of a formal test can tell the difference.</li>
+    <li><b>Chapter 03 fixes a confusion almost everyone carries.</b> As you add more flips the <em>count</em> of heads spreads out and the <em>proportion</em> of heads tightens. Both are true, both are √n, and mixing them up is the source of most bad intuitions about sample size.</li>
+    <li><b>Chapter 04 is the one you will use tomorrow.</b> Converting an annual volatility to a daily one divides by √252, not by 252 — a factor of 15.87, which is the single most common units error in finance.</li>
+  </ol>
+  <details class="drop">
+    <summary>Notation — every symbol used on this page</summary>
+    <table class="ntab">
+      <tr><td>n</td><td>How many independent things you are adding — flips, days, draws.</td></tr>
+      <tr><td>Binomial</td><td>The distribution of how many successes in n independent trials. Coin flips, free throws, assignments.</td></tr>
+      <tr><td>μ, σ</td><td>The mean and standard deviation of whatever you are summing.</td></tr>
+      <tr><td>Central limit theorem</td><td>The result that sums of independent things converge to a normal, whatever their own shape, as long as their variance is finite.</td></tr>
+      <tr><td>Standardizing</td><td>Subtracting the mean and dividing by the standard deviation, so any distribution can be compared to the standard normal.</td></tr>
+      <tr><td>Excess kurtosis</td><td>How much fatter the tails are than a normal's. Zero means normal; negative means thinner.</td></tr>
+      <tr><td>√T scaling</td><td>Volatility over a period T is the annual figure times √T. The reason a month is 0.29 of a year and not 0.083.</td></tr>
+      <tr><td>Trading days</td><td>252 a year, by convention. Weekends and holidays do not move prices, so calendars and volatility disagree.</td></tr>
+    </table>
+  </details>
+</div>
+
+<!-- ══════════ 01 ══════════ -->
+<section class="chapter" id="c1">
+  <div class="chead">
+    <div class="cnum">01</div>
+    <h2>One coin is boring. A hundred is a shape.</h2>
+    <p class="dek">Flip one coin and there are two outcomes. Flip a hundred and the outcomes arrange themselves into something with a middle and two tails.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">A single fair coin has nothing to say: heads or tails, half each, no structure. Two coins already have a middle — one head is twice as likely as zero or two, because there are two ways to get it. That counting is the whole engine.</p>
+    <p>Ten flips and the shape is visible. The most likely single result is five heads, at <b>24.6%</b>, and the chance of seven or more is <b>17.2%</b>. A hundred flips and it is unmistakably a bell: the mean is 50, the standard deviation is exactly <b>5</b>, and getting sixty or more heads happens <b>2.84%</b> of the time.</p>
+    <p>Nothing has been assumed here. The curve is a consequence of counting how many ways each total can happen, and the reason it looks like the normal distribution is chapter 02.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>How many heads, out of n flips</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>Exact probability</span>
+            <span><i class="swl" style="background:var(--verm)"></i>The normal with the same mean and spread</span>
+          </span>
+        </div>
+        <canvas id="cv1" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl1"></div>
+        <div class="kv" style="margin-top:20px" id="kv1"></div>
+      </div>
+    </div>
+    <figcaption>Notice how quickly the red curve becomes a good description of the blue bars. By twenty flips it is already hard to see daylight between them in the middle.</figcaption>
+  </figure>
+
+  <div class="mline">P(k heads in n flips) = C(n,k) · pᵏ · (1−p)ⁿ⁻ᵏ     mean = np,  sd = √(np(1−p))</div>
+  <p class="mread">Reads as: <b>count the ways it can happen, times the probability of any one way.</b> The C(n,k) is the counting; the rest is one particular sequence's chance.</p>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Set the coin to 70% heads and watch what happens to the shape. Predict first whether it stays symmetric.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c1" data-patch='{"n":10,"p":0.5}' data-focus="cv1">Ten fair flips</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"n":100,"p":0.5}' data-focus="cv1">A hundred</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"n":10,"p":0.7}' data-focus="cv1">A biased coin</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A hundred fair flips. What is the standard deviation of the number of heads?</p>
+    <div class="opts">
+      <button>50, the same as the mean</button>
+      <button data-ok="1">5. √(np(1−p)) = √(100 × 0.5 × 0.5) = √25</button>
+      <button>10</button>
+      <button>0.5, since each flip has a half chance</button>
+    </div>
+    <div class="ans"><b>Five heads.</b> Which is a useful anchor: on a hundred flips, 60 heads is two standard deviations out and 65 is three. The fourth answer is the per-flip standard deviation, and confusing the two is exactly the mistake chapter 03 exists to prevent.</div>
+  </div>
+</section>
+
+<!-- ══════════ 02 ══════════ -->
+<section class="chapter" id="c2">
+  <div class="chead">
+    <div class="cnum">02</div>
+    <h2>It does not matter what you started with</h2>
+    <p class="dek">Sum five draws from a perfectly flat distribution and it is already nearly normal. Sum thirty and nothing you can see will tell them apart.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Coins are suspiciously convenient — symmetric, two outcomes, obviously heading somewhere symmetric. So take the flattest thing available instead: a number drawn uniformly between 0 and 1, which has no peak at all. Add several and standardize.</p>
+    <p>One draw is a rectangle, as far from a bell as a distribution gets: its <span class="term" data-t="Excess kurtosis" data-def="A measure of how much of the variance comes from the tails, scaled so that a normal distribution reads exactly zero. Negative means thinner tails than normal; positive means fatter.">excess kurtosis</span> is <b>−1.20</b>. Two draws make a triangle, at <b>−0.59</b>. Five draws reach <b>−0.24</b>, and the largest gap between its cumulative distribution and a normal's is <b>0.007</b> — under a percentage point, anywhere. Thirty draws sit at <b>−0.05</b> with a maximum gap of <b>0.003</b>.</p>
+    <p>Nothing about the rectangle survives. This is the <span class="term" data-t="Central limit theorem" data-def="Sums of many independent random quantities converge to a normal distribution, whatever the shape of the individual quantities, provided their variance is finite. The last clause is the escape hatch that module 08 walks through.">central limit theorem</span>, and it is the reason the normal distribution turns up everywhere: most quantities you measure are secretly sums of many small independent things, and sums forget their ingredients.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Sums of n draws, standardized, against the normal</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>Simulated sums</span>
+            <span><i class="swl" style="background:var(--verm)"></i>The standard normal</span>
+          </span>
+        </div>
+        <canvas id="cv2" height="320"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl2"></div>
+        <div class="kv" style="margin-top:20px" id="kv2"></div>
+      </div>
+    </div>
+    <figcaption>Notice that the convergence is fastest in the middle and slowest in the tails. That is not a detail — it is why a normal approximation can be excellent for ordinary days and badly wrong for extreme ones.</figcaption>
+  </figure>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Switch the ingredient to the lopsided one and predict how many draws it takes to look normal. Skew takes longer to wash out than flatness does.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c2" data-patch='{"n":1,"kind":0}' data-focus="cv2">One flat draw</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"n":5,"kind":0}' data-focus="cv2">Five</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"n":5,"kind":2}' data-focus="cv2">Five lopsided ones</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"n":30,"kind":2}' data-focus="cv2">Thirty lopsided</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">The central limit theorem needs one condition that gets left out of most summaries. Which?</p>
+    <div class="opts">
+      <button>The things being added must be identically distributed</button>
+      <button data-ok="1">Their variance must be finite. Sums of things with infinite variance do not converge to a normal, and some financial quantities behave that way</button>
+      <button>There must be at least thirty of them</button>
+      <button>They must be symmetric</button>
+    </div>
+    <div class="ans"><b>Finite variance, and it is not a technicality.</b> The other three are all false: the theorem works for non-identical and asymmetric ingredients, and "thirty" is a rule of thumb rather than a condition. But a distribution with infinite variance — the Cauchy is the standard example — sums to itself forever and never becomes normal. <a href="index.html">Module 08</a> is about how close real markets get to that boundary.</div>
+  </div>
+</section>
+
+<!-- ══════════ 03 ══════════ -->
+<section class="chapter" id="c3">
+  <div class="chead">
+    <div class="cnum">03</div>
+    <h2>The count spreads out; the proportion tightens</h2>
+    <p class="dek">Both are true at once and they point opposite ways. Almost every wrong intuition about sample size lives in the gap.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Flip a hundred coins and the number of heads has a standard deviation of <b>5</b>. Flip ten thousand and it is <b>50</b>. The count of heads becomes <em>more</em> variable as you flip more — it spreads out with √n.</p>
+    <p>Now measure the same experiment as a percentage. At a hundred flips the proportion of heads has a standard deviation of <b>5.0 percentage points</b>. At ten thousand it is <b>0.5 points</b>. The proportion becomes <em>less</em> variable, tightening with 1/√n.</p>
+    <p>These are the same fact seen through two lenses, and they are both correct. The absolute deviation from the expected count grows; the deviation as a fraction of the total shrinks. Anyone who has ever argued that a long streak "must even out" is confusing them — the count does not come back, it just gets swamped.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The same coin, measured two ways</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Spread of the count</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Spread of the proportion</span>
+          </span>
+        </div>
+        <canvas id="cv3" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl3"></div>
+        <div class="kv" style="margin-top:20px" id="kv3"></div>
+      </div>
+    </div>
+    <figcaption>Notice the two curves go opposite ways from the same experiment. Whenever someone says "the law of large numbers," ask which of these they mean — the answer is always the red one.</figcaption>
+  </figure>
+
+  <div class="mline">sd of the count = √(n·p·q)      sd of the proportion = √(p·q/n)</div>
+  <p class="mread">Reads as: <b>the count's spread grows like √n and the proportion's shrinks like 1/√n.</b> One divided by the other is exactly n, which is the whole relationship.</p>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A fair coin has come up heads 10 more times than tails after 100 flips. After 10,000 flips, what do you expect that gap to be?</p>
+    <div class="opts">
+      <button>Zero — it evens out</button>
+      <button data-ok="1">Larger in absolute terms. The typical gap grows like √n, so it goes from about 5 to about 50 — while shrinking from 5% to 0.5% of the flips</button>
+      <button>Still about 10</button>
+      <button>Smaller, since the law of large numbers pulls it back</button>
+    </div>
+    <div class="ans"><b>Bigger in heads and smaller in percent, and there is no force pulling it back.</b> Nothing corrects an early imbalance; it simply stops mattering as the denominator grows. The gambler's fallacy is exactly this confusion — expecting the count to return to zero because the proportion returns to a half.</div>
+  </div>
+</section>
+
+<!-- ══════════ 04 ══════════ -->
+<section class="chapter" id="c4">
+  <div class="chead">
+    <div class="cnum">04</div>
+    <h2>Which makes a month 29% of a year, not 8%</h2>
+    <p class="dek">The single most common units error in finance, and it is off by a factor of nearly sixteen at the daily horizon.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Variances add over independent periods. Standard deviations do not — they add in quadrature, which is a fancy way of saying you add the squares and take the root at the end. That one fact sets every conversion between time horizons.</p>
+    <p>A stock quoted at <b>20% annual volatility</b> has a daily standard deviation of 20% ÷ √252 = <b>1.26%</b>. Divide by 252 instead, as if volatility accrued evenly like interest, and you get 0.079% — <b>15.87 times too small</b>. On a $100 stock that is the difference between expecting daily moves of $1.26 and expecting them of eight cents.</p>
+    <p>Going the other way is the same arithmetic. A month is 1/12 of a year, so monthly volatility is 20% × √(1/12) = <b>5.77%</b>, not 1.67%. A quarter is exactly half of a year in volatility terms, because √(1/4) = 1/2.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>How far a price wanders, against how long you wait</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>√T — what actually happens</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Linear — what people assume</span>
+          </span>
+        </div>
+        <canvas id="cv4" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl4"></div>
+        <div class="kv" style="margin-top:20px" id="kv4"></div>
+      </div>
+    </div>
+    <figcaption>Notice the two curves agree at exactly one point — the horizon the volatility was quoted for — and diverge in both directions from it. Below it the square root is larger; above it, smaller.</figcaption>
+  </figure>
+
+  <div class="mline">σ over a period T = σ_annual · √T</div>
+  <p class="mread">Reads as: <b>scale volatility by the square root of the time, never by the time.</b> The three worth memorizing: a month is 0.29, a quarter is 0.50, a day is 0.063.</p>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Set the horizon to four years and predict the ratio between the two curves before you look. It is not four.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c4" data-patch='{"T":0.00397}' data-focus="cv4">One trading day</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"T":0.0833}' data-focus="cv4">One month</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"T":4}' data-focus="cv4">Four years</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A stock's daily moves have a standard deviation of 2%. What is its annualized volatility?</p>
+    <div class="opts">
+      <button>2% × 252 = 504%</button>
+      <button data-ok="1">2% × √252 = 31.7%</button>
+      <button>2% × 365 = 730%</button>
+      <button>2% ÷ √252 = 0.13%</button>
+    </div>
+    <div class="ans"><b>31.7%, using 252 trading days rather than 365 calendar ones.</b> The day count matters more than people expect: using 365 would give 38.2%, which is a fifth too high. Markets are closed on weekends and prices do not move when nobody is trading, so volatility is counted in trading days even when everything else is counted in calendar days.</div>
+  </div>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section class="chapter" id="c5">
+  <div class="chead">
+    <div class="cnum">05</div>
+    <h2>68, 95, 99.7 — and what the last one really means</h2>
+    <p class="dek">The rule everyone half-remembers, made exact, and then pushed out to where it stops describing anything real.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">For a normal distribution, <b>68.27%</b> of the mass sits within one standard deviation of the mean, <b>95.45%</b> within two, and <b>99.73%</b> within three. Those are worth knowing exactly rather than approximately, because the interesting quantity is always what is left over.</p>
+    <p>Outside one sigma is <b>31.7%</b> — about one day in three. Outside two is <b>4.55%</b>, one day in 22. Outside three is <b>0.27%</b>, one in 370, which is roughly once every year and a half of trading.</p>
+    <p>Keep going and the numbers stop being believable. A four-sigma day should occur once in <b>15,780</b> trading days — about once every <b>63 years</b>. A five-sigma day, once every <b>6,911 years</b>. Markets deliver both several times a decade, which does not mean the arithmetic is wrong. It means the normal distribution is the wrong model for the tails, and that discrepancy is the subject of <a href="index.html">module 08</a>.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The tail beyond k standard deviations</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Normal density</span>
+            <span><i class="sw" style="background:var(--verm)"></i>The tail you are asking about</span>
+          </span>
+        </div>
+        <canvas id="cv5" height="300"></canvas>
+        <div class="tblwrap" style="margin-top:18px">
+          <table class="rot" id="tab5"></table>
+        </div>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl5"></div>
+        <div class="kv" style="margin-top:20px" id="kv5"></div>
+      </div>
+    </div>
+    <figcaption>Notice the shaded area is nearly invisible past three sigma while the numbers underneath keep changing by orders of magnitude. The eye is a poor instrument for tails, which is why they get modeled badly.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Under a normal distribution, how often should a four-sigma daily move happen?</p>
+    <div class="opts">
+      <button>About once a year</button>
+      <button data-ok="1">About once every 63 years — one trading day in 15,780</button>
+      <button>About once a decade</button>
+      <button>About once every 6,900 years</button>
+    </div>
+    <div class="ans"><b>Once every 63 years, and the fourth answer is the five-sigma number.</b> Both are wildly at odds with what markets actually deliver, which is the honest conclusion to take away: the normal distribution is an excellent description of the middle of a return distribution and a terrible one of its edges. Using it for ordinary risk is fine; using it for tail risk is how firms fail.</div>
+  </div>
+</section>
+
+<!-- ══════════ 06 ══════════ -->
+<section class="chapter" id="c6">
+  <div class="chead">
+    <div class="cnum">06</div>
+    <h2>Drill it</h2>
+    <p class="dek">Binomial spreads, √T conversions and tail probabilities, at speed.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The first tier is counting and spread. The second is the volatility conversions, which is the one that turns up in a working day.</p>
+  </div>
+
+  <figure>
+    <div class="drill" id="drill">
+      <div class="dstats">
+        <div class="c"><span class="k">Correct</span><span class="v" id="dScore">0 / 0</span></div>
+        <div class="c"><span class="k">Streak</span><span class="v" id="dStreak" style="color:var(--moss)">0</span></div>
+        <div class="c"><span class="k">Best</span><span class="v" id="dBest">0</span></div>
+        <div class="c" style="flex:1;min-width:170px"><span class="k">Tier</span>
+          <div class="seg" style="margin-top:5px;max-width:240px">
+            <button id="dT1" aria-pressed="true">Spread</button>
+            <button id="dT2" aria-pressed="false">Scaling</button>
+          </div>
+        </div>
+      </div>
+      <span class="qn" id="dKind">Question</span>
+      <p class="qt" id="dText">Loading…</p>
+      <div class="ansrow">
+        <input type="text" inputmode="decimal" id="dInput" placeholder="your answer" aria-label="Your answer">
+        <span class="unit" id="dUnit"></span>
+        <button class="act" id="dSubmit">Check</button>
+        <button class="act ghost" id="dSkip">Skip</button>
+      </div>
+      <div class="verdict">
+        <div class="vd" id="dVerdict"></div>
+        <div class="work" id="dWork"></div>
+        <div class="btnrow"><button class="act" id="dNext">Next question</button></div>
+      </div>
+    </div>
+    <figcaption>Square roots are the whole skill here. Knowing √252 ≈ 15.87 and √12 ≈ 3.46 by heart converts most of a screen without a calculator.</figcaption>
+  </figure>
+
+  <div class="prose" style="margin-top:46px">
+    <p>Six questions across the page.</p>
+  </div>
+
+  <div class="score" id="scoreBox">
+    <span class="big" id="scoreNum">0 / 6</span>
+    <span class="txt" id="scoreTxt">Answered nothing yet. Questions are scored as you go.</span>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 1 · chapter 01</span>
+    <p class="q">Ten fair coin flips. What is the chance of exactly five heads?</p>
+    <div class="opts">
+      <button>50% — it is the expected number</button>
+      <button data-ok="1">24.6%. It is the most likely single outcome, and it still happens less than a quarter of the time</button>
+      <button>About 10%</button>
+      <button>100%, on average</button>
+    </div>
+    <div class="ans"><b>Under a quarter.</b> "Most likely" and "likely" are different claims, and the gap grows with n: on a hundred flips the most likely count is fifty and it happens just 7.96% of the time. The mode of a spread-out distribution is not where the mass is.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 2 · chapter 02</span>
+    <p class="q">You sum five draws from a perfectly flat distribution. How close to normal is the result?</p>
+    <div class="opts">
+      <button>Not close — five is far too few</button>
+      <button data-ok="1">Very close. Excess kurtosis −0.24, and the largest gap between its cumulative distribution and a normal's is under a percentage point</button>
+      <button>Exactly normal</button>
+      <button>Closer in the tails than in the middle</button>
+    </div>
+    <div class="ans"><b>Close enough that you could not tell by eye.</b> The fourth answer inverts the truth and is the important one to reject: convergence is fastest in the middle and slowest in the tails, which is precisely why normal approximations are safe for typical outcomes and dangerous for extreme ones.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 3 · chapter 03</span>
+    <p class="q">Going from 100 flips to 10,000, what happens to the spread of the head <em>count</em>?</p>
+    <div class="opts">
+      <button>It shrinks, from 5 to 0.5</button>
+      <button data-ok="1">It grows tenfold, from 5 to 50 — while the spread of the proportion shrinks tenfold, from 5 points to 0.5</button>
+      <button>It stays at 5</button>
+      <button>It grows a hundredfold</button>
+    </div>
+    <div class="ans"><b>Both, depending on which quantity you name.</b> A hundred times the flips is ten times the count-spread and a tenth of the proportion-spread, because √100 = 10. Almost every argument about whether small samples are "enough" turns on which of these the arguer has in mind.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 4 · chapter 04</span>
+    <p class="q">A stock is quoted at 20% annual volatility. What is its daily standard deviation?</p>
+    <div class="opts">
+      <button>0.079% — twenty divided by 252</button>
+      <button data-ok="1">1.26% — twenty divided by √252</button>
+      <button>20%, since volatility is already annualized</button>
+      <button>0.055% — twenty divided by 365</button>
+    </div>
+    <div class="ans"><b>1.26%, and the first answer is wrong by a factor of 15.87.</b> Dividing by the number of periods instead of its square root is the most common units error in finance, and it is not a rounding difference — it is an order of magnitude. Variances add; standard deviations do not.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 5 · chapter 04</span>
+    <p class="q">Quarterly volatility, as a fraction of annual?</p>
+    <div class="opts">
+      <button>A quarter</button>
+      <button data-ok="1">A half. √(1/4) = 1/2, which is the tidiest example of the whole rule</button>
+      <button>A third</button>
+      <button>The same — volatility does not depend on horizon</button>
+    </div>
+    <div class="ans"><b>Half.</b> Worth keeping as the sanity check on every other conversion: if your scaling does not turn a quarter into a half, you have used time instead of its square root somewhere.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 6 · chapter 05</span>
+    <p class="q">How much of a normal distribution lies more than two standard deviations from the mean?</p>
+    <div class="opts">
+      <button>5%, split evenly</button>
+      <button data-ok="1">4.55% — about one observation in 22</button>
+      <button>2.5%</button>
+      <button>32%</button>
+    </div>
+    <div class="ans"><b>4.55%, and the 5% everyone remembers is the 1.96-sigma figure.</b> The two get used interchangeably and the difference matters when you are counting rare events: 1 in 22 versus 1 in 20 is a 10% error in how often you expect to be surprised.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="n">Every simulation here uses a seeded generator, so the numbers in the prose are the numbers on the screen and will be the same tomorrow. The central limit theorem needs finite variance and independence, and financial returns violate the second one routinely — volatility clusters, so a big day makes the next day bigger, and sums of dependent draws converge more slowly than these figures suggest. The √T rule inherits that assumption whole: it is exactly right for independent increments and progressively wrong as returns become autocorrelated, which is why realized volatility measured over overlapping windows behaves differently from the tidy arithmetic on this page. And the tail probabilities in chapter 05 are the normal's, which is the model this series spends <a href="index.html">module 08</a> arguing against.</p>
+</footer>
+
+<script src="assets/lab.js"></script>
+<script src="assets/stats.js"></script>
+<script src="assets/pwa.js" defer></script>
+<script>
+"use strict";
+
+/* The three ingredients chapter 02 sums. Each is standardized to mean 0 and
+   sd 1 by the caller, so only the SHAPE differs — which is the point. */
+const INGREDIENT = [
+  {name:"flat",     draw:r=>r(),                    mean:0.5,      sd:Math.sqrt(1/12)},
+  {name:"two-sided",draw:r=>(r()<0.5?0:1),          mean:0.5,      sd:0.5},
+  {name:"lopsided", draw:r=>-Math.log(1-r()),       mean:1,        sd:1}
+];
+/* the largest gap between a sample's cumulative distribution and the normal's —
+   how the page measures "how close to normal is this yet" */
+function cdfGap(sorted) {
+  let worst = 0;
+  const n = sorted.length, step = Math.max(1, Math.floor(n / 400));
+  for (let i = 0; i < n; i += step)
+    worst = Math.max(worst, Math.abs((i + 1) / n - ncdf(sorted[i])));
+  return worst;
+}
+
+/* ══════════ hero ══════════
+   Binomial rows stacking into a bell: the page's argument as a texture. */
+(function(){
+  const cv=document.getElementById("heroCv");let w,h,g,raf,t0=0;
+  function size(){const dpr=window.devicePixelRatio||1;
+    w=cv.clientWidth;h=cv.clientHeight;cv.width=w*dpr;cv.height=h*dpr;
+    g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);}
+  function draw(ph){
+    g.fillStyle=C("--chalk");g.fillRect(0,0,w,h);
+    const padX=w*0.06,padY=h*0.12,gw=w-padX*2,gh=h-padY*2;
+    const ROWS=9;
+    for(let row=0;row<ROWS;row++){
+      const n=2+row*3;
+      const pulse=Math.sin(ph*0.6+row*0.5)*0.5+0.5;
+      g.fillStyle=row%2?C("--verm"):C("--blue");
+      const y=padY+gh*row/(ROWS-1);
+      let peak=0;
+      for(let k=0;k<=n;k++)peak=Math.max(peak,dbinom(k,n,0.5));
+      for(let k=0;k<=n;k++){
+        const p=dbinom(k,n,0.5)/peak;
+        const x=padX+gw*(k/n);
+        g.globalAlpha=0.05+0.20*p*(0.6+0.4*pulse);
+        const bw=Math.max(2,gw/(n+1)*0.7);
+        g.fillRect(x-bw/2,y-gh*0.045*p,bw,gh*0.09*p);
+      }
+    }
+    g.globalAlpha=1;
+  }
+  function tick(t){if(!t0)t0=t;draw((t-t0)/2600);raf=requestAnimationFrame(tick);}
+  window.drawHero=function(){size();if(RM){draw(0);return;}
+    if(raf)cancelAnimationFrame(raf);t0=0;raf=requestAnimationFrame(tick);};
+})();
+
+/* ══════════ 01 — the binomial ══════════ */
+const s1={n:20,p:0.5};
+(function(){
+  sliders(document.getElementById("ctl1"),[
+    {id:"a1",k:"n",lbl:"n",name:"Flips",min:1,max:200,step:1,fmt:v=>v.toFixed(0)},
+    {id:"b1",k:"p",lbl:"p",name:"Chance of heads",min:0.05,max:0.95,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"}
+  ],s1,()=>draw(),"c1");
+  window.draw1=draw;
+  function draw(){
+    const n=Math.round(s1.n),p=s1.p;
+    const mean=n*p, sdev=Math.sqrt(n*p*(1-p));
+    const lo=Math.max(0,Math.floor(mean-4*sdev)), hi=Math.min(n,Math.ceil(mean+4*sdev));
+    const ks=[],ps=[];
+    for(let k=lo;k<=hi;k++){ks.push(k);ps.push(dbinom(k,n,p));}
+    const o=Fig(document.getElementById("cv1"),
+      {h:310,x0:lo-0.5,x1:hi+0.5,y0:0,y1:Math.max.apply(null,ps)*1.16,pad:{l:62,r:14,t:14}});
+    axes(o,v=>v.toFixed(0),v=>v.toFixed(3),5,4);
+    bars(o,ks,ps,C("--blue"),{alpha:0.8});
+    /* the normal with the same mean and spread, on the same axes */
+    const xs=[],ys=[];
+    for(let i=0;i<=300;i++){const x=lo-0.5+(hi-lo+1)*i/300;xs.push(x);ys.push(dnorm(x,mean,sdev));}
+    clip(o,()=>line(o,xs,ys,C("--verm"),2.0));
+    vline(o,mean,C("--ochre"),"mean");
+    const atMean=Number.isInteger(mean)?dbinom(mean,n,p):NaN;
+    document.getElementById("kv1").innerHTML=kvHTML([
+      ["Flips",n.toFixed(0)],
+      ["Chance of heads",(p*100).toFixed(0)+"%"],
+      ["Expected heads",mean.toFixed(2)],
+      ["Standard deviation",sdev.toFixed(4)],
+      ["P(exactly the mean)",isFinite(atMean)?(atMean*100).toFixed(3)+"%":"—"],
+      ["P(within 1 sd)",((pbinom(Math.floor(mean+sdev),n,p)-pbinom(Math.ceil(mean-sdev)-1,n,p))*100).toFixed(2)+"%"],
+      ["P(2 sd or more above)",((1-pbinom(Math.ceil(mean+2*sdev)-1,n,p))*100).toFixed(3)+"%"],
+      ["Normal says",((1-ncdf(2))*100).toFixed(3)+"%"],
+      ["sd as % of n",(sdev/n*100).toFixed(3)+"%"]
+    ]);
+  }
+})();
+
+/* ══════════ 02 — the central limit theorem ══════════ */
+const s2={n:1,kind:0,draws:60000};
+(function(){
+  sliders(document.getElementById("ctl2"),[
+    {id:"a2",k:"n",lbl:"n",name:"How many you add up",min:1,max:40,step:1,fmt:v=>v.toFixed(0)},
+    {id:"b2",k:"kind",lbl:"◇",name:"What you are adding",min:0,max:2,step:1,
+      fmt:v=>INGREDIENT[Math.round(v)].name},
+    {id:"c2d",k:"draws",lbl:"N",name:"Sample size",min:10000,max:200000,step:10000,
+      fmt:v=>(v/1000).toFixed(0)+"k"}
+  ],s2,()=>draw(),"c2");
+  window.draw2=draw;
+  window.__clt=run;
+  function run(n,kind,N){
+    const ing=INGREDIENT[kind], r=rng(4242+n*13+kind*101);
+    const out=new Float64Array(N);
+    const mu=ing.mean*n, sg=ing.sd*Math.sqrt(n);
+    for(let i=0;i<N;i++){
+      let s=0;for(let j=0;j<n;j++)s+=ing.draw(r);
+      out[i]=(s-mu)/sg;
+    }
+    const arr=Array.from(out);
+    const m=mean(arr), v=variance(arr,false);
+    return {arr,mean:m,sd:Math.sqrt(v),skew:skewness(arr),kurt:kurtosis(arr),
+      gap:cdfGap(arr.slice().sort((a,b)=>a-b)),name:ing.name};
+  }
+  function draw(){
+    const n=Math.round(s2.n), kind=Math.round(s2.kind), N=Math.round(s2.draws);
+    const R=run(n,kind,N);
+    const b=binned(R.arr,-4.5,4.5,60);
+    const o=Fig(document.getElementById("cv2"),
+      {h:320,x0:-4.5,x1:4.5,y0:0,y1:0.52,pad:{l:60,r:14,t:14}});
+    axes(o,v=>v.toFixed(0),v=>v.toFixed(2),5,4);
+    hist(o,b,C("--blue"),{norm:true,alpha:0.7});
+    const xs=[],ys=[];
+    for(let i=0;i<=300;i++){const x=-4.5+9*i/300;xs.push(x);ys.push(dnorm(x));}
+    clip(o,()=>line(o,xs,ys,C("--verm"),2.2));
+    document.getElementById("kv2").innerHTML=kvHTML([
+      ["Adding up",n+" × "+R.name],
+      ["Sample",N.toLocaleString()],
+      ["Mean",R.mean.toFixed(4)],
+      ["Standard deviation",R.sd.toFixed(4)],
+      ["Skewness",R.skew.toFixed(4)],
+      ["Excess kurtosis",R.kurt.toFixed(4)],
+      ["  a normal reads","0.0000"],
+      ["Largest gap vs normal",R.gap.toFixed(4)],
+      ["Verdict",R.gap<0.005?"indistinguishable":(R.gap<0.02?"close":"not yet")]
+    ]);
+  }
+})();
+
+/* ══════════ 03 — count versus proportion ══════════ */
+const s3={n:100,p:0.5};
+(function(){
+  sliders(document.getElementById("ctl3"),[
+    {id:"a3",k:"n",lbl:"n",name:"Flips",min:10,max:100000,step:10,fmt:v=>v>=1000?(v/1000).toFixed(1)+"k":v.toFixed(0)},
+    {id:"b3",k:"p",lbl:"p",name:"Chance of heads",min:0.05,max:0.95,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"}
+  ],s3,()=>draw(),"c3");
+  window.draw3=draw;
+  function draw(){
+    const p=s3.p;
+    const xs=[],cnt=[],prp=[];
+    for(let i=0;i<=240;i++){
+      const n=Math.round(10*Math.pow(10000,i/240));
+      xs.push(Math.log10(n));
+      cnt.push(Math.sqrt(n*p*(1-p)));
+      prp.push(Math.sqrt(p*(1-p)/n)*100);
+    }
+    /* two quantities on wildly different scales: plot both as logs */
+    const o=Fig(document.getElementById("cv3"),
+      {h:310,x0:1,x1:5,y0:-1.2,y1:2.6,pad:{l:66,r:14,t:14}});
+    axes(o,v=>{const n=Math.pow(10,v);return n>=1000?(n/1000).toFixed(0)+"k":n.toFixed(0);},
+      v=>Math.pow(10,v).toFixed(Math.pow(10,v)<1?2:0),5,4);
+    clip(o,()=>{
+      line(o,xs,cnt.map(v=>Math.log10(v)),C("--blue"),2.2);
+      line(o,xs,prp.map(v=>Math.log10(v)),C("--verm"),2.2);
+    });
+    vline(o,Math.log10(s3.n),C("--ochre"),s3.n>=1000?(s3.n/1000).toFixed(1)+"k":String(Math.round(s3.n)));
+    const n=Math.round(s3.n);
+    document.getElementById("kv3").innerHTML=kvHTML([
+      ["Flips",n.toLocaleString()],
+      ["Expected heads",(n*p).toFixed(1)],
+      ["sd of the COUNT",Math.sqrt(n*p*(1-p)).toFixed(3)],
+      ["sd of the PROPORTION",(Math.sqrt(p*(1-p)/n)*100).toFixed(4)+" pts"],
+      ["Ten times the flips","→ count ×"+Math.sqrt(10).toFixed(3)],
+      ["  and proportion","→ ÷"+Math.sqrt(10).toFixed(3)],
+      ["Typical gap from even",(Math.sqrt(n*p*(1-p))*0.8).toFixed(1)+" heads"],
+      ["  as a share of n",(Math.sqrt(p*(1-p)/n)*0.8*100).toFixed(3)+"%"],
+      ["Their product is",(Math.sqrt(n*p*(1-p))*Math.sqrt(p*(1-p)/n)).toFixed(4)]
+    ]);
+  }
+})();
+
+/* ══════════ 04 — √T scaling ══════════ */
+const s4={ann:0.20,T:0.0833,S:100};
+(function(){
+  sliders(document.getElementById("ctl4"),[
+    {id:"a4",k:"ann",lbl:"σ",name:"Annual volatility",min:0.05,max:1.0,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"b4",k:"T",lbl:"T",name:"Horizon",min:0.00397,max:5,step:0.00397,
+      fmt:v=>v<0.05?(v*252).toFixed(1)+"d":(v<1?(v*12).toFixed(1)+"mo":v.toFixed(2)+"y")},
+    {id:"c4s",k:"S",lbl:"S",name:"Price",min:5,max:500,step:1,fmt:v=>"$"+v.toFixed(0)}
+  ],s4,()=>draw(),"c4");
+  window.draw4=draw;
+  function draw(){
+    const xs=[],root=[],lin=[];
+    for(let i=0;i<=300;i++){
+      const T=0.002+(5-0.002)*i/300;
+      xs.push(T);
+      root.push(s4.ann*Math.sqrt(T)*100);
+      lin.push(s4.ann*T*100);
+    }
+    const o=Fig(document.getElementById("cv4"),
+      {h:310,x0:0,x1:5,y0:0,y1:s4.ann*Math.sqrt(5)*100*1.1,pad:{l:60,r:14,t:14}});
+    axes(o,v=>v.toFixed(0)+"y",v=>v.toFixed(0)+"%",5,4);
+    clip(o,()=>{line(o,xs,lin,C("--verm"),1.9,[5,4]);line(o,xs,root,C("--blue"),2.2);});
+    vline(o,s4.T,C("--ochre"),s4.T<0.05?(s4.T*252).toFixed(0)+"d":(s4.T<1?(s4.T*12).toFixed(0)+"mo":s4.T.toFixed(1)+"y"));
+    const sT=s4.ann*Math.sqrt(s4.T), wrong=s4.ann*s4.T;
+    document.getElementById("kv4").innerHTML=kvHTML([
+      ["Annual volatility",(s4.ann*100).toFixed(2)+"%"],
+      ["Horizon",s4.T<0.05?(s4.T*252).toFixed(2)+" days":(s4.T*12).toFixed(2)+" months"],
+      ["√T",Math.sqrt(s4.T).toFixed(5)],
+      ["Volatility over T",(sT*100).toFixed(4)+"%"],
+      ["  in dollars","$"+(s4.S*sT).toFixed(3)],
+      ["Scaling by T instead",(wrong*100).toFixed(4)+"%"],
+      ["  which is wrong by",(sT/wrong).toFixed(2)+"×"],
+      ["One trading day",(s4.ann/Math.sqrt(252)*100).toFixed(4)+"%"],
+      ["One month",(s4.ann*Math.sqrt(1/12)*100).toFixed(3)+"%"],
+      ["One quarter",(s4.ann*0.5*100).toFixed(3)+"%"]
+    ]);
+  }
+})();
+
+/* ══════════ 05 — the tails ══════════ */
+const s5={k:2};
+(function(){
+  sliders(document.getElementById("ctl5"),[
+    {id:"a5",k:"k",lbl:"k",name:"How many standard deviations",min:0.5,max:5,step:0.05,fmt:v=>v.toFixed(2)+" σ"}
+  ],s5,()=>draw(),"c5");
+  window.draw5=draw;
+  function draw(){
+    const xs=[],ys=[];
+    for(let i=0;i<=400;i++){const x=-5+10*i/400;xs.push(x);ys.push(dnorm(x));}
+    const o=Fig(document.getElementById("cv5"),
+      {h:300,x0:-5,x1:5,y0:0,y1:0.45,pad:{l:60,r:14,t:14}});
+    axes(o,v=>v.toFixed(0),v=>v.toFixed(2),5,4);
+    shade(o,x=>dnorm(x),s5.k,5,C("--verm"),0.30);
+    shade(o,x=>dnorm(x),-5,-s5.k,C("--verm"),0.30);
+    clip(o,()=>line(o,xs,ys,C("--blue"),2.2));
+    vline(o,s5.k,C("--ochre"),"+"+s5.k.toFixed(2)+"σ");
+    vline(o,-s5.k,C("--ochre"));
+    const inside=2*ncdf(s5.k)-1, outside=1-inside;
+    document.getElementById("tab5").innerHTML=
+      "<tr><th style='text-align:left'>k</th><th>Inside</th><th>Outside</th><th>One day in</th><th>Once every</th></tr>"+
+      [1,2,3,4,5].map(k=>{const o2=1-(2*ncdf(k)-1);
+        return "<tr><td style='text-align:left'>"+k+" σ</td><td>"+((1-o2)*100).toFixed(4)+"%</td><td>"+
+          (o2*100).toFixed(o2<0.001?6:4)+"%</td><td>"+Math.round(1/o2).toLocaleString()+"</td><td>"+
+          (1/o2/252>=1?(1/o2/252).toFixed(1)+" yrs":(1/o2/21).toFixed(1)+" mo")+"</td></tr>";}).join("");
+    document.getElementById("kv5").innerHTML=kvHTML([
+      ["Threshold",s5.k.toFixed(2)+" σ"],
+      ["Inside",(inside*100).toFixed(4)+"%"],
+      ["Outside",(outside*100).toFixed(outside<0.001?6:4)+"%"],
+      ["  one side only",(outside/2*100).toFixed(outside<0.001?6:4)+"%"],
+      ["One observation in",Math.round(1/outside).toLocaleString()],
+      ["At 252 days a year",(1/outside/252).toFixed(2)+" years"],
+      ["The 1.96σ figure",((1-(2*ncdf(1.96)-1))*100).toFixed(3)+"%"],
+      ["  which is the 5% everyone quotes",""]
+    ]);
+  }
+})();
+
+/* ══════════ 06 — the drill ══════════ */
+(function(){
+  let tier=1,sc=0,asked=0,streak=0,best=0,cur=null;
+  const E=id=>document.getElementById(id);
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  function make(){
+    const R=Math.random;
+    if(tier===1){
+      const t=Math.floor(R()*3);
+      if(t===0){const n=pick([25,50,100,400,900,2500]),p=pick([0.5,0.5,0.4,0.6]);
+        const a=Math.sqrt(n*p*(1-p));
+        return{kind:"Spread of a count",unit:"",a:a,tol:Math.max(0.05,a*0.02),
+          q:"<b>"+n+"</b> trials at <b>"+(p*100).toFixed(0)+"%</b> each. What is the standard deviation of the number of successes?",
+          w:"√(npq) = √("+n+" × "+p.toFixed(2)+" × "+(1-p).toFixed(2)+") = √"+(n*p*(1-p)).toFixed(2)+
+            " = <b>"+a.toFixed(2)+"</b>."};}
+      if(t===1){const n=pick([100,400,1000,2500,10000]),p=0.5;
+        const a=Math.sqrt(p*(1-p)/n)*100;
+        return{kind:"Spread of a proportion",unit:"pts",a:a,tol:Math.max(0.02,a*0.02),
+          q:"<b>"+n.toLocaleString()+"</b> fair coin flips. What is the standard deviation of the <em>proportion</em> of heads, in percentage points?",
+          w:"√(pq/n) = √(0.25/"+n+") = "+(Math.sqrt(0.25/n)).toFixed(5)+" = <b>"+a.toFixed(3)+
+            " points</b>. Note the count's spread is "+Math.sqrt(n*0.25).toFixed(1)+" — the opposite direction."};}
+      const k=pick([1,1.5,2,2.5,3]);
+      const a=(1-(2*ncdf(k)-1))*100;
+      return{kind:"Tail beyond k sigma",unit:"%",a:a,tol:Math.max(0.02,a*0.03),
+        q:"What percentage of a normal distribution lies more than <b>"+k+"</b> standard deviations from the mean?",
+        w:"2(1 − Φ("+k+")) = <b>"+a.toFixed(3)+"%</b>, which is about one observation in "+
+          Math.round(100/a).toLocaleString()+"."};
+    }
+    const t=Math.floor(R()*3);
+    if(t===0){const ann=pick([0.12,0.16,0.20,0.25,0.35,0.50]);
+      const a=ann/Math.sqrt(252)*100;
+      return{kind:"Annual to daily",unit:"%",a:a,tol:Math.max(0.02,a*0.02),
+        q:"A stock is quoted at <b>"+(ann*100).toFixed(0)+"%</b> annual volatility. What is its daily standard deviation?",
+        w:(ann*100).toFixed(0)+"% ÷ √252 = "+(ann*100).toFixed(0)+"% ÷ 15.87 = <b>"+a.toFixed(3)+
+          "%</b>. Dividing by 252 instead would give "+(ann/252*100).toFixed(4)+"%, wrong by 15.87×."};}
+    if(t===1){const dly=pick([0.5,0.8,1.0,1.5,2.0,3.0]);
+      const a=dly*Math.sqrt(252);
+      return{kind:"Daily to annual",unit:"%",a:a,tol:Math.max(0.1,a*0.02),
+        q:"Daily moves have a standard deviation of <b>"+dly.toFixed(1)+"%</b>. What is the annualized volatility?",
+        w:dly.toFixed(1)+"% × √252 = "+dly.toFixed(1)+"% × 15.87 = <b>"+a.toFixed(2)+
+          "%</b>. Using 365 days instead would give "+(dly*Math.sqrt(365)).toFixed(2)+"%, a fifth too high."};}
+    const ann=pick([0.15,0.20,0.30,0.45]),S=pick([25,50,100,200,400]);
+    const d=pick([[1/252,"one day"],[1/12,"one month"],[0.25,"one quarter"],[1,"one year"]]);
+    const a=S*ann*Math.sqrt(d[0]);
+    return{kind:"A one-sigma move in dollars",unit:"$",a:a,tol:Math.max(0.02,a*0.02),
+      q:"A <b>$"+S+"</b> stock at <b>"+(ann*100).toFixed(0)+"%</b> volatility. How big is a one-sigma move over <b>"+d[1]+"</b>?",
+      w:"S · σ · √T = "+S+" × "+ann.toFixed(2)+" × "+Math.sqrt(d[0]).toFixed(4)+" = <b>$"+a.toFixed(2)+"</b>."};
+  }
+  function next(){
+    cur=make();
+    E("dKind").textContent=cur.kind;E("dText").innerHTML=cur.q;
+    E("dUnit").textContent=cur.unit;E("dInput").value="";
+    E("drill").classList.remove("done");
+    focusSoft(E("dInput"),E("drill"));
+  }
+  function submit(){
+    if(!cur||E("drill").classList.contains("done"))return;
+    const raw=parseFloat(String(E("dInput").value).replace(/[$,%\s]/g,""));
+    asked++;
+    const ok=isFinite(raw)&&Math.abs(raw-cur.a)<=cur.tol;
+    if(ok){sc++;streak++;if(streak>best)best=streak;}else streak=0;
+    E("dVerdict").textContent=ok?"CORRECT":("NOT QUITE — the answer is "+cur.a.toFixed(3));
+    E("dVerdict").className="vd "+(ok?"ok":"no");
+    E("dWork").innerHTML=cur.w;
+    E("dScore").textContent=sc+" / "+asked;
+    E("dStreak").textContent=String(streak);E("dBest").textContent=String(best);
+    E("drill").classList.add("done");
+  }
+  E("dSubmit").addEventListener("click",submit);
+  E("dInput").addEventListener("keydown",e=>{if(e.key==="Enter")submit();});
+  E("dNext").addEventListener("click",next);
+  E("dSkip").addEventListener("click",()=>{streak=0;E("dStreak").textContent="0";next();});
+  [1,2].forEach(k=>E("dT"+k).addEventListener("click",()=>{
+    tier=k;[1,2].forEach(j=>E("dT"+j).setAttribute("aria-pressed",j===k?"true":"false"));
+    next();}));
+  window.drawDrill=next;
+  window.__drill=()=>{const o=[];for(let i=0;i<2;i++){tier=i+1;for(let j=0;j<400;j++)o.push(make());}tier=1;return o;};
+})();
+
+function drawAll(){
+  drawHero();draw1();draw2();draw3();draw4();draw5();drawDrill();
+}
+LAB.boot(drawAll);
+
+</script>
+</body>
+</html>
