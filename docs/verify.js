@@ -28,10 +28,18 @@ const ROOT = __dirname;
 
 /* ── run a page's script under a stub DOM, capturing every kv row ────── */
 function load(page, exports) {
-  const LAB = fs.readFileSync(path.join(ROOT, "assets/lab.js"), "utf8")
-    .replace("const kvHTML=", "let kvHTML=")
-    + "\n" + fs.readFileSync(path.join(ROOT, "assets/stats.js"), "utf8");
   const html = fs.readFileSync(path.join(ROOT, page), "utf8");
+  /* load exactly what the page links, so a page with an extra asset — the
+     practice page and its question bank — is exercised as it ships */
+  const srcs = [];
+  const reS = /<script src="(assets\/[a-z0-9.-]+\.js)"/g;
+  let mS;
+  while ((mS = reS.exec(html)) !== null) {
+    if (mS[1].indexOf("pwa.js") < 0) srcs.push(mS[1]);
+  }
+  if (!srcs.length) srcs.push("assets/lab.js", "assets/stats.js");
+  const LAB = srcs.map(f => fs.readFileSync(path.join(ROOT, f), "utf8"))
+    .join("\n").replace("const kvHTML=", "let kvHTML=");
   const m = html.match(/<script>\n([\s\S]*?)<\/script>\s*<\/body>/);
   if (!m) throw new Error(page + ": script extraction failed (CRLF line endings?)");
   const ROWS = [];
@@ -1516,6 +1524,187 @@ PAGES["describe"] = () => {
   yes("the exact answer is always accepted", Q.every(q => Math.abs(q.a - q.a) <= q.tol));
   yes("an answer well outside the band is rejected",
     Q.every(q => Math.abs((q.a + Math.max(q.tol * 10, 1)) - q.a) > q.tol));
+};
+
+
+PAGES["practice"] = () => {
+  const M = load("practice.html", ["BANK", "MODNAME", "MODFILE", "bankById", "K",
+    "BOXES", "MINTRIES", "blankRecord", "byModule", "weakest", "boxCounts",
+    "chooseNext", "grade", "eligible", "__practice", "__exam",
+    "ncdf", "qnorm", "npdf", "choose", "dbinom", "lgamma"]);
+
+  /* a seeded generator, so every question below is reproducible */
+  const seeded = seed => { let s = (seed | 0) || 99;
+    return () => { s ^= s << 13; s |= 0; s ^= s >>> 17; s ^= s << 5; s |= 0;
+      return (s >>> 0) / 4294967296; }; };
+  /* drive a generator until it produces the case we want to check */
+  const findCase = (id, needle) => {
+    const want = [].concat(needle);
+    const g = M.bankById(id), R = seeded(id.length * 31 + 7);
+    for (let i = 0; i < 60000; i++) {
+      const o = g.gen(R);
+      if (want.every(w => o.q.indexOf(w) >= 0)) return o;
+    }
+    return null;
+  };
+
+  console.log("    the bank - shape");
+  eq("47 question types", M.BANK.length, 47, 0);
+  const mods = [];
+  M.BANK.forEach(b => { if (mods.indexOf(b.mod) < 0) mods.push(b.mod); });
+  mods.sort((a, b) => a - b);
+  yes("every module 1 to 13 is represented",
+    mods.join(",") === "1,2,3,4,5,6,7,8,9,10,11,12,13");
+  const ids = M.BANK.map(b => b.id);
+  yes("ids are unique", new Set(ids).size === ids.length);
+  yes("both tiers are present",
+    M.BANK.some(b => b.tier === 1) && M.BANK.some(b => b.tier === 2));
+  yes("every entry names a real module file",
+    M.BANK.every(b => !!M.MODFILE[b.mod] && !!M.MODNAME[b.mod]));
+  yes("no module is left with fewer than three types",
+    mods.every(m => M.BANK.filter(b => b.mod === m).length >= 3));
+
+  console.log("    the bank - every generator, 400 draws each");
+  let bad = 0, loose = 0;
+  M.BANK.forEach(b => {
+    const R = seeded(b.id.length * 7919 + 13);
+    for (let i = 0; i < 400; i++) {
+      const o = b.gen(R);
+      if (!isFinite(o.a) || !(o.tol > 0) || !o.q || !o.w) { bad++; break; }
+      if (Math.abs(o.a + Math.max(o.tol * 12, 1) - o.a) <= o.tol) { loose++; break; }
+    }
+  });
+  yes("every generator returns a finite answer, a positive tolerance, a prompt and working",
+    bad === 0);
+  yes("no tolerance is wide enough to accept a wrong answer", loose === 0);
+
+  console.log("    the bank - answers, against the values their home pages assert");
+  const spot = (label, id, needle, want, tol) => {
+    const o = findCase(id, needle);
+    eq(label, o ? o.a : NaN, want, tol);
+  };
+  spot("birthday at 23 people", "c-birth", "<b>23</b> people", 50.7297, 5e-3);
+  spot("at least one six in four rolls", "r-atleast", "<b>4</b> rolls", 51.7747, 5e-3);
+  spot("Monty Hall, three doors", "r-monty", "<b>3</b> doors", 66.6667, 5e-3);
+  spot("-110 implies", "o-us", "<b>-110</b>", 52.3810, 5e-3);
+  spot("a -110/-110 book holds", "o-hold", "<b>-110</b>", 4.5455, 5e-3);
+  spot("within two sigma", "d-emp", "<b>2</b> standard", 95.4500, 5e-3);
+  spot("IQR of a sigma-10 normal", "d-iqr", "\u03c3 = <b>10</b>", 13.4898, 5e-3);
+  spot("half Kelly keeps", "e-frac", "<b>0.50\u00d7</b>", 75.0, 1e-9);
+  spot("20 vol over 21 days", "s-sqrtT", ["<b>20%</b>", "<b>21</b>-day"], 5.7735, 5e-3);
+  spot("critical z at alpha 0.05", "t-crit", "0.05</b>", 1.9600, 5e-3);
+  spot("years to 80% power at Sharpe 1", "t-years", "<b>1.00</b>", 7.8490, 5e-3);
+  spot("1-in-1000 with a 99/99 test", "b-post", "1 in 1000", 9.0164, 5e-3);
+  spot("what survives a 0.7 hedge", "k-resid", "<b>0.7</b>", 71.4143, 5e-3);
+  spot("99% VaR in sigmas", "v-var", "99.0%", 2.3263, 5e-3);
+  spot("99% expected shortfall", "v-es", "99.0%", 2.6652, 5e-3);
+  spot("years to t=2 at Sharpe 1", "a-t2", "<b>1.00</b>", 4.0, 1e-9);
+  const ruin = findCase("a-ruin", "<b>1.00\u00d7</b>");
+  yes("full Kelly halves the bankroll at some point half the time",
+    ruin && Math.abs(ruin.a - 50) < 1e-6 || ruin && Math.abs(ruin.a - 25) < 1e-6);
+
+  console.log("    scheduling - the Leitner boxes");
+  eq("five boxes", M.BOXES.length - 1, 5, 0);
+  yes("the intervals are 1, 3, 8, 21, 55",
+    M.BOXES.slice(1).join(",") === "1,3,8,21,55");
+  yes("each interval is roughly three times the last",
+    [2, 3, 4, 5].every(i => M.BOXES[i] / M.BOXES[i - 1] > 2.2 &&
+      M.BOXES[i] / M.BOXES[i - 1] < 3.2));
+  const rec = M.blankRecord();
+  yes("a fresh record puts every type in box 1",
+    M.BANK.every(b => rec.gen[b.id].box === 1));
+  eq("  so the box-1 count starts at 47", M.boxCounts(rec)[1], 47, 0);
+  /* a correct answer promotes and pushes the due date out */
+  const id0 = M.BANK[0].id;
+  M.grade(rec, id0, true);
+  eq("one correct answer promotes to box 2", rec.gen[id0].box, 2, 0);
+  eq("  and schedules it 3 questions out", rec.gen[id0].due - rec.answered, 3, 0);
+  M.grade(rec, id0, true); M.grade(rec, id0, true); M.grade(rec, id0, true);
+  eq("four in a row reaches box 5", rec.gen[id0].box, 5, 0);
+  eq("  scheduled 55 questions out", rec.gen[id0].due - rec.answered, 55, 0);
+  M.grade(rec, id0, false);
+  eq("a single miss drops it straight back to box 1", rec.gen[id0].box, 1, 0);
+  eq("  and it returns on the very next question", rec.gen[id0].due - rec.answered, 1, 0);
+  yes("the box never exceeds 5",
+    (() => { const r = M.blankRecord(); for (let i = 0; i < 20; i++) M.grade(r, id0, true);
+      return r.gen[id0].box === 5; })());
+  yes("seen and right are tracked separately",
+    (() => { const r = M.blankRecord();
+      M.grade(r, id0, true); M.grade(r, id0, false); M.grade(r, id0, true);
+      return r.gen[id0].seen === 3 && r.gen[id0].right === 2; })());
+
+  console.log("    scheduling - selection interleaves and prefers what is missed");
+  const all = []; for (let m = 1; m <= 13; m++) all.push(m);
+  eq("with every module in play, all 47 are eligible",
+    M.eligible(all, 0).length, 47, 0);
+  yes("filtering to one module narrows the pool",
+    M.eligible([1], 0).length < 10 && M.eligible([1], 0).length > 0);
+  yes("filtering by tier narrows it further",
+    M.eligible(all, 1).length + M.eligible(all, 2).length === 47);
+  yes("selection returns something for any non-empty module set",
+    all.every(m => M.chooseNext(M.blankRecord(), [m], 0) !== null));
+  yes("  and returns null when nothing is selected",
+    M.chooseNext(M.blankRecord(), [], 0) === null);
+  /* a fresh record has everything due, so a run should touch many modules */
+  const fresh = M.blankRecord();
+  const touched = {};
+  for (let i = 0; i < 200; i++) {
+    const g = M.chooseNext(fresh, all, 0);
+    touched[g.mod] = true;
+    M.grade(fresh, g.id, true);
+  }
+  yes("200 questions from a fresh record reach every module",
+    Object.keys(touched).length === 13);
+  /* after everything is promoted, a missed item should come back at once */
+  const settled = M.blankRecord();
+  for (let i = 0; i < 5; i++) M.BANK.forEach(b => M.grade(settled, b.id, true));
+  yes("once everything is promoted, nothing is overdue",
+    M.BANK.every(b => settled.gen[b.id].due > settled.answered));
+  yes("  and selection still returns a question rather than stalling",
+    M.chooseNext(settled, all, 0) !== null);
+  const victim = M.BANK[7].id;
+  M.grade(settled, victim, false);
+  const nxt = M.chooseNext(settled, all, 0);
+  yes("a missed question is the next one served", nxt.id === victim);
+
+  console.log("    the record - rollup and weak spots");
+  const r2 = M.blankRecord();
+  M.BANK.filter(b => b.mod === 3).forEach(b => {
+    for (let i = 0; i < 4; i++) M.grade(r2, b.id, false);
+  });
+  M.BANK.filter(b => b.mod === 12).forEach(b => {
+    for (let i = 0; i < 4; i++) M.grade(r2, b.id, true);
+  });
+  const by = M.byModule(r2);
+  eq("module 03 was answered 12 times", by[3].seen, 12, 0);
+  eq("  all of them wrong", by[3].right, 0, 0);
+  eq("  a rate of zero", by[3].rate, 0, 1e-12);
+  eq("module 12 was answered 12 times", by[12].seen, 12, 0);
+  eq("  all correct", by[12].rate, 1.0, 1e-12);
+  yes("an untouched module reports no rate", isNaN(by[7].rate));
+  yes("  and is not counted as judgeable", by[7].enough === false);
+  eq("five attempts is the bar for judging a module", M.MINTRIES, 5, 0);
+  yes("a module with fewer than five attempts is not judged",
+    (() => { const r = M.blankRecord();
+      for (let i = 0; i < 4; i++) M.grade(r, "o-us", false);
+      return M.byModule(r)[3].enough === false; })());
+  const w = M.weakest(r2, 4);
+  yes("the weakest list puts module 03 first", w[0] === 3);
+  yes("  and never includes a module with too few attempts",
+    w.every(m => by[m].enough));
+
+  console.log("    the exam");
+  eq("the paper is 20 questions", M.__exam.LEN, 20, 0);
+  const paper = M.__exam.build();
+  eq("  and build() returns exactly that many", paper.length, 20, 0);
+  yes("every question on it is a real bank entry",
+    paper.every(g => M.bankById(g.id) !== null));
+  const spread = {};
+  paper.forEach(g => { spread[g.mod] = (spread[g.mod] || 0) + 1; });
+  yes("it spreads across at least ten modules rather than clustering",
+    Object.keys(spread).length >= 10);
+  yes("  and no single module takes more than three of the twenty",
+    Object.keys(spread).every(k => spread[k] <= 3));
 };
 
 

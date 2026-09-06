@@ -480,3 +480,64 @@ footer .n{max-width:66ch}
 }
 .pwatoast button.x:hover{color:var(--chalk);background:none}
 @media(prefers-reduced-motion:reduce){.pwatoast{transition:none}}
+
+/* ── practice floor (page 14) ──────────────────────────
+   The drill, plus what a single-page drill has no need of: a module picker,
+   a per-question source line, and a marked exam paper. */
+.practice{background:var(--card);border:1px solid var(--hair);border-radius:2px;padding:24px 26px}
+.practice .qn{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--blue);font-weight:600;margin-bottom:12px;display:block}
+.practice .qt{font-size:19px;line-height:1.5;margin:0 0 18px;max-width:60ch}
+.practice .qt b{font-weight:500;font-family:var(--mono);font-size:17px}
+.practice .ansrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.practice input{font-family:var(--mono);font-size:17px;background:var(--chalk);
+  border:1px solid var(--hair);border-radius:2px;padding:9px 12px;width:170px;
+  color:var(--ink);text-align:right}
+.practice input:focus{outline:2px solid var(--blue);outline-offset:-1px}
+.practice input:disabled{opacity:.45}
+.practice .unit{font-family:var(--mono);font-size:12px;color:var(--grey)}
+.practice .verdict{margin-top:18px;padding-top:16px;border-top:1px solid var(--hair);display:none}
+.practice.done .verdict{display:block}
+.practice .vd{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.06em;
+  margin-bottom:9px}
+.practice .vd.ok{color:var(--moss)} .practice .vd.no{color:var(--verm)}
+.practice .work{font-size:15px;color:var(--ink2);font-weight:300;line-height:1.6;max-width:62ch}
+.practice .src{font-family:var(--mono);font-size:11px;color:var(--grey);margin:12px 0 0;
+  letter-spacing:.02em}
+.practice .src a{color:var(--blue);text-decoration:none;border-bottom:1px solid var(--hair)}
+.practice .src a:hover{border-bottom-color:var(--blue)}
+
+.prtop{display:flex;gap:26px;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;
+  margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--hair)}
+.prstats{display:flex;gap:28px;flex-wrap:wrap}
+.prstats .c .k,.prseg .k,.modpick .k{font-family:var(--mono);font-size:9px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--grey);display:block;font-weight:600}
+.prstats .c .v{font-family:var(--mono);font-size:23px;font-weight:600;letter-spacing:-.02em}
+.prseg .seg{margin-top:5px}
+
+.modpick{margin-bottom:20px;padding-bottom:18px;border-bottom:1px solid var(--hair)}
+.modgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px;margin-top:8px}
+.modbtn{display:flex;align-items:baseline;gap:6px;text-align:left;cursor:pointer;
+  background:var(--chalk);border:1px solid var(--hair);border-radius:2px;padding:6px 8px;
+  color:var(--grey);font-family:var(--body);font-size:12.5px;font-weight:300;
+  transition:background .12s,color .12s,border-color .12s}
+.modbtn .mn{font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.06em}
+.modbtn:hover{border-color:var(--grey);color:var(--ink2)}
+.modbtn.on{background:var(--blue);border-color:var(--blue);color:var(--chalk)}
+.modbtn.on .mn{color:var(--chalk);opacity:.75}
+.act.sm{font-size:10.5px;padding:5px 10px}
+.tiny{font-family:var(--mono);font-size:9.5px;color:var(--grey);line-height:1.5;margin:9px 0 0}
+
+.extab{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;
+  font-variant-numeric:tabular-nums;margin-top:14px}
+.extab th{text-align:right;font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--grey);padding:0 0 7px;border-bottom:1px solid var(--hair);font-weight:600}
+.extab th:nth-child(2),.extab td:nth-child(2){text-align:left}
+.extab th:first-child,.extab td:first-child{text-align:left;width:34px}
+.extab td{padding:6px 0;border-bottom:1px solid var(--hair);text-align:right}
+.extab td:nth-child(2){font-family:var(--body);font-size:13.5px;font-weight:300;color:var(--ink2);
+  padding-right:12px}
+.extab tr.y td:first-child{color:var(--moss)}
+.extab tr.n td:first-child{color:var(--verm)}
+.extab tr.n td:nth-child(3){color:var(--verm)}
+.extab tr:last-child td{border-bottom:0}

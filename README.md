@@ -1,7 +1,7 @@
 # Chance, visually
 
 Probability and statistics built from simulation rather than asserted, for
-people who price risk. Thirteen modules, each one earning its ideas on the way to
+people who price risk. Thirteen modules and a practice floor, each one earning its ideas on the way to
 something a trading desk actually does — ending with the arithmetic pointed at
 bookmaking, bet sizing, poker, blackjack and options trading.
 
@@ -37,6 +37,30 @@ figure computes 42%; that has happened, on the companion series, twice.
 The Jupyter notebooks and `app.py` at the root are the earlier version of this
 project. `CONTEXT.md` holds personal curriculum notes and is deliberately
 gitignored — it stays on disk and out of the published repo.
+
+## Practice (page 14)
+
+The thirteen modules each end in a drill, and those drills share a structural
+limit: they sit under the chapter that taught the method, so they never make
+you choose it. Page 14 is the drill floor that does.
+
+`assets/bank.js` holds all 47 question generators, keyed by module and tier.
+Each returns `{q, a, unit, tol, w}` from a random source, so the numbers are
+regenerated every time and there is nothing to memorize. The page draws from
+every module at once, schedules with Leitner boxes at 1/3/8/21/55 questions,
+keeps a per-module record in localStorage, and offers a twenty-question exam
+marked only at the end.
+
+Adding a question is one object in `BANK`. `verify.js` exercises every
+generator 400 times for finiteness and a usable tolerance, and spot-checks
+sixteen of them against the values their home pages assert — so a formula
+transcribed wrongly into the bank fails the pre-flight rather than teaching
+someone the wrong thing.
+
+The per-module drills deliberately still generate their own questions. Sharing
+one bank across fourteen pages would have made every page depend on it, and
+the point of a page being self-contained is that it keeps working when
+something else changes.
 
 ## The syllabus, and what was deliberately left out
 

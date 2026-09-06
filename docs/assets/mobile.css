@@ -127,3 +127,18 @@
 /* the sticky series bar eats into the hero; give the height back */
 .serieshead ~ .hero{height:calc(100svh - 41px)}
 @media (max-width:700px){.serieshead ~ .hero{height:calc(100svh - 38px);min-height:520px}}
+
+/* ── practice floor ──────────────────────────────── */
+@media(max-width:760px){
+  .practice{padding:18px 16px}
+  .prtop{gap:16px}
+  .prstats{gap:18px}
+  .prstats .c .v{font-size:19px}
+  .modgrid{grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:5px}
+  .modbtn{padding:7px 7px;font-size:11.5px;min-height:34px}
+  .practice input{width:100%;min-width:0}
+  .practice .ansrow{gap:8px}
+  .practice .ansrow .act{flex:1;min-height:38px}
+  .extab{font-size:11px}
+  .extab td:nth-child(2){font-size:12.5px}
+}

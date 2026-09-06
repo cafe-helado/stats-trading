@@ -22,8 +22,23 @@
  */
 const fs = require("fs"), path = require("path");
 const ROOT = __dirname;
-const LAB = fs.readFileSync(path.join(ROOT, "assets/lab.js"), "utf8")
-  + "\n" + fs.readFileSync(path.join(ROOT, "assets/stats.js"), "utf8");
+/* Concatenate exactly the assets the page itself links, in that order, so
+   the checker sees what the browser sees. Hardcoding lab.js + stats.js was
+   fine while every page loaded those two and nothing else; the practice page
+   also loads bank.js, and a checker that does not know that reports a page
+   as broken when it is not. pwa.js is skipped — it registers a worker and
+   has no bearing on whether the page script parses. */
+function engineFor(html) {
+  const srcs = [];
+  const re = /<script src="(assets\/[a-z0-9.-]+\.js)"/g;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    if (m[1].indexOf("pwa.js") >= 0) continue;
+    srcs.push(m[1]);
+  }
+  if (!srcs.length) srcs.push("assets/lab.js", "assets/stats.js");
+  return srcs.map(f => fs.readFileSync(path.join(ROOT, f), "utf8")).join("\n");
+}
 
 function stubDom() {
   const mk = () => ({
@@ -63,7 +78,7 @@ function check(file) {
 
   // 1. parses with the engine
   if (js) {
-    try { new Function(LAB + "\n" + js); }
+    try { new Function(engineFor(h) + "\n" + js); }
     catch (e) { problems.push("does not parse: " + e.message); return problems; }
   }
 
@@ -180,7 +195,7 @@ function check(file) {
     let drawErr = null;
     const orig = console.error;
     console.error = (...a) => { drawErr = a.join(" "); };
-    try { new Function(LAB + "\n" + js)(); }
+    try { new Function(engineFor(h) + "\n" + js)(); }
     catch (e) { console.error = orig; problems.push("threw at runtime: " + e.message); return problems; }
     console.error = orig;
     if (drawErr) problems.push("a draw function failed: " + drawErr);

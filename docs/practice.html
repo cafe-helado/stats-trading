@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F4F1E8">
+<title>Practice — Chance, visually</title>
+<meta name="description" content="The drill floor for the thirteen modules. Questions interleaved from every one of them with no chapter heading attached, spaced repetition that brings back what you miss, a record of what you are actually weak at, and a twenty-question exam marked at the end.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Practice — Chance, visually">
+<meta property="og:description" content="The drill floor for the thirteen modules. Questions interleaved from every one of them with no chapter heading attached, spaced repetition that brings back what you miss, a record of what you are actually weak at, and a twenty-question exam marked at the end.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F1E8'/><rect x='5' y='19' width='4' height='7' fill='%230B6E75'/><rect x='11' y='12' width='4' height='14' fill='%230B6E75'/><rect x='17' y='7' width='4' height='19' fill='%230B6E75'/><rect x='23' y='16' width='4' height='10' fill='%230B6E75'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lab.css">
+<link rel="stylesheet" href="assets/mobile.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chance">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+<header class="serieshead">
+  <div class="in">
+    <a class="home" href="index.html">← Chance, visually</a>
+    <span class="num">No. 14 · Practice</span>
+  </div>
+</header>
+
+<div class="progress" id="prog"></div>
+<nav class="chapnav" id="chapnav" aria-label="Chapters">
+  <a href="#c1"><span>Interleaved practice</span><i></i></a>
+  <a href="#c2"><span>What you are weak at</span><i></i></a>
+  <a href="#c3"><span>Spacing</span><i></i></a>
+  <a href="#c4"><span>Exam</span><i></i></a>
+  <a href="#c5"><span>Why this shape</span><i></i></a>
+</nav>
+
+<div class="hero">
+  <canvas id="heroCv" aria-hidden="true"></canvas>
+  <div class="heroInner">
+    <div class="eyebrow">Practice · No. 14</div>
+    <h1>The questions, without the <em>chapter headings</em></h1>
+    <p class="sub">Thirteen modules of worked examples teach you the ideas. What they cannot do is ask you a question without telling you which idea it needs — and choosing the right tool is most of the difficulty. This page draws from all of them at once, remembers what you miss, and brings it back.</p>
+  </div>
+  <div class="scrollcue">Scroll ↓</div>
+</div>
+
+<main>
+
+<div class="orient">
+  <h2>Start here</h2>
+  <p class="lede">This is not a fourteenth lesson. It is the drill floor for the other thirteen, and it works differently from the practice at the foot of each module in three specific ways.</p>
+  <ol>
+    <li><b>It interleaves.</b> A question arrives with no module attached, so you have to recognize what kind of problem it is before you can start. In a per-page drill you already know — that context is doing work you will not have when it matters.</li>
+    <li><b>It spaces.</b> Anything you get wrong comes back after a few questions, then after a dozen, then after fifty. Getting it right once moves it further away; missing it again drags it back to the front.</li>
+    <li><b>It remembers.</b> Your record is kept in this browser, so the weak-spot grid in chapter 02 is built from every session rather than the last five minutes.</li>
+  </ol>
+  <p class="lede" style="margin-top:18px">There are <b>47</b> question types across the thirteen modules. Nothing here is new material — every formula was derived somewhere else in the series, and every answer links back to where.</p>
+</div>
+
+<!-- ══════════ 01 ══════════ -->
+<section class="chapter" id="c1">
+  <div class="chead">
+    <div class="cnum">01</div>
+    <h2>Interleaved practice</h2>
+    <p class="dek">One question at a time, drawn from any of the thirteen. The first job is working out what it is asking.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Answer in the box. Numbers only — units are shown beside it, and percentages want the number rather than the sign. Anything within the stated tolerance counts, so round sensibly rather than chasing decimals.</p>
+    <p>Every question tells you afterwards which module it came from and links there. Use that: if a topic keeps catching you, the fix is usually to reread one chapter, not to grind more questions at it.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="practice" id="pr">
+      <div class="prtop">
+        <div class="prstats">
+          <div class="c"><span class="k">This session</span><span class="v" id="pScore">0 / 0</span></div>
+          <div class="c"><span class="k">Streak</span><span class="v" id="pStreak" style="color:var(--moss)">0</span></div>
+          <div class="c"><span class="k">Best</span><span class="v" id="pBest">0</span></div>
+          <div class="c"><span class="k">All time</span><span class="v" id="pAll">0 / 0</span></div>
+        </div>
+        <div class="prseg">
+          <span class="k">Difficulty</span>
+          <div class="seg" style="max-width:280px">
+            <button id="pTierA" aria-pressed="false">Warm-up</button>
+            <button id="pTierB" aria-pressed="false">Harder</button>
+            <button id="pTierC" aria-pressed="true">Both</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modpick">
+        <span class="k">Modules in play</span>
+        <div class="modgrid" id="modGrid"></div>
+        <div class="btnrow" style="margin-top:9px">
+          <button class="act ghost sm" id="modAll">All thirteen</button>
+          <button class="act ghost sm" id="modWeak">My weakest four</button>
+          <button class="act ghost sm" id="modNone">Clear</button>
+        </div>
+      </div>
+
+      <span class="qn" id="pKind">Question</span>
+      <p class="qt" id="pText">Press start.</p>
+      <div class="ansrow">
+        <input type="text" inputmode="decimal" id="pInput" placeholder="your answer" aria-label="Your answer">
+        <span class="unit" id="pUnit"></span>
+        <button class="act" id="pSubmit">Check</button>
+        <button class="act ghost" id="pSkip">Skip</button>
+      </div>
+      <div class="verdict">
+        <div class="vd" id="pVerdict"></div>
+        <div class="work" id="pWork"></div>
+        <p class="src" id="pSrc"></p>
+        <div class="btnrow"><button class="act" id="pNext">Next question</button></div>
+      </div>
+    </div>
+    <figcaption>Skipping counts as a miss, which is deliberate — a question you could not start is exactly the one worth seeing again soon.</figcaption>
+  </figure>
+</section>
+
+<!-- ══════════ 02 ══════════ -->
+<section class="chapter" id="c2">
+  <div class="chead">
+    <div class="cnum">02</div>
+    <h2>What you are actually weak at</h2>
+    <p class="dek">Accuracy per module, across every session. The grid is usually a surprise.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The reason to track this rather than trust a feeling is that difficulty and <em>felt</em> difficulty come apart badly. Topics that were hard to read often stick, and topics that felt obvious on the page are the ones that evaporate.</p>
+    <p>Bars are colored by accuracy, and grey means not enough attempts to say anything yet — under five, the number is noise, which is <a href="sample.html">module 08</a> applied to your own record. The "weakest four" button in chapter 01 filters practice down to the four modules with the worst rate among those you have actually attempted.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Accuracy by module, all sessions</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--moss)"></i>Above 80%</span>
+            <span><i class="sw" style="background:var(--ochre)"></i>50 to 80%</span>
+            <span><i class="sw" style="background:var(--verm)"></i>Below 50%</span>
+            <span><i class="sw" style="background:var(--hair)"></i>Too few tries</span>
+          </span>
+        </div>
+        <canvas id="cv2" height="330"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Your record</h4>
+        <div class="kv" id="kv2"></div>
+        <div class="btnrow" style="margin-top:16px">
+          <button class="act ghost sm" id="wipe">Erase my record</button>
+        </div>
+        <p class="tiny" id="wipeNote">Kept in this browser only. Nothing is sent anywhere.</p>
+      </div>
+    </div>
+    <figcaption>A module with no bar has not been attempted. A grey bar has been attempted too few times for the rate to mean anything.</figcaption>
+  </figure>
+</section>
+
+<!-- ══════════ 03 ══════════ -->
+<section class="chapter" id="c3">
+  <div class="chead">
+    <div class="cnum">03</div>
+    <h2>Spacing, and the boxes</h2>
+    <p class="dek">Each of the 47 question types sits in one of five boxes. Getting it right promotes it; missing it sends it back to the first.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The scheduler is a Leitner system, which is the simplest honest form of spaced repetition. Every question type carries a box number from <b>1</b> to <b>5</b>, and the box sets how long before it can be asked again — measured in questions answered, not in time.</p>
+    <p>The intervals are <b>1, 3, 8, 21</b> and <b>55</b>. Answer something correctly and it moves up a box, so it returns less often. Miss it and it drops straight back to box 1 regardless of how high it had climbed, which puts it in the group served first. Early on that group is most of the bank, so a missed item takes a little while to come round; once the rest have been promoted it returns almost immediately.</p>
+    <p>The effect is that practice concentrates itself. Early on almost everything is due and the mix is broad; as things settle, most of what you see is the handful you keep missing, and the material you have secured only reappears occasionally to check it is still there.</p>
+    <p>When nothing is due — which happens once most types have climbed — the page picks the item due soonest rather than stalling. So it never runs out, it just gets progressively less repetitive.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Where the 47 question types currently sit</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--verm)"></i>Box 1, seen soonest</span>
+            <span><i class="sw" style="background:var(--blue)"></i>Middle boxes</span>
+            <span><i class="sw" style="background:var(--moss)"></i>Box 5, well spaced</span>
+          </span>
+        </div>
+        <canvas id="cv3" height="300"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>The schedule</h4>
+        <div class="kv" id="kv3"></div>
+      </div>
+    </div>
+    <figcaption>The whole bank starts in box 1. A healthy record has most types drifting rightward with a small stubborn cluster on the left — that cluster is your revision list.</figcaption>
+  </figure>
+
+  <div class="mline">box 1 → 3 → 8 → 21 → 55 questions between repeats;  a miss returns to 1</div>
+  <p class="mread">Reads as: <b>things you know come back rarely, things you do not come back immediately.</b> The intervals grow roughly threefold because forgetting is roughly exponential, so equal-ratio spacing keeps the difficulty of each recall about constant.</p>
+</section>
+
+<!-- ══════════ 04 ══════════ -->
+<section class="chapter" id="c4">
+  <div class="chead">
+    <div class="cnum">04</div>
+    <h2>Exam</h2>
+    <p class="dek">Twenty questions, no feedback until the end. Practice tells you how it is going; this tells you where you are.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The drill above gives an answer after every question, which is right for learning and wrong for measuring. Immediate feedback lets you correct course mid-session, and that makes the final score an overestimate of what you could do cold.</p>
+    <p>So: twenty questions, drawn evenly across the modules you have selected, marked only at the end. No box updates during it and no hints. It does count toward your record, because it is the most honest data the page collects — but it does not advance the scheduler's clock, since a measurement should not move the schedule it is measuring.</p>
+    <p>A score below about twelve usually means one or two modules are dragging rather than a general weakness — the breakdown at the end says which, and chapter 02's grid will confirm it after a few runs.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="practice" id="ex">
+      <div class="prtop">
+        <div class="prstats">
+          <div class="c"><span class="k">Question</span><span class="v" id="exN">—</span></div>
+          <div class="c"><span class="k">Answered</span><span class="v" id="exDone">0</span></div>
+          <div class="c"><span class="k">Last score</span><span class="v" id="exLast">—</span></div>
+          <div class="c"><span class="k">Best score</span><span class="v" id="exBest">—</span></div>
+        </div>
+      </div>
+      <span class="qn" id="exKind">Not started</span>
+      <p class="qt" id="exText">Twenty questions, marked at the end.</p>
+      <div class="ansrow">
+        <input type="text" inputmode="decimal" id="exInput" placeholder="your answer" aria-label="Your answer" disabled>
+        <span class="unit" id="exUnit"></span>
+        <button class="act" id="exSubmit" disabled>Submit</button>
+        <button class="act ghost" id="exStart">Start the exam</button>
+      </div>
+      <div class="verdict">
+        <div class="vd" id="exVerdict"></div>
+        <div class="work" id="exWork"></div>
+      </div>
+    </div>
+    <figcaption>Nothing is revealed until the twentieth answer is in. The breakdown afterwards lists every question, your answer and the right one.</figcaption>
+  </figure>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section class="chapter" id="c5">
+  <div class="chead">
+    <div class="cnum">05</div>
+    <h2>Why the page is shaped like this</h2>
+    <p class="dek">Three design choices, and the honest limits of each.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Each of the three differences from a per-page drill is doing a specific job, and it is worth being clear about what they do and do not buy.</p>
+    <p><b>Interleaving</b> exists because selecting the method is a separate skill from executing it, and a drill sitting under the chapter that taught it never exercises the first one. That is also why it feels worse: blocked practice produces a higher score during the session and interleaved practice produces a lower one. If this page feels harder than the drill at the foot of module 09, that is the mechanism working rather than failing.</p>
+    <p><b>Spacing</b> exists because a question answered correctly three seconds after reading the answer has tested almost nothing. Putting distance between repeats forces an actual recall rather than a read-off, and the Leitner boxes are simply the cheapest way to arrange that without a clock.</p>
+    <p><b>Tracking</b> exists because self-assessment is unreliable in a specific direction: fluency while reading gets mistaken for retrieval. The grid in chapter 02 is deliberately built from attempts rather than from how confident anything felt.</p>
+    <p><b>And the limits.</b> Forty-seven question types is enough to stop you memorizing answers, since the numbers are regenerated every time, but it is not enough to cover everything the thirteen modules contain — the conceptual multiple-choice questions on each page test things a numeric drill structurally cannot. Nor does a numeric answer prove understanding: you can execute a Kelly formula perfectly and still size a real position badly, which is the whole argument of <a href="bet.html">module 13</a>'s last chapter. Treat a full green grid as a floor rather than a finish.</p>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">You score worse on this page than on the drill at the foot of each module. What does that tell you?</p>
+    <div class="opts">
+      <button>That you have forgotten the material</button>
+      <button data-ok="1">Very little on its own — interleaved practice reliably scores lower than blocked practice, because choosing the method is a task the per-page drill removes for you</button>
+      <button>That the questions here are harder</button>
+      <button>That the per-page drills are too easy</button>
+    </div>
+    <div class="ans"><b>The gap is expected and is roughly the point.</b> The questions are drawn from the same formulas; what changed is that nothing tells you which one applies. A score that falls when the module label is removed is a precise measurement of how much of your performance was riding on that label.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="n">Your record lives in this browser's local storage under a single key and is never transmitted; clearing site data, using a private window, or opening the series on another device all start you from nothing, and the erase button in chapter 02 does the same deliberately. The Leitner intervals are measured in questions answered rather than elapsed time, which is a simplification — real spaced repetition schedules against the clock, and a system that cannot tell a five-minute gap from a five-day one is approximating. The 1, 3, 8, 21, 55 spacing is a convention rather than a derivation. Accuracy per module is only meaningful once a module has been attempted a reasonable number of times, which is why the grid greys out anything under five attempts rather than reporting a confident-looking rate off two. And a numeric drill can only test what reduces to a number: the conceptual questions at the foot of each module cover ground this page structurally cannot reach, so a full grid here means the arithmetic is secure, not that the subject is.</p>
+</footer>
+
+<script src="assets/lab.js"></script>
+<script src="assets/stats.js"></script>
+<script src="assets/bank.js"></script>
+<script src="assets/pwa.js" defer></script>
+<script>
+"use strict";
+
+/* line() takes arrays, not a function — passing one draws nothing at all. */
+function curve(o, f, col, w, dash) {
+  const n = 260, xs = [], ys = [];
+  for (let i = 0; i <= n; i++) {
+    const x = o.x0 + (o.x1 - o.x0) * i / n;
+    xs.push(x); ys.push(f(x));
+  }
+  line(o, xs, ys, col, w, dash);
+}
+
+/* ── the record ──────────────────────────────────────────────────────────
+   One localStorage key. Every read and write is wrapped, because a private
+   window throws on access rather than returning null and an unguarded read
+   would take the whole page down. */
+const KEY = "chance-practice-v1";
+const BOXES = [0, 1, 3, 8, 21, 55];      /* interval by box, 1..5 */
+const MINTRIES = 5;                      /* below this an accuracy rate is noise */
+
+function blankRecord() {
+  const g = {};
+  BANK.forEach(b => { g[b.id] = { seen: 0, right: 0, box: 1, due: 0 }; });
+  return { gen: g, answered: 0, bestStreak: 0, examBest: null, examLast: null };
+}
+function loadRecord() {
+  let r = null;
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) r = JSON.parse(raw);
+  } catch (e) { r = null; }
+  if (!r || !r.gen) r = blankRecord();
+  /* the bank can grow between visits; anything new starts in box 1 */
+  BANK.forEach(b => {
+    if (!r.gen[b.id]) r.gen[b.id] = { seen: 0, right: 0, box: 1, due: 0 };
+  });
+  if (typeof r.answered !== "number") r.answered = 0;
+  return r;
+}
+function saveRecord(r) {
+  try { localStorage.setItem(KEY, JSON.stringify(r)); }
+  catch (e) { /* private mode, or full — the session still works, it just forgets */ }
+}
+let REC = loadRecord();
+
+/* ── per-module rollup, which is what the grid draws ─────────────────── */
+function byModule(rec) {
+  const out = {};
+  for (let m = 1; m <= 13; m++) out[m] = { seen: 0, right: 0, name: MODNAME[m], mod: m };
+  BANK.forEach(b => {
+    const g = rec.gen[b.id];
+    if (!g) return;
+    out[b.mod].seen += g.seen; out[b.mod].right += g.right;
+  });
+  for (let m = 1; m <= 13; m++) {
+    const o = out[m];
+    o.rate = o.seen ? o.right / o.seen : NaN;
+    o.enough = o.seen >= MINTRIES;
+  }
+  return out;
+}
+/* the four worst modules among those actually attempted enough to judge */
+function weakest(rec, k) {
+  const by = byModule(rec);
+  const list = [];
+  for (let m = 1; m <= 13; m++) if (by[m].enough) list.push(by[m]);
+  list.sort((a, b) => a.rate - b.rate);
+  return list.slice(0, k || 4).map(o => o.mod);
+}
+const boxCounts = rec => {
+  const c = [0, 0, 0, 0, 0, 0];
+  BANK.forEach(b => { const g = rec.gen[b.id]; c[Math.max(1, Math.min(5, g.box))]++; });
+  return c;
+};
+
+/* ── selection: interleaved, and spaced by the Leitner boxes ─────────── */
+function eligible(mods, tier) {
+  return BANK.filter(b => mods.indexOf(b.mod) >= 0 && (tier === 0 || b.tier === tier));
+}
+function chooseNext(rec, mods, tier) {
+  const pool = eligible(mods, tier);
+  if (!pool.length) return null;
+  const due = pool.filter(b => rec.gen[b.id].due <= rec.answered);
+  if (due.length) {
+    /* among the due, prefer the lowest box — the things being missed */
+    let lo = 99;
+    due.forEach(b => { if (rec.gen[b.id].box < lo) lo = rec.gen[b.id].box; });
+    const front = due.filter(b => rec.gen[b.id].box === lo);
+    return front[Math.floor(Math.random() * front.length)];
+  }
+  /* nothing due: take whatever comes up soonest, so the page never stalls */
+  let best = pool[0];
+  pool.forEach(b => { if (rec.gen[b.id].due < rec.gen[best.id].due) best = b; });
+  return best;
+}
+function grade(rec, id, ok) {
+  const g = rec.gen[id];
+  g.seen++;
+  if (ok) { g.right++; g.box = Math.min(5, g.box + 1); }
+  else g.box = 1;
+  rec.answered++;
+  g.due = rec.answered + BOXES[g.box];
+  saveRecord(rec);
+}
+
+/* ══════════ hero ══════════ */
+(function () {
+  const cv = document.getElementById("heroCv"); let w, h, g, raf, t0 = 0;
+  function size() {
+    const dpr = window.devicePixelRatio || 1;
+    w = cv.clientWidth; h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr;
+    g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  /* forty-seven dots shuffling between five columns */
+  const N = BANK.length, seedR = rng(4711), home = [];
+  for (let i = 0; i < N; i++) home.push(1 + Math.floor(seedR() * 5));
+  function draw(ph) {
+    g.fillStyle = C("--chalk"); g.fillRect(0, 0, w, h);
+    const cols = 5, cw = w / (cols + 1.4);
+    for (let i = 0; i < N; i++) {
+      const drift = Math.sin(ph * 0.7 + i * 0.9);
+      const b = Math.max(0.6, Math.min(5.4, home[i] + drift * 1.1));
+      const x = w / 2 + (b - 3) * cw * 0.82;
+      const y = h * (0.20 + 0.62 * ((i * 13) % N) / N);
+      const t = (b - 1) / 4;
+      g.globalAlpha = 0.30 + 0.5 * (1 - t);
+      g.fillStyle = C(t < 0.25 ? "--verm" : t > 0.75 ? "--moss" : "--blue");
+      g.beginPath(); g.arc(x, y, 4.2, 0, 6.2832); g.fill();
+    }
+    g.globalAlpha = 1;
+  }
+  function tick(t) { if (!t0) t0 = t; draw((t - t0) / 1100); raf = requestAnimationFrame(tick); }
+  window.drawHero = function () {
+    size(); if (RM) { draw(1.1); return; }
+    if (raf) cancelAnimationFrame(raf); t0 = 0; raf = requestAnimationFrame(tick);
+  };
+})();
+
+/* ══════════ 01 — the interleaved drill ══════════ */
+let MODS = [];
+for (let m = 1; m <= 13; m++) MODS.push(m);
+let TIER = 0;                              /* 0 = both */
+
+(function () {
+  const E = id => document.getElementById(id);
+  let cur = null, curGen = null, sc = 0, asked = 0, streak = 0;
+
+  /* the module toggles */
+  const grid = E("modGrid");
+  function paintGrid() {
+    grid.innerHTML = "";
+    for (let m = 1; m <= 13; m++) {
+      const b = document.createElement("button");
+      b.className = "modbtn" + (MODS.indexOf(m) >= 0 ? " on" : "");
+      b.innerHTML = "<span class='mn'>" + (m < 10 ? "0" + m : m) + "</span>" +
+        "<span class='ml'>" + MODNAME[m] + "</span>";
+      b.setAttribute("aria-pressed", MODS.indexOf(m) >= 0 ? "true" : "false");
+      b.addEventListener("click", () => {
+        const i = MODS.indexOf(m);
+        if (i >= 0) { if (MODS.length > 1) MODS.splice(i, 1); }
+        else MODS.push(m);
+        paintGrid(); draw2(); draw3();
+      });
+      grid.appendChild(b);
+    }
+  }
+  paintGrid();
+  E("modAll").addEventListener("click", () => {
+    MODS = []; for (let m = 1; m <= 13; m++) MODS.push(m);
+    paintGrid(); draw2(); draw3();
+  });
+  E("modNone").addEventListener("click", () => { MODS = [1]; paintGrid(); draw2(); draw3(); });
+  E("modWeak").addEventListener("click", () => {
+    const w = weakest(REC, 4);
+    if (w.length) { MODS = w.slice(); paintGrid(); draw2(); draw3(); }
+  });
+
+  /* difficulty */
+  const tierBtns = { 1: E("pTierA"), 2: E("pTierB"), 0: E("pTierC") };
+  function setTier(t) {
+    TIER = t;
+    Object.keys(tierBtns).forEach(k => {
+      tierBtns[k].setAttribute("aria-pressed", Number(k) === t ? "true" : "false");
+    });
+  }
+  E("pTierA").addEventListener("click", () => { setTier(1); next(); });
+  E("pTierB").addEventListener("click", () => { setTier(2); next(); });
+  E("pTierC").addEventListener("click", () => { setTier(0); next(); });
+
+  function allTime() {
+    let s = 0, r = 0;
+    BANK.forEach(b => { const g = REC.gen[b.id]; s += g.seen; r += g.right; });
+    return { seen: s, right: r };
+  }
+  function paintStats() {
+    E("pScore").textContent = sc + " / " + asked;
+    E("pStreak").textContent = String(streak);
+    E("pBest").textContent = String(REC.bestStreak || 0);
+    const a = allTime();
+    E("pAll").textContent = a.right + " / " + a.seen;
+  }
+  paintStats();
+
+  function next() {
+    curGen = chooseNext(REC, MODS, TIER);
+    if (!curGen) { E("pText").textContent = "No modules selected."; return; }
+    cur = curGen.gen(Math.random);
+    E("pKind").textContent = curGen.topic;
+    E("pText").innerHTML = cur.q;
+    E("pUnit").textContent = curGen.unit || "";
+    E("pInput").value = "";
+    E("pr").classList.remove("done");
+    focusSoft(E("pInput"), E("pr"));
+  }
+  function settle(ok) {
+    const g = REC.gen[curGen.id];
+    grade(REC, curGen.id, ok);
+    if (ok) { sc++; streak++; if (streak > (REC.bestStreak || 0)) { REC.bestStreak = streak; saveRecord(REC); } }
+    else streak = 0;
+    asked++;
+    E("pVerdict").textContent = ok ? "CORRECT"
+      : ("NOT QUITE — the answer is " +
+        (Math.abs(cur.a) >= 1000 ? Math.round(cur.a).toLocaleString() : cur.a.toFixed(4)));
+    E("pVerdict").className = "vd " + (ok ? "ok" : "no");
+    E("pWork").innerHTML = cur.w;
+    E("pSrc").innerHTML = "From <a href='" + MODFILE[curGen.mod] + "'>module " +
+      (curGen.mod < 10 ? "0" + curGen.mod : curGen.mod) + " · " + MODNAME[curGen.mod] +
+      "</a> — now in box " + g.box + ", back in " + BOXES[g.box] + " question" +
+      (BOXES[g.box] === 1 ? "" : "s") + ".";
+    E("pr").classList.add("done");
+    paintStats(); draw2(); draw3();
+  }
+  function submit() {
+    if (!cur || E("pr").classList.contains("done")) return;
+    const raw = parseFloat(String(E("pInput").value).replace(/[$,%\s]/g, ""));
+    settle(isFinite(raw) && Math.abs(raw - cur.a) <= cur.tol);
+  }
+  E("pSubmit").addEventListener("click", submit);
+  E("pInput").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+  E("pNext").addEventListener("click", next);
+  E("pSkip").addEventListener("click", () => { if (cur && !E("pr").classList.contains("done")) settle(false); });
+  window.drawDrill = next;
+  window.__practice = { chooseNext: chooseNext, grade: grade, eligible: eligible,
+    weakest: weakest, byModule: byModule, boxCounts: boxCounts,
+    blankRecord: blankRecord, BOXES: BOXES, MINTRIES: MINTRIES };
+})();
+
+/* ══════════ 02 — the mastery grid ══════════ */
+(function () {
+  window.draw2 = draw;
+  document.getElementById("wipe").addEventListener("click", () => {
+    REC = blankRecord(); saveRecord(REC);
+    document.getElementById("wipeNote").textContent = "Record erased.";
+    draw(); draw3();
+  });
+  function draw() {
+    const by = byModule(REC);
+    const o = Fig(document.getElementById("cv2"),
+      { h: 340, x0: 0, x1: 1.02, y0: -0.6, y1: 12.6, pad: { l: 96, r: 18, t: 12 } });
+    axes(o, x => (x * 100).toFixed(0) + "%", () => "", 6, 0);
+    const g = o.g;
+    const bh = o.ph / 15;
+    for (let m = 1; m <= 13; m++) {
+      const row = by[m], y = 13 - m;
+      const inPlay = MODS.indexOf(m) >= 0;
+      g.fillStyle = C(inPlay ? "--ink2" : "--grey");
+      g.font = "10px 'IBM Plex Mono', monospace";
+      g.textAlign = "right"; g.textBaseline = "middle";
+      g.fillText((m < 10 ? "0" + m : m) + " " + row.name, o.P.l - 6, o.Y(y));
+      if (!row.seen) continue;
+      const r = row.rate;
+      const col = !row.enough ? "--hair" : r >= 0.8 ? "--moss" : r >= 0.5 ? "--ochre" : "--verm";
+      g.save(); g.fillStyle = C(col); g.globalAlpha = inPlay ? 0.9 : 0.4;
+      g.fillRect(o.X(0), o.Y(y) - bh / 2, o.X(r) - o.X(0), bh);
+      g.restore();
+      g.fillStyle = C("--ink2"); g.font = "9.5px 'IBM Plex Mono', monospace";
+      g.textAlign = "left"; g.textBaseline = "middle";
+      g.fillText((r * 100).toFixed(0) + "%  (" + row.right + "/" + row.seen + ")",
+        o.X(r) + 5, o.Y(y));
+    }
+    const a = (() => { let s = 0, r = 0; BANK.forEach(b => { s += REC.gen[b.id].seen; r += REC.gen[b.id].right; }); return { s, r }; })();
+    const attempted = Object.keys(by).filter(m => by[m].seen > 0).length;
+    const judged = Object.keys(by).filter(m => by[m].enough).length;
+    const w = weakest(REC, 4);
+    document.getElementById("kv2").innerHTML = kvHTML([
+      ["Questions answered", String(a.s)],
+      ["Correct", String(a.r)],
+      ["Overall accuracy", a.s ? (a.r / a.s * 100).toFixed(1) + "%" : "—",
+        a.s && a.r / a.s >= 0.8 ? "moss" : a.s ? "ochre" : "grey"],
+      ["Best streak", String(REC.bestStreak || 0), "moss"],
+      ["Modules attempted", attempted + " of 13"],
+      ["— enough to judge", judged + " of 13", "grey"],
+      ["Question types", BANK.length + " in the bank"],
+      ["Weakest", w.length ? w.map(m => MODNAME[m]).join(", ") : "not enough data yet",
+        w.length ? "verm" : "grey"]
+    ]);
+  }
+})();
+
+/* ══════════ 03 — the boxes ══════════ */
+(function () {
+  window.draw3 = draw;
+  function draw() {
+    const c = boxCounts(REC);
+    const top = Math.max.apply(null, c.slice(1)) * 1.25 || 10;
+    const o = Fig(document.getElementById("cv3"),
+      { h: 310, x0: 0.4, x1: 5.6, y0: 0, y1: top, pad: { l: 56, r: 14, t: 14 } });
+    axes(o, x => "box " + Math.round(x), y => y.toFixed(0), 5, 5);
+    const g = o.g, bw = o.pw / 7;
+    for (let b = 1; b <= 5; b++) {
+      const v = c[b];
+      if (!v) continue;
+      const col = b === 1 ? "--verm" : b === 5 ? "--moss" : "--blue";
+      g.save(); g.fillStyle = C(col); g.globalAlpha = 0.85;
+      g.fillRect(o.X(b) - bw / 2, o.Y(v), bw, o.Y(0) - o.Y(v));
+      g.restore();
+      g.fillStyle = C("--ink2"); g.font = "10px 'IBM Plex Mono', monospace";
+      g.textAlign = "center"; g.textBaseline = "bottom";
+      g.fillText(String(v), o.X(b), o.Y(v) - 5);
+      g.fillStyle = C("--grey"); g.font = "9px 'IBM Plex Mono', monospace";
+      g.fillText("+" + BOXES[b], o.X(b), o.Y(0) + 14);
+    }
+    const dueNow = BANK.filter(b => REC.gen[b.id].due <= REC.answered).length;
+    const inPlay = eligible(MODS, TIER).length;
+    document.getElementById("kv3").innerHTML = kvHTML([
+      ["Question types", String(BANK.length)],
+      ["In play right now", String(inPlay), "blue"],
+      ["Due now", String(dueNow), dueNow ? "verm" : "moss"],
+      ["Box 1 — repeat at once", String(c[1]), "verm"],
+      ["Box 2 — after 3", String(c[2])],
+      ["Box 3 — after 8", String(c[3])],
+      ["Box 4 — after 21", String(c[4])],
+      ["Box 5 — after 55", String(c[5]), "moss"],
+      /* NOT the same total as the record panel: an exam adds to seen and
+         right but deliberately does not advance this clock, because a
+         measurement should not move the schedule it is measuring. */
+      ["Scheduler clock", String(REC.answered), "grey"]
+    ]);
+  }
+})();
+
+/* ══════════ 04 — the exam ══════════ */
+(function () {
+  const E = id => document.getElementById(id);
+  const LEN = 20;
+  let queue = [], idx = 0, answers = [], running = false;
+
+  function paint() {
+    E("exN").textContent = running ? (idx + 1) + " / " + LEN : "—";
+    E("exDone").textContent = String(answers.length);
+    E("exLast").textContent = REC.examLast === null ? "—" : REC.examLast + " / " + LEN;
+    E("exBest").textContent = REC.examBest === null ? "—" : REC.examBest + " / " + LEN;
+  }
+  paint();
+
+  function build() {
+    /* spread evenly over the selected modules rather than sampling the bank
+       uniformly, so one crowded module cannot dominate the paper */
+    const pool = eligible(MODS, TIER);
+    const byMod = {};
+    pool.forEach(b => { (byMod[b.mod] = byMod[b.mod] || []).push(b); });
+    const mods = Object.keys(byMod);
+    const out = [];
+    let i = 0;
+    while (out.length < LEN && mods.length) {
+      const m = mods[i % mods.length];
+      const list = byMod[m];
+      out.push(list[Math.floor(Math.random() * list.length)]);
+      i++;
+    }
+    return out;
+  }
+  function start() {
+    queue = build();
+    if (!queue.length) { E("exText").textContent = "Select at least one module first."; return; }
+    idx = 0; answers = []; running = true;
+    E("exInput").disabled = false; E("exSubmit").disabled = false;
+    E("exStart").textContent = "Abandon";
+    E("ex").classList.remove("done");
+    show();
+    paint();
+  }
+  function show() {
+    const g = queue[idx];
+    const q = g.gen(Math.random);
+    queue[idx] = { gen: g, q: q };
+    E("exKind").textContent = "Question " + (idx + 1) + " of " + LEN;
+    E("exText").innerHTML = q.q;
+    E("exUnit").textContent = g.unit || "";
+    E("exInput").value = "";
+    focusSoft(E("exInput"), E("ex"));
+  }
+  function submit() {
+    if (!running) return;
+    const item = queue[idx];
+    const raw = parseFloat(String(E("exInput").value).replace(/[$,%\s]/g, ""));
+    const ok = isFinite(raw) && Math.abs(raw - item.q.a) <= item.q.tol;
+    answers.push({ gen: item.gen, q: item.q, given: raw, ok: ok });
+    idx++;
+    paint();
+    if (idx >= LEN) finish(); else show();
+  }
+  function finish() {
+    running = false;
+    E("exInput").disabled = true; E("exSubmit").disabled = true;
+    E("exStart").textContent = "Take it again";
+    const score = answers.filter(a => a.ok).length;
+    REC.examLast = score;
+    if (REC.examBest === null || score > REC.examBest) REC.examBest = score;
+    /* an exam counts toward the record, but does not disturb the boxes —
+       it is a measurement, and measuring should not move what it measures */
+    answers.forEach(a => {
+      const g = REC.gen[a.gen.id];
+      g.seen++; if (a.ok) g.right++;
+    });
+    saveRecord(REC);
+    const byMod = {};
+    answers.forEach(a => {
+      const k = a.gen.mod;
+      byMod[k] = byMod[k] || { right: 0, seen: 0 };
+      byMod[k].seen++; if (a.ok) byMod[k].right++;
+    });
+    const worst = Object.keys(byMod)
+      .filter(m => byMod[m].right < byMod[m].seen)
+      .sort((a, b) => (byMod[a].right / byMod[a].seen) - (byMod[b].right / byMod[b].seen));
+    E("exKind").textContent = "Finished";
+    E("exText").innerHTML = "<b>" + score + " out of " + LEN + "</b>" +
+      (worst.length ? " — the misses were in " +
+        worst.slice(0, 3).map(m => MODNAME[m]).join(", ") + "." : " — a clean sheet.");
+    E("exVerdict").textContent = score >= 16 ? "STRONG" : score >= 12 ? "SOLID" : "MORE PRACTICE";
+    E("exVerdict").className = "vd " + (score >= 12 ? "ok" : "no");
+    E("exWork").innerHTML = "<table class='extab'><tr><th>#</th><th>Topic</th>" +
+      "<th>You</th><th>Answer</th></tr>" +
+      answers.map((a, i) => "<tr class='" + (a.ok ? "y" : "n") + "'><td>" + (i + 1) +
+        "</td><td>" + a.gen.topic + "</td><td>" +
+        (isFinite(a.given) ? a.given : "—") + "</td><td>" +
+        (Math.abs(a.q.a) >= 1000 ? Math.round(a.q.a).toLocaleString() : a.q.a.toFixed(3)) +
+        "</td></tr>").join("") + "</table>";
+    E("ex").classList.add("done");
+    paint(); draw2(); draw3();
+  }
+  E("exStart").addEventListener("click", () => {
+    if (running) {
+      running = false;
+      E("exInput").disabled = true; E("exSubmit").disabled = true;
+      E("exStart").textContent = "Start the exam";
+      E("exKind").textContent = "Abandoned";
+      E("exText").textContent = "Nothing recorded.";
+      paint();
+    } else start();
+  });
+  E("exSubmit").addEventListener("click", submit);
+  E("exInput").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+  window.__exam = { build: build, LEN: LEN };
+})();
+
+function drawAll() {
+  drawHero(); draw2(); draw3(); drawDrill();
+}
+LAB.boot(drawAll);
+
+</script>
+</body>
+</html>
