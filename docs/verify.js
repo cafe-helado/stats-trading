@@ -610,6 +610,343 @@ PAGES["bayes"] = () => {
     Q.every(q => Math.abs((q.a + Math.max(q.tol * 10, 1)) - q.a) > q.tol));
 };
 
+PAGES["corr"] = () => {
+  const M = load("corr.html", ["portVol", "betaOf", "residualShare", "corrInterval",
+    "nForSignificance", "fisherZ", "ANSCOMBE", "__drill", "corr", "variance", "mean",
+    "s1", "s2", "s3", "s4"]);
+
+  console.log("    chapter 01 - what a correlation buys you");
+  eq("two 20-vols at rho 0: 14.142%", M.portVol(0.5, 0.20, 0.20, 0) * 100, 14.142, 5e-3);
+  eq("  which is a 29.29% reduction",
+    (0.20 - M.portVol(0.5, 0.20, 0.20, 0)) / 0.20 * 100, 29.289, 5e-3);
+  eq("at rho 0.6: 17.889%", M.portVol(0.5, 0.20, 0.20, 0.6) * 100, 17.889, 5e-3);
+  eq("at rho 0.9: 19.494%", M.portVol(0.5, 0.20, 0.20, 0.9) * 100, 19.494, 5e-3);
+  eq("  a benefit of only 2.53%",
+    (0.20 - M.portVol(0.5, 0.20, 0.20, 0.9)) / 0.20 * 100, 2.53, 5e-3);
+  eq("at rho 1.0 there is no benefit at all", M.portVol(0.5, 0.20, 0.20, 1) * 100, 20.0, 1e-9);
+  yes("the benefit falls away long before rho reaches 1",
+    (0.20 - M.portVol(0.5, 0.20, 0.20, 0.9)) / 0.20 < 0.03);
+
+  console.log("    chapter 02 - correlation is symmetric, slope is not");
+  eq("beta of Y on X, vols 10 and 40, rho 0.5", M.betaOf(0.5, 0.40, 0.10), 2.0, 1e-12);
+  eq("beta of X on Y, the same pair", M.betaOf(0.5, 0.10, 0.40), 0.125, 1e-12);
+  eq("  their product is rho squared",
+    M.betaOf(0.5, 0.40, 0.10) * M.betaOf(0.5, 0.10, 0.40), 0.25, 1e-12);
+  yes("the two regressions have different slopes",
+    Math.abs(M.betaOf(0.5, 0.40, 0.10) - M.betaOf(0.5, 0.10, 0.40)) > 1);
+
+  console.log("    chapter 03 - how little correlation explains");
+  eq("rho 0.7 explains 49%", 0.7 * 0.7 * 100, 49.0, 1e-9);
+  eq("  and leaves residual vol at 71.41% of total",
+    M.residualShare(0.7) * 100, 71.414, 5e-3);
+  eq("rho 0.5 leaves 86.60%", M.residualShare(0.5) * 100, 86.603, 5e-3);
+  eq("rho 0.9 leaves 43.59%", M.residualShare(0.9) * 100, 43.589, 5e-3);
+  yes("a 0.7 correlation still leaves half the variance unexplained",
+    1 - 0.7 * 0.7 >= 0.5);
+
+  console.log("    chapter 04 - the standard error of a correlation");
+  const ci = M.corrInterval(0.30, 30, 0.95);
+  eq("r 0.30 from 30 points: lower end -0.068", ci.lo, -0.0680, 5e-3);
+  eq("  upper end 0.596", ci.hi, 0.5964, 5e-3);
+  yes("  so it does not clear zero", ci.lo < 0);
+  eq("44 observations are needed to call 0.30 non-zero",
+    M.nForSignificance(0.30, 0.95), 44, 0);
+  const wide = M.corrInterval(0.30, 250, 0.95);
+  yes("more data narrows it", (wide.hi - wide.lo) < (ci.hi - ci.lo));
+  yes("  and at 250 it does clear zero", wide.lo > 0);
+
+  console.log("    chapter 05 - Anscombe");
+  M.ANSCOMBE.forEach((set, i) => {
+    const r = M.corr(set.x, set.y);
+    const b = r * Math.sqrt(M.variance(set.y) / M.variance(set.x));
+    console.log("      set " + (i + 1) + "  mean x " + M.mean(set.x).toFixed(2) +
+      "  mean y " + M.mean(set.y).toFixed(2) + "  r " + r.toFixed(3) +
+      "  slope " + b.toFixed(3));
+    eq("  set " + (i + 1) + " mean x is 9.00", M.mean(set.x), 9.0, 5e-3);
+    eq("  set " + (i + 1) + " mean y is 7.50", M.mean(set.y), 7.50, 5e-3);
+    eq("  set " + (i + 1) + " var x is 11.00", M.variance(set.x), 11.0, 5e-3);
+    eq("  set " + (i + 1) + " var y is 4.12", M.variance(set.y), 4.125, 5e-3);
+    eq("  set " + (i + 1) + " r is 0.816", r, 0.816, 5e-3);
+    eq("  set " + (i + 1) + " slope is 0.500", b, 0.500, 5e-3);
+  });
+  yes("all four sets agree on every summary statistic", M.ANSCOMBE.length === 4);
+
+  console.log("    chapter 06 - the drill generator");
+  const Q = M.__drill();
+  yes("every question has a finite answer, prompt, working and tolerance",
+    Q.every(q => isFinite(q.a) && q.q && q.w && q.tol > 0));
+  const kinds = {};
+  Q.forEach(q => { kinds[q.kind] = (kinds[q.kind] || 0) + 1; });
+  Object.keys(kinds).sort().forEach(k => console.log("      " + k.padEnd(34) + kinds[k]));
+  yes("the exact answer is always accepted", Q.every(q => Math.abs(q.a - q.a) <= q.tol));
+  yes("an answer well outside the band is rejected",
+    Q.every(q => Math.abs((q.a + Math.max(q.tol * 10, 1)) - q.a) > q.tol));
+};
+
+PAGES["tails"] = () => {
+  const M = load("tails.html", ["varSigma", "esSigma", "mixParts", "mixVaR", "mixES",
+    "bondRisk", "concentration", "concentrationNormal", "exceptionRange",
+    "__drill", "__moments", "s1", "s2", "s3", "s4", "s5"]);
+
+  console.log("    chapter 01 - where the variance lives");
+  const F = M.concentration(88, 2520, 0.94, 4, 0.008);
+  eq("the worst single day holds 3.26%", F.share(1) * 100, 3.26, 0.02);
+  eq("the worst 5 days hold 13.76%", F.share(5) * 100, 13.76, 0.02);
+  eq("the worst 25 days - 1% of them - hold 31.44%", F.share(25) * 100, 31.44, 0.02);
+  eq("the worst 5% of days hold 54.36%", F.share(126) * 100, 54.36, 0.02);
+  const G = M.concentrationNormal(88, 2520, F.tot);
+  eq("a normal puts only 8.55% in the worst 1%", G.share(25) * 100, 8.546, 0.02);
+  yes("the fat sample is more than three times as concentrated",
+    F.share(25) / G.share(25) > 3);
+  yes("a window missing the worst 1% understates variance by about a third",
+    Math.abs(F.share(25) - 0.31) < 0.02);
+  eq("  which is 17% in volatility terms",
+    (1 - Math.sqrt(1 - F.share(25))) * 100, 17.2, 0.6);
+
+  console.log("    chapter 02 - VaR and expected shortfall");
+  eq("the 95% VaR is 1.645 sigma", M.varSigma(0.05), 1.6449, 5e-4);
+  eq("the 99% VaR is 2.326 sigma", M.varSigma(0.01), 2.3263, 5e-4);
+  eq("the 95% expected shortfall is 2.063 sigma", M.esSigma(0.05), 2.0627, 5e-4);
+  eq("the 99% expected shortfall is 2.665 sigma", M.esSigma(0.01), 2.6652, 5e-4);
+  eq("  a ratio of 1.15", M.esSigma(0.01) / M.varSigma(0.01), 1.1457, 5e-4);
+  yes("expected shortfall always sits further out", M.esSigma(0.01) > M.varSigma(0.01));
+  eq("a $10m book at 1.26% daily vol: 99% VaR $293,120",
+    10e6 * 0.0126 * M.varSigma(0.01), 293120, 40);
+  eq("  and an expected shortfall of $335,817",
+    10e6 * 0.0126 * M.esSigma(0.01), 335817, 40);
+
+  console.log("    chapter 02 - and what fat tails do to each");
+  const mx = M.mixParts(0.94, 4);
+  eq("the mixture is rescaled to unit variance",
+    mx.w * mx.a * mx.a + (1 - mx.w) * mx.b * mx.b, 1.0, 1e-9);
+  eq("at 99% the mixture VaR is 2.817 sigma", M.mixVaR(0.01, mx), 2.8168, 5e-3);
+  eq("  its expected shortfall is 4.351 sigma", M.mixES(0.01, mx), 4.3511, 5e-3);
+  eq("  VaR rose 21% against the normal",
+    (M.mixVaR(0.01, mx) / M.varSigma(0.01) - 1) * 100, 21.08, 0.15);
+  eq("  while expected shortfall rose 63%",
+    (M.mixES(0.01, mx) / M.esSigma(0.01) - 1) * 100, 63.26, 0.15);
+  eq("at 95% the fat-tailed VaR is 1.338 - LOWER than the normal",
+    M.mixVaR(0.05, mx), 1.3376, 5e-3);
+  yes("  so a fatter tail can shrink the reported VaR",
+    M.mixVaR(0.05, mx) < M.varSigma(0.05));
+  yes("  while its expected shortfall still rises", M.mixES(0.05, mx) > M.esSigma(0.05));
+
+  console.log("    chapter 03 - VaR is not subadditive");
+  const B = M.bondRisk(0.03, 100, 0.95);
+  eq("P(at least one of two 3% bonds defaults) is 5.910%", B.pAny * 100, 5.910, 5e-3);
+  eq("the 95% VaR of one bond is 0", B.v1, 0, 1e-12);
+  eq("the 95% VaR of the pair is 100", B.v2, 100, 1e-12);
+  yes("so the pair's VaR exceeds the sum of the parts", B.varBroken);
+  eq("expected shortfall of one bond is 60", B.e1, 60.0, 1e-9);
+  eq("  of the pair, 101.80", B.e2, 101.80, 5e-3);
+  eq("  against a sum of 120", 2 * B.e1, 120.0, 1e-9);
+  yes("expected shortfall stays subadditive", B.esOk);
+  eq("the pair's VaR jumps once each bond passes 2.53%", B.pStar * 100, 2.5321, 5e-3);
+  const safe = M.bondRisk(0.02, 100, 0.95);
+  yes("below that rate VaR behaves", !safe.varBroken);
+  yes("  and expected shortfall is subadditive there too", safe.esOk);
+
+  console.log("    chapter 04 - the moments are unstable");
+  const half = M.__moments(88, 630, 0.94, -1.2, 4);
+  const full = M.__moments(88, 1260, 0.94, -1.2, 4);
+  console.log("      630 days: kurtosis " + half.kurt.toFixed(2) +
+    "   1260 days: " + full.kurt.toFixed(2));
+  yes("a normal-mixture sample reads a large excess kurtosis", full.kurt > 5);
+  yes("  and it moves materially as the sample grows",
+    Math.abs(full.kurt - half.kurt) > 0.5);
+  const sym = M.__moments(88, 1260, 0.94, 0, 4);
+  const skewed = M.__moments(88, 1260, 0.94, -2.0, 4);
+  yes("a downward bias in the wild days produces negative skew",
+    skewed.skew < sym.skew);
+  yes("  which is the shape equity returns actually have", skewed.skew < 0);
+
+  console.log("    chapter 05 - what a backtest can establish");
+  const y1 = M.exceptionRange(252, 0.01);
+  eq("a 99% model over one year expects 2.52 breaches", y1.exp, 2.52, 5e-3);
+  eq("  the 95% range runs from 0", y1.lo, 0, 0);
+  eq("  to 6", y1.hi, 6, 0);
+  yes("  so two observed breaches establish nothing", y1.lo <= 2 && y1.hi >= 2);
+  const y2 = M.exceptionRange(504, 0.01);
+  eq("over two years it expects 5.04", y2.exp, 5.04, 5e-3);
+  eq("  and the range is 1 to 10", y2.hi - y2.lo, 9, 0);
+  const deep = M.exceptionRange(252, 0.001);
+  eq("a 99.9% model over a year expects 0.25 breaches", deep.exp, 0.252, 5e-3);
+  yes("  which cannot distinguish a good model from a bad one", deep.lo === 0);
+  yes("more data does narrow the band in relative terms",
+    (y2.hi - y2.lo) / y2.exp < (y1.hi - y1.lo) / y1.exp);
+
+  console.log("    chapter 06 - the drill generator");
+  const Q = M.__drill();
+  yes("every question has a finite answer, prompt, working and tolerance",
+    Q.every(q => isFinite(q.a) && q.q && q.w && q.tol > 0));
+  const kinds = {};
+  Q.forEach(q => { kinds[q.kind] = (kinds[q.kind] || 0) + 1; });
+  Object.keys(kinds).sort().forEach(k => console.log("      " + k.padEnd(34) + kinds[k]));
+  yes("seven distinct question kinds", Object.keys(kinds).length === 7);
+  yes("the exact answer is always accepted", Q.every(q => Math.abs(q.a - q.a) <= q.tol));
+  yes("an answer well outside the band is rejected",
+    Q.every(q => Math.abs((q.a + Math.max(q.tol * 10, 1)) - q.a) > q.tol));
+};
+
+
+PAGES["bet"] = () => {
+  const M = load("bet.html", ["impliedProb", "usToDecimal", "marketMargin", "kelly",
+    "logGrowth", "kellyC", "growthC", "zeroCrossing", "growthKept", "ruinProb",
+    "seatStats", "SEATS", "__seats", "__drill", "s1", "s2", "s3", "s4", "s5"]);
+
+  console.log("    chapter 01 - where the price comes from");
+  eq("-110 implies 52.381%", M.impliedProb(-110) * 100, 52.381, 5e-3);
+  eq("  as decimal odds, 1.9091", M.usToDecimal(-110), 1.90909, 1e-5);
+  const mk = M.marketMargin(-110, -110);
+  eq("both sides sum to 104.762%", mk.sum * 100, 104.762, 5e-3);
+  eq("  an overround of 4.762 points", mk.over * 100, 4.7619, 5e-4);
+  eq("  and a hold of 4.545%", mk.hold * 100, 4.5455, 5e-4);
+  yes("the hold is smaller than the overround", mk.hold < mk.over);
+  eq("the break-even win rate is the implied probability", mk.breakEven * 100, 52.381, 5e-3);
+  eq("  which is 2.38 points above a coin", (mk.breakEven - 0.5) * 100, 2.381, 5e-3);
+  /* the cashflow the prose walks through */
+  const staked = 220, paid = 110 * M.usToDecimal(-110);
+  eq("two $110 stakes pay the winner $210", paid, 210.0, 1e-9);
+  eq("  so the book keeps $10", staked - paid, 10.0, 1e-9);
+  eq("  which is 4.545% of what was staked", (staked - paid) / staked * 100, 4.5455, 5e-4);
+  yes("a balanced book profits whichever side wins", (staked - paid) > 0);
+  eq("de-vigging -110/-110 gives 50/50", mk.fair[0] * 100, 50.0, 1e-9);
+  /* the market maker's version of the same trade */
+  eq("a 1.90/2.10 quote keeps 5.00% of two-sided handle",
+    0.20 / (1.90 + 2.10) * 100, 5.0, 1e-9);
+  const fair = M.marketMargin(100, 100);
+  eq("a market with no margin sums to 100%", fair.sum * 100, 100.0, 1e-9);
+  eq("  and holds nothing", fair.hold * 100, 0.0, 1e-12);
+
+  console.log("    chapter 02 - how much to bet");
+  eq("a 60% even-money coin: Kelly is 20%", M.kelly(0.60, 1) * 100, 20.0, 1e-9);
+  eq("  which for b=1 is just the edge 2p-1", (2 * 0.60 - 1) * 100, 20.0, 1e-9);
+  eq("  growth at f* is 2.034% per bet",
+    (Math.exp(M.logGrowth(0.60, 0.20, 1)) - 1) * 100, 2.0340, 5e-4);
+  eq("  at 10% it is 1.516%", (Math.exp(M.logGrowth(0.60, 0.10, 1)) - 1) * 100, 1.5156, 5e-4);
+  eq("  at 30% it is 1.486%", (Math.exp(M.logGrowth(0.60, 0.30, 1)) - 1) * 100, 1.4858, 5e-4);
+  yes("the peak really is the peak",
+    M.logGrowth(0.60, 0.20, 1) > M.logGrowth(0.60, 0.10, 1) &&
+    M.logGrowth(0.60, 0.20, 1) > M.logGrowth(0.60, 0.30, 1));
+  yes("the curve is flat near the top - 10% off costs under a third of the growth",
+    (M.logGrowth(0.60, 0.20, 1) - M.logGrowth(0.60, 0.30, 1)) / M.logGrowth(0.60, 0.20, 1) < 0.30);
+
+  console.log("    chapter 02 - the discrete curve crosses zero BELOW twice Kelly");
+  yes("double Kelly on a 60% coin is already negative", M.logGrowth(0.60, 0.40, 1) < 0);
+  eq("the 55% coin crosses at 1.99x Kelly", M.zeroCrossing(0.55, 1), 1.9874, 5e-3);
+  eq("the 60% coin crosses at 1.95x", M.zeroCrossing(0.60, 1), 1.9470, 5e-3);
+  eq("the 70% coin crosses at 1.79x", M.zeroCrossing(0.70, 1), 1.7914, 5e-3);
+  yes("the approximation drifts further with a bigger edge",
+    M.zeroCrossing(0.70, 1) < M.zeroCrossing(0.60, 1) &&
+    M.zeroCrossing(0.60, 1) < M.zeroCrossing(0.55, 1));
+  yes("  and always in the direction that flatters the bettor",
+    M.zeroCrossing(0.60, 1) < 2);
+  /* the continuous version, where it IS exactly two */
+  eq("continuous Kelly at mu 8% sigma 20% is 2.0x", M.kellyC(0.08, 0.20), 2.0, 1e-12);
+  eq("  growth at f* is 8.00%", M.growthC(2.0, 0.08, 0.20) * 100, 8.0, 1e-9);
+  eq("  and growth at 2f* is exactly zero", M.growthC(4.0, 0.08, 0.20), 0.0, 1e-15);
+  yes("so the doubling rule is exact only in the continuous limit",
+    Math.abs(M.growthC(4.0, 0.08, 0.20)) < 1e-15 && M.logGrowth(0.60, 0.40, 1) < -1e-4);
+
+  console.log("    chapter 02 - a big edge is not a big bet");
+  const bFav = M.usToDecimal(-200) - 1, bDog = M.usToDecimal(400) - 1;
+  eq("-200 implies 66.67%", M.impliedProb(-200) * 100, 66.667, 5e-3);
+  eq("+400 implies 20.00%", M.impliedProb(400) * 100, 20.0, 5e-3);
+  eq("the favorite at 72% has an 8% edge", (0.72 * bFav - 0.28) * 100, 8.0, 5e-3);
+  eq("  and a Kelly stake of 16.00%", M.kelly(0.72, bFav) * 100, 16.0, 5e-3);
+  eq("the longshot at 25% has a 25% edge", (0.25 * bDog - 0.75) * 100, 25.0, 5e-3);
+  eq("  but a Kelly stake of only 6.25%", M.kelly(0.25, bDog) * 100, 6.25, 5e-3);
+  yes("three times the edge, a quarter of the bet",
+    M.kelly(0.25, bDog) < M.kelly(0.72, bFav));
+
+  console.log("    chapter 03 - why nobody bets that much");
+  eq("full Kelly: 50% chance of ever halving", M.ruinProb(1.0, 0.5) * 100, 50.0, 1e-9);
+  eq("  25% of ever quartering", M.ruinProb(1.0, 0.25) * 100, 25.0, 1e-9);
+  eq("  10% of ever losing 90%", M.ruinProb(1.0, 0.10) * 100, 10.0, 1e-9);
+  yes("at full Kelly the exponent is 1, so P equals the level itself",
+    Math.abs(M.ruinProb(1.0, 0.37) - 0.37) < 1e-12);
+  eq("half Kelly: 12.5% of ever halving", M.ruinProb(0.5, 0.5) * 100, 12.5, 1e-9);
+  eq("  and 1.56% of ever quartering", M.ruinProb(0.5, 0.25) * 100, 1.5625, 1e-6);
+  eq("quarter Kelly: 0.78% of ever halving", M.ruinProb(0.25, 0.5) * 100, 0.7813, 5e-4);
+  eq("half Kelly keeps 75% of the growth", M.growthKept(0.5) * 100, 75.0, 1e-9);
+  eq("quarter Kelly keeps 43.8%", M.growthKept(0.25) * 100, 43.75, 1e-9);
+  eq("three-quarter Kelly keeps 93.8%", M.growthKept(0.75) * 100, 93.75, 1e-9);
+  eq("full Kelly keeps all of it", M.growthKept(1.0) * 100, 100.0, 1e-9);
+  yes("halving the stake costs a quarter of the growth and removes three quarters of the risk",
+    M.growthKept(0.5) === 0.75 && M.ruinProb(0.5, 0.5) / M.ruinProb(1.0, 0.5) === 0.25);
+  yes("growth per unit of risk is better below full Kelly",
+    M.growthKept(0.5) / 0.5 > M.growthKept(1.0) / 1.0);
+
+  console.log("    chapter 04 - four seats, one arithmetic");
+  const S = M.__seats();
+  S.forEach(s => console.log("      " + s.n.padEnd(16) +
+    " SR/unit " + s.srUnit.toFixed(4).padStart(8) +
+    "  annual SR " + s.srYear.toFixed(3).padStart(7) +
+    "  Kelly " + (s.kelly * 100).toFixed(2).padStart(8) + "%" +
+    "  years " + s.yearsToT2.toFixed(2).padStart(6)));
+  eq("sports betting: annual Sharpe 1.01", S[0].srYear, 1.0062, 5e-3);
+  eq("  4.50% Kelly stake", S[0].kelly * 100, 4.50, 5e-3);
+  eq("  3.95 years to t=2", S[0].yearsToT2, 3.951, 5e-3);
+  eq("card counting: annual Sharpe 1.23", S[1].srYear, 1.2296, 5e-3);
+  eq("  0.76% Kelly stake", S[1].kelly * 100, 0.7561, 5e-3);
+  eq("  2.65 years to t=2", S[1].yearsToT2, 2.6450, 5e-3);
+  eq("live poker: annual Sharpe 0.96", S[2].srYear, 0.9623, 5e-3);
+  eq("  4.32 years to t=2", S[2].yearsToT2, 4.320, 5e-3);
+  eq("selling vol: annual Sharpe 1.50", S[3].srYear, 1.5, 1e-9);
+  eq("  1.78 years to t=2", S[3].yearsToT2, 1.7778, 5e-3);
+  yes("the smallest per-unit edge does NOT have the worst Sharpe",
+    S[1].ev < S[0].ev && S[1].ev < S[2].ev && S[1].srYear > S[0].srYear && S[1].srYear > S[2].srYear);
+  yes("  frequency is what makes an edge bankable", S[1].per > S[2].per);
+  yes("live poker has the largest per-unit edge and the worst annual Sharpe",
+    S[2].ev >= S[0].ev && S[2].srYear < S[0].srYear && S[2].srYear < S[1].srYear);
+
+  console.log("    chapter 04 - years to t=2 is 4 over Sharpe squared, always");
+  S.forEach(s => {
+    yes("  " + s.n + ": the formula matches the count",
+      Math.abs(s.yearsToT2 - 4 / (s.srYear * s.srYear)) < 1e-9);
+    yes("  " + s.n + ": and the units cancel",
+      Math.abs(s.unitsToT2 / s.per - s.yearsToT2) < 1e-6);
+  });
+  eq("a Sharpe of 1.0 takes four years", 4 / 1.0, 4.0, 1e-12);
+  eq("a Sharpe of 1.5 takes 1.78", 4 / (1.5 * 1.5), 1.7778, 5e-4);
+  eq("a Sharpe of 0.5 takes sixteen", 4 / (0.5 * 0.5), 16.0, 1e-12);
+
+  console.log("    chapter 05 - where it breaks");
+  eq("Kelly on 15% alpha at 10% vol is 15x leverage", M.kellyC(0.15, 0.10), 15.0, 1e-9);
+  eq("  and that Sharpe takes 1.78 years to establish",
+    4 / Math.pow(0.15 / 0.10, 2), 1.7778, 5e-4);
+  yes("  which is the same figure the vol seat reports", Math.abs(S[3].yearsToT2 - 1.7778) < 5e-3);
+  /* overestimating the edge twofold lands you at double the true Kelly */
+  const chosen = M.kellyC(0.15, 0.10), trueK = M.kellyC(0.075, 0.10);
+  eq("if the true edge is half what you assumed, true Kelly is 7.5x", trueK, 7.5, 1e-9);
+  eq("  so you are betting exactly 2x true Kelly", chosen / trueK, 2.0, 1e-12);
+  eq("  where continuous growth is exactly zero", M.growthC(chosen, 0.075, 0.10), 0.0, 1e-14);
+  yes("  all of the volatility and none of the return",
+    Math.abs(M.growthC(chosen, 0.075, 0.10)) < 1e-14);
+  /* and the argument for sizing at half */
+  const halfStake = M.kellyC(0.15, 0.10) * 0.5;
+  eq("sizing at half Kelly on a doubled estimate lands on true full Kelly",
+    halfStake, trueK, 1e-9);
+  yes("  so the fraction buys a margin of error in the input, not just a smoother ride",
+    Math.abs(M.growthC(halfStake, 0.075, 0.10) -
+      M.growthC(trueK, 0.075, 0.10)) < 1e-14);
+  yes("overbetting by three times the edge makes growth negative",
+    M.growthC(M.kellyC(0.15, 0.10), 0.05, 0.10) < 0);
+
+  console.log("    chapter 06 - the drill generator");
+  const Q = M.__drill();
+  yes("every question has a finite answer, prompt, working and tolerance",
+    Q.every(q => isFinite(q.a) && q.q && q.w && q.tol > 0));
+  const kinds = {};
+  Q.forEach(q => { kinds[q.kind] = (kinds[q.kind] || 0) + 1; });
+  Object.keys(kinds).sort().forEach(k => console.log("      " + k.padEnd(34) + kinds[k]));
+  yes("eight distinct question kinds", Object.keys(kinds).length === 8);
+  yes("the exact answer is always accepted", Q.every(q => Math.abs(q.a - q.a) <= q.tol));
+  yes("an answer well outside the band is rejected",
+    Q.every(q => Math.abs((q.a + Math.max(q.tol * 10, 1)) - q.a) > q.tol));
+};
+
+
 /* ── run ─────────────────────────────────────────────────────────────── */
 const only = process.argv[2];
 const names = only ? [only.replace(/\.html$/, "")] : Object.keys(PAGES);

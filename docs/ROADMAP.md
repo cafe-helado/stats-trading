@@ -32,56 +32,48 @@ it at 0.22054, and quoting it 2c wide is a 2.015% overround. At the financing
 rate the same one-year 110 strike is 34.966%; at 8% drift it is 42.613% and at
 12% it is 48.953%.
 
-## 02 · Expectation, and Why It Is Not What Happens  🔲
-
+## 02 · Expectation, and Why It Is Not What Happens  ✅ live (ev.html)
 EV and variance from a payoff table; the law of large numbers watched
 converging; why a positive-edge bettor spends most of a career underwater;
 Kelly derived from compounding rather than asserted. Signature: a bankroll
 simulator where the reader sets the edge and the stake and watches ruin arrive
 at a stake size that still has positive expectation.
 
-## 03 · Randomness Has a Shape  🔲
-
+## 03 · Randomness Has a Shape  ✅ live (shape.html)
 The central limit theorem built from coin flips, so the normal curve is
 something that appears rather than something introduced. Then √n scaling, and
 the connection to volatility: why an annual number divides by √252 and not 252.
 Signature: a Galton board that fills in live, with the normal drawn over it.
 
-## 04 · The Distributions You Actually Meet  🔲
-
+## 04 · The Distributions You Actually Meet  ✅ live (dist.html)
 Lognormal, Poisson, Student's t, and mixtures. Which one options assume and
 where it fails. Signature: a "guess the distribution" drill — the reader sees a
 sample and has to name the shape, with the answer scored.
 
-## 05 · What a Sample Can Tell You  🔲
-
+## 05 · What a Sample Can Tell You  ✅ live (sample.html)
 Estimators, standard error, confidence intervals, bootstrap. The practical
 question: how many days of returns before a volatility estimate is worth
 trading on? Signature: resampling done visibly, so a confidence interval is a
 thing the reader watched being built.
 
-## 06 · Updating on Evidence  🔲
-
+## 06 · Updating on Evidence  ✅ live (bayes.html)
 Bayes as a picture. Base rates, the medical-test problem, and the trader's
 version: a stock gaps four standard deviations — was that a four-sigma move or
 a wrong volatility estimate? Signature: a grid of squares that repartitions as
 the prior moves.
 
-## 07 · Two Things Moving Together  🔲
-
+## 07 · Two Things Moving Together  ✅ live (corr.html)
 Covariance, correlation, regression, beta, R². Then Anscombe's quartet, which
 breaks the summary statistic on purpose. Signature: the reader drags points and
 watches the fitted line and the correlation move, including the one point that
 moves it most.
 
-## 08 · The Tails Are the Whole Job  🔲
-
+## 08 · The Tails Are the Whole Job  ✅ live (tails.html)
 Skewness, kurtosis, extreme values, value at risk and expected shortfall. How
 much of a portfolio's variance lives in its worst five days. Signature: the
 same standard deviation drawn three ways, with wildly different worst cases.
 
-## 09 · Putting It to Work  🔲
-
+## 09 · Putting It to Work  ✅ live (bet.html)
 The capstone. Everything before it is machinery; this is the machinery pointed
 at things people actually do with money. Odds setting from the market-maker's
 side, bet sizing done properly, and then four applications side by side:

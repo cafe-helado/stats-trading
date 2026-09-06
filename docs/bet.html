@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F4F1E8">
+<title>Putting It to Work — Chance, visually</title>
+<meta name="description" content="A sportsbook, a card counter, a poker player and an options market maker running one business. Where the price comes from, how much to bet, why the answer is always smaller than the formula says, and the four-divided-by-Sharpe-squared rule for knowing you have an edge at all.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Putting It to Work — Chance, visually">
+<meta property="og:description" content="A sportsbook, a card counter, a poker player and an options market maker running one business. Where the price comes from, how much to bet, why the answer is always smaller than the formula says, and the four-divided-by-Sharpe-squared rule for knowing you have an edge at all.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F1E8'/><rect x='5' y='19' width='4' height='7' fill='%230B6E75'/><rect x='11' y='12' width='4' height='14' fill='%230B6E75'/><rect x='17' y='7' width='4' height='19' fill='%230B6E75'/><rect x='23' y='16' width='4' height='10' fill='%230B6E75'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lab.css">
+<link rel="stylesheet" href="assets/mobile.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chance">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+<header class="serieshead">
+  <div class="in">
+    <a class="home" href="index.html">← Chance, visually</a>
+    <span class="num">No. 09 · Putting it to work</span>
+  </div>
+</header>
+
+<div class="progress" id="prog"></div>
+<nav class="chapnav" id="chapnav" aria-label="Chapters">
+  <a href="#c1"><span>Setting the price</span><i></i></a>
+  <a href="#c2"><span>How much to bet</span><i></i></a>
+  <a href="#c3"><span>Why nobody bets that much</span><i></i></a>
+  <a href="#c4"><span>Four seats, one arithmetic</span><i></i></a>
+  <a href="#c5"><span>Where it breaks</span><i></i></a>
+  <a href="#c6"><span>Drills</span><i></i></a>
+</nav>
+
+<div class="hero">
+  <canvas id="heroCv" aria-hidden="true"></canvas>
+  <div class="heroInner">
+    <div class="eyebrow">An interactive derivation · No. 09</div>
+    <h1>The same arithmetic, in four different chairs</h1>
+    <p class="sub">A sportsbook, a card counter, a poker player and an options market maker are running one business with four sets of vocabulary. This is that business: where the price comes from, how much to bet, why the correct answer is always smaller than the formula says, and what it takes to know you have an edge at all.</p>
+  </div>
+  <div class="scrollcue">Scroll ↓</div>
+</div>
+
+<main>
+
+<div class="orient">
+  <h2>Start here</h2>
+  <p class="lede">This is the capstone. Every module before it built a piece of machinery; this one points all of it at things people do with money. Nothing new is introduced — chapters 01 through 05 are <a href="odds.html">odds</a>, <a href="ev.html">expected value</a>, <a href="sample.html">sampling error</a> and <a href="tails.html">tails</a> wearing different clothes.</p>
+  <ol>
+    <li><b>Chapter 01 is the business model.</b> A book quoting −110 on both sides keeps <b>4.55%</b> of everything staked while forecasting nothing. An options market maker quoting 1.90 at 2.10 is running the identical trade.</li>
+    <li><b>Chapter 02 is the sizing rule</b>, and chapter 03 is why you should use half of it. Full Kelly halves your bankroll at some point with probability <b>one half</b>. Half Kelly keeps <b>75%</b> of the growth and drops that risk to <b>12.5%</b>.</li>
+    <li><b>Chapter 04 is the number to carry out of the whole series.</b> The years it takes to prove you have an edge is <b>4 ÷ Sharpe²</b>, in every seat, with all units canceled.</li>
+  </ol>
+  <details class="drop">
+    <summary>Notation — every symbol used on this page</summary>
+    <table class="ntab">
+      <tr><td>−110</td><td>American odds: risk $110 to win $100. Implies 52.38%.</td></tr>
+      <tr><td>Overround</td><td>How much the implied probabilities of a market sum past 100%. The book's built-in margin.</td></tr>
+      <tr><td>Hold</td><td>The fraction of everything staked that a balanced book keeps. Smaller than the overround, and the number that matters.</td></tr>
+      <tr><td>Bankroll</td><td>The money you are betting with, as opposed to the money you are betting.</td></tr>
+      <tr><td>f*</td><td>The Kelly stake: the fraction of bankroll that maximizes long-run growth.</td></tr>
+      <tr><td>bb/100</td><td>Poker's unit — big blinds won per hundred hands. A good live win rate is 5; the standard deviation around it is about 90.</td></tr>
+      <tr><td>Sharpe ratio</td><td>Edge divided by the volatility around it, annualized. The one number that compares seats.</td></tr>
+      <tr><td>Risk of ruin</td><td>The probability of ever falling to some fraction of the starting bankroll, over an unlimited number of bets.</td></tr>
+    </table>
+  </details>
+</div>
+
+<!-- ══════════ 01 ══════════ -->
+<section class="chapter" id="c1">
+  <div class="chead">
+    <div class="cnum">01</div>
+    <h2>Where the price comes from</h2>
+    <p class="dek">A book that cannot predict anything still makes 4.55% of everything staked. That is the whole business, and a market maker runs it too.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">A standard American sports market quotes <b>−110</b> on both sides: risk $110 to win $100, either way. <a href="odds.html">Module 01</a> converted that to a probability — <b>52.381%</b>. Both sides at once sum to <b>104.762%</b>.</p>
+    <p>That excess is the <span class="term" data-t="Overround" data-def="The amount by which the implied probabilities across a market sum past 100%. It is the book's margin expressed in probability terms, and it is why the quoted prices are never anyone's honest forecast.">overround</span>: <b>4.762</b> points of probability that do not exist. It is not a mistake and it is not a forecast. It is the price of the service.</p>
+    <p>Follow the cash rather than the percentages. Two bettors each stake <b>$110</b>, one on each side. Whichever wins is paid <b>$210</b> — their stake back plus $100. The book took in $220 and paid out $210, keeping <b>$10</b>. As a fraction of what was staked that is <b>4.545%</b>, and it arrives with certainty. The book did not need an opinion about the game.</p>
+    <p>The mirror image is what the bettor faces. To break even at −110 you must win <b>52.381%</b> of your bets — you have to be right <b>2.38 percentage points</b> more often than a coin just to stand still. A bettor with no edge at all, picking at exactly 50%, loses <b>4.545%</b> of every dollar they stake, forever.</p>
+    <p>Now the same trade in a different chair. An option is worth <b>$2.00</b> and a market maker quotes it <b>1.90 bid, 2.10 offer</b>. Someone sells to them at 1.90, someone else buys from them at 2.10, and the maker keeps <b>$0.20</b> on $4.00 of two-sided business — <b>5.00%</b>. Same structure, same indifference to who is right, same requirement: stay balanced. A book with a lopsided position and a market maker with a lopsided inventory have precisely the same problem.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>What the two sides imply, and the gap between them</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>Side A implies</span>
+            <span><i class="sw" style="background:var(--verm)"></i>Side B implies</span>
+            <span><i class="sw" style="background:var(--ochre)"></i>The overround</span>
+          </span>
+        </div>
+        <canvas id="cv1" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl1"></div>
+        <div class="kv" style="margin-top:20px" id="kv1"></div>
+      </div>
+    </div>
+    <figcaption>Drag the two prices apart and watch the gold band widen. Everything the book earns is that band; everything the bettor must overcome is that band.</figcaption>
+  </figure>
+
+  <div class="mline">hold = overround ÷ (1 + overround)</div>
+  <p class="mread">Reads as: <b>the margin, spread over all the money rather than over one side of it.</b> A 4.762-point overround is a 4.545% hold, and the hold is the number that describes the business.</p>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Find the price at which the book keeps a tenth of everything staked, then find the one where it keeps nothing. Predict the second before you drag.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c1" data-patch='{"a":-110,"b":-110}' data-focus="cv1">The standard market</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"a":-125,"b":-125}' data-focus="cv1">A wider one</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"a":100,"b":100}' data-focus="cv1">No margin at all</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A book takes $110 on each side of a −110 market. What is its expected profit?</p>
+    <div class="opts">
+      <button>Zero — it is a fair market</button>
+      <button data-ok="1">$10, with certainty rather than in expectation. It keeps 4.545% of the $220 staked no matter which side wins</button>
+      <button>$110 half the time</button>
+      <button>It depends on which side is correct</button>
+    </div>
+    <div class="ans"><b>$10, and not as an expectation.</b> A balanced book has no exposure to the outcome — its profit is realized whatever happens. This is why the actual job of a bookmaker, like the actual job of a market maker, is moving prices to attract the side they are short of. Forecasting is a means to balancing, not the product.</div>
+  </div>
+</section>
+
+<!-- ══════════ 02 ══════════ -->
+<section class="chapter" id="c2">
+  <div class="chead">
+    <div class="cnum">02</div>
+    <h2>How much to bet</h2>
+    <p class="dek">Maximize the average of the logarithm rather than the average of the money, and one specific fraction falls out.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Suppose you find the other side of chapter 01 — a bet where you genuinely have the edge. How much of your bankroll should go on it?</p>
+    <p>Maximizing expected <em>money</em> gives a useless answer: bet everything, every time, because that maximizes the average. <a href="ev.html">Module 02</a> showed why the average is the wrong target for anything repeated — you go broke on the first loss, and the average is carried by paths you will never be on.</p>
+    <p>Maximize the expected <b>logarithm</b> of the bankroll instead, which is the same as maximizing the median long-run outcome, and the answer is the <span class="term" data-t="Kelly criterion" data-def="The bet size that maximizes the expected logarithm of wealth, and so the long-run growth rate of a repeatedly-staked bankroll. For a bet paying b-to-1 with win probability p it is (bp − q)/b.">Kelly criterion</span>:</p>
+    <p>For a coin landing heads <b>60%</b> of the time at even money, that gives <b>f* = 0.20</b> — bet a fifth of the bankroll. The growth rate at that stake is <b>2.03%</b> per bet. Bet 10% instead and you grow at 1.50%; bet 30% and you grow at 1.47%. The peak is flat near the top, which turns out to matter enormously in chapter 03.</p>
+    <p>Two properties are worth internalizing. First, the growth curve comes back down and <b>crosses zero at about twice the optimal stake</b> — in the continuous case, exactly twice. Betting double Kelly gives you all of the volatility and none of the growth, which is a remarkably precise description of a lot of trading. Second, a bigger edge does not mean a bigger bet: a <b>+400</b> longshot you think wins 25% of the time carries a <b>25%</b> edge but a Kelly stake of only <b>6.25%</b>, while a <b>−200</b> favorite with an <b>8%</b> edge takes <b>16%</b>. The stake follows edge <em>divided by variance</em>, and the longshot has far more of the latter.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Growth rate against the fraction of bankroll staked</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Long-run growth</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>The Kelly stake</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Twice it</span>
+          </span>
+        </div>
+        <canvas id="cv2" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl2"></div>
+        <div class="kv" style="margin-top:20px" id="kv2"></div>
+      </div>
+    </div>
+    <figcaption>Notice how flat the curve is around its peak, and how steeply it falls past the vermilion line. Betting too little costs a little; betting too much costs everything.</figcaption>
+  </figure>
+
+  <div class="mline">f* = (b·p − q) / b          and in continuous form          f* = μ / σ²</div>
+  <p class="mread">Reads as: <b>stake your edge divided by the odds, or in the continuous version, your edge divided by your variance.</b> Both say the same thing — the size of a bet is set by how much you expect to make relative to how much the answer bounces around.</p>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Set the win probability to exactly the break-even rate and watch what the optimal stake does. Then push it one tenth of a point above.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c2" data-patch='{"p":0.60,"odds":100}' data-focus="cv2">The 60% coin</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"p":0.5238,"odds":-110}' data-focus="cv2">Exactly break-even at −110</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"p":0.55,"odds":-110}' data-focus="cv2">Winning 55% at −110</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"p":0.25,"odds":400}' data-focus="cv2">The longshot</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Bet A has a 25% edge; bet B has an 8% edge. Which takes the bigger Kelly stake?</p>
+    <div class="opts">
+      <button>A, because the edge is three times larger</button>
+      <button data-ok="1">You cannot tell from the edge alone. If A is a longshot its variance is far higher, and the stake is edge over variance — in the example on this page A takes 6.25% and B takes 16%</button>
+      <button>They take the same stake</button>
+      <button>B, always</button>
+    </div>
+    <div class="ans"><b>Edge alone does not size a bet.</b> This is the same statement as <a href="corr.html">module 07</a>'s: a number is meaningless until you know the spread around it. A large edge on something wild is a small bet; a modest edge on something tame is a large one.</div>
+  </div>
+</section>
+
+<!-- ══════════ 03 ══════════ -->
+<section class="chapter" id="c3">
+  <div class="chead">
+    <div class="cnum">03</div>
+    <h2>Why nobody bets that much</h2>
+    <p class="dek">Full Kelly halves your bankroll at some point with probability one half. Half Kelly costs a quarter of the growth and removes almost all of that.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Kelly is optimal for a stated objective — maximum long-run growth — and that objective quietly assumes you will still be there for the long run. The path is brutal.</p>
+    <p>There is a clean result for how brutal. Betting at a <b>k</b>-multiple of full Kelly, the probability of <em>ever</em> seeing your bankroll fall to a fraction <b>a</b> of where it started is <b>a<sup>(2/k − 1)</sup></b>. At full Kelly the exponent is 1, so the probability of ever halving is exactly <b>50%</b>, of ever quartering exactly <b>25%</b>, of ever falling by 90% exactly <b>10%</b>. Those are not tail scenarios. They are coin flips.</p>
+    <p>Now the other half of the trade. Growth at a k-multiple is <b>2k − k²</b> of the maximum. At <b>half</b> Kelly you keep <b>75%</b> of the growth for <b>half</b> the volatility, and the risk of ever halving falls from 50% to <b>12.5%</b>. At quarter Kelly you keep <b>43.8%</b> and the risk drops to <b>0.78%</b>.</p>
+    <p>That asymmetry is the whole argument, and it exists because the growth curve is flat near its peak while the risk is not. Nobody serious bets full Kelly. Half is the common answer and a quarter is defensible, and the reason is not timidity — it is that the formula's input is an <em>estimate</em>, which is chapter 05.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>What you keep, and what you risk, at each fraction of Kelly</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--moss)"></i>Growth retained</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Chance of ever halving</span>
+            <span><i class="swl" style="background:var(--grey)"></i>Volatility</span>
+          </span>
+        </div>
+        <canvas id="cv3" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl3"></div>
+        <div class="kv" style="margin-top:20px" id="kv3"></div>
+      </div>
+    </div>
+    <figcaption>The green curve is nearly flat between half and full Kelly. The red one is not. Everything about position sizing follows from the gap between those two shapes.</figcaption>
+  </figure>
+
+  <div class="derive">
+    <span class="lab">Where this comes from</span>
+    <p>Under the continuous approximation a bankroll bet at fraction <b>f</b> of a strategy with drift μ and volatility σ grows at <b>g(f) = fμ − f²σ²/2</b>. Setting the derivative to zero gives <b>f* = μ/σ²</b>, and substituting back gives a maximum growth of <b>μ²/2σ²</b>, which is <b>half the squared Sharpe ratio</b>. Writing <b>f = k·f*</b> and substituting gives <b>g = (2k − k²)·g<sub>max</sub></b> directly. The drawdown result comes from the same diffusion: the probability of a geometric Brownian motion with drift ever reaching a level below its start is the ratio raised to a power set by drift over variance, which for a k-multiple of Kelly works out to <b>2/k − 1</b>.</p>
+    <p><b>Where it breaks:</b> all of this is the continuous limit. For a discrete bet the growth curve crosses zero slightly <em>before</em> twice the Kelly stake — at 1.99× for a 55% coin, 1.95× at 60%, and 1.79× at 70%, because a discrete bet cannot be rebalanced mid-move. The bigger the individual bet, the further the approximation drifts, and in the direction that flatters you. It also assumes you can always stake a fraction rather than a minimum ticket, which is exactly false at a blackjack table.</p>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Why is half Kelly the common answer rather than a compromise nobody can justify?</p>
+    <div class="opts">
+      <button>Because it is simple to remember</button>
+      <button data-ok="1">Because the growth curve is flat near its peak and the risk curve is not — half the stake keeps three quarters of the growth and removes three quarters of the drawdown risk</button>
+      <button>Because full Kelly is mathematically wrong</button>
+      <button>Because regulators require it</button>
+    </div>
+    <div class="ans"><b>The two curves have different shapes.</b> Growth is quadratic near its maximum, so it barely moves when you back off; the probability of ruin is a power law in the same parameter, so it collapses. Any time you find an optimum that is flat on one axis and steep on another, sitting below the peak is nearly free.</div>
+  </div>
+</section>
+
+<!-- ══════════ 04 ══════════ -->
+<section class="chapter" id="c4">
+  <div class="chead">
+    <div class="cnum">04</div>
+    <h2>Four seats, one arithmetic</h2>
+    <p class="dek">Sports betting, card counting, poker and selling volatility, with the vocabulary stripped out. The units cancel and one number is left.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Put four apparently unrelated ways of making money side by side, each described by only three things: the edge per unit staked, the standard deviation per unit, and how many units happen in a year.</p>
+    <p><b>Sports betting.</b> Winning 55% of −110 sides is a <b>4.5%</b> edge per bet with a standard deviation of about 1.0, over maybe 500 bets a year. Annual Sharpe <b>1.01</b>.</p>
+    <p><b>Card counting.</b> A <b>1%</b> average edge — smaller than any other seat here — with a per-hand standard deviation of 1.15, but <b>20,000</b> hands a year. Annual Sharpe <b>1.23</b>, the second highest in the table, from the smallest edge in it.</p>
+    <p><b>Live poker.</b> Five big blinds per hundred hands against a standard deviation of ninety, over 30,000 hands a year. Annual Sharpe <b>0.96</b> — the largest per-unit edge and the worst ratio, because live poker deals so few hands.</p>
+    <p><b>Selling volatility.</b> 15% of alpha a year against 10% of volatility, marked daily. Annual Sharpe <b>1.50</b>.</p>
+    <p>And now the number that makes the whole series cohere. <a href="sample.html">Module 05</a> showed that a mean needs <b>(2/SR)²</b> observations before it is two standard errors from zero. Convert that to years and the units cancel completely:</p>
+    <p>A Sharpe of 1.0 takes <b>four years</b>. A Sharpe of 1.5 takes <b>1.78</b>. A Sharpe of 0.5 takes <b>sixteen</b>. This is true for a card counter, a poker player, a sports bettor and a hedge fund identically, and it does not care how many bets a year you make — a strategy trading a thousand times a day and one trading once a month need exactly the same number of <em>years</em> to prove the same Sharpe ratio.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Four seats: annual Sharpe, and the years each needs to prove itself</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>Annual Sharpe</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Years to two standard errors</span>
+          </span>
+        </div>
+        <canvas id="cv4" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl4"></div>
+        <div class="kv" style="margin-top:20px" id="kv4"></div>
+      </div>
+    </div>
+    <figcaption>Drag any seat's edge or frequency and watch both bars move together. The vermilion bar is always 4 ÷ Sharpe², whatever is on the other axis.</figcaption>
+  </figure>
+
+  <div class="mline">years to t = 2   =   4 ÷ (annual Sharpe)²</div>
+  <p class="mread">Reads as: <b>how long before your results distinguish you from someone with no edge at all.</b> Nothing about the size of the bets, the frequency, or the market survives into this formula.</p>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Take the card counter's edge down from 1% to 0.5% and watch the years double twice over. Then put the frequency up and watch it come back.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c4" data-patch='{"seat":1}' data-focus="cv4">Sports</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"seat":2}' data-focus="cv4">Counting</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"seat":3}' data-focus="cv4">Poker</button>
+      <button class="act ghost" data-preset="c4" data-patch='{"seat":4}' data-focus="cv4">Selling vol</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A counter has a 1% edge per hand and a poker player has a 5% edge per hundred hands. Who has the better business?</p>
+    <div class="opts">
+      <button>The poker player — five times the edge</button>
+      <button data-ok="1">The counter, on annual Sharpe: 1.23 against 0.96, because 20,000 hands a year beats 300 blocks even at a fifth of the edge per unit</button>
+      <button>They are identical</button>
+      <button>You cannot compare them, the units differ</button>
+    </div>
+    <div class="ans"><b>Frequency is what makes an edge bankable.</b> The units differing is precisely what the Sharpe ratio is for — it divides by the standard deviation and multiplies by the square root of the count, and everything idiosyncratic cancels. This is also the honest reason high-frequency trading exists: a per-trade edge far too small to notice becomes a Sharpe nobody else can reach, purely from the count.</div>
+  </div>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section class="chapter" id="c5">
+  <div class="chead">
+    <div class="cnum">05</div>
+    <h2>Where it breaks</h2>
+    <p class="dek">Kelly tells the vol seller to run fifteen times leverage. Chapter 04 says it takes 1.78 years to establish the number that produced it, and module 08 says the returns are not the shape assumed.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Run the Kelly formula on the fourth seat exactly as written. Edge 15%, volatility 10%, so f* = μ/σ² = <b>15× leverage</b>. Every part of that calculation is correct and the answer is insane. It is worth being precise about why, because all three reasons are things this series has already shown.</p>
+    <p><b>The inputs are estimates, and bad ones.</b> The 1.5 Sharpe that produced 15× is exactly the quantity chapter 04 says takes <b>1.78 years</b> of data to distinguish from zero. Sizing off a number with that much sampling error is not aggressive; it is arithmetic performed on noise. Kelly is also asymmetric here: <em>over</em>estimating your edge by a factor of two puts you at double Kelly, where growth is zero, and by a factor of three puts you well past it, where growth is negative.</p>
+    <p><b>The distribution is wrong.</b> The continuous derivation assumes a Gaussian. <a href="tails.html">Module 08</a> showed a mild two-regime mixture whose 99% expected shortfall is <b>63%</b> worse than a normal's, and short-volatility returns are considerably more skewed than that mixture. A Kelly stake computed from μ and σ alone is blind to precisely the shape that ends leveraged positions.</p>
+    <p><b>Ruin is not a fraction.</b> The formula assumes you can always stake a proportion of what remains. A margin call, a risk limit, a table minimum and a redemption are all the same event: a floor that turns a drawdown into an exit, at which point the long run the whole derivation is about no longer applies to you.</p>
+    <p>None of this makes the framework useless — it makes it a <em>ceiling</em> rather than a target. The correct reading of Kelly is: this is the most that could ever be justified, under assumptions you know are optimistic, on inputs you cannot measure well. Take a fraction of it. And notice that the argument arrives at the same place as <a href="tails.html">module 08</a>'s from the opposite direction: be precise about the middle, conservative about the tail, and size so that being wrong is survivable.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>What happens when the edge you sized on was not the edge you had</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Growth, if you were right</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Growth at the true edge</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>The stake you chose</span>
+          </span>
+        </div>
+        <canvas id="cv5" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl5"></div>
+        <div class="kv" style="margin-top:20px" id="kv5"></div>
+      </div>
+    </div>
+    <figcaption>Drag the true edge below what you assumed. The stake stays where you put it and the growth beneath it goes negative long before the edge does.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">You size at full Kelly on an edge you have overestimated by a factor of two. What happens?</p>
+    <div class="opts">
+      <button>You grow at half the rate</button>
+      <button data-ok="1">You are betting double the true Kelly stake, where long-run growth is approximately zero — all of the volatility and none of the return</button>
+      <button>You still grow, just more slowly</button>
+      <button>Nothing, Kelly is robust to input error</button>
+    </div>
+    <div class="ans"><b>Double the true Kelly stake, which is the zero-growth point.</b> This is the strongest practical argument for fractional Kelly, and it is not about risk appetite: if you size at half Kelly and your edge estimate is double the truth, you land on full Kelly of the real edge — still the growth-maximizing bet. The fraction buys you a margin of error in the input, not just a smoother ride.</div>
+  </div>
+</section>
+
+<!-- ══════════ 06 ══════════ -->
+<section class="chapter" id="c6">
+  <div class="chead">
+    <div class="cnum">06</div>
+    <h2>Drill it</h2>
+    <p class="dek">Prices into probabilities and holds, edges into stakes, and Sharpe ratios into years.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The first tier is the market: implied probabilities, overround, hold, break-even rates. The second is sizing and proof: Kelly stakes, fractional Kelly, and how long an edge takes to establish.</p>
+  </div>
+
+  <figure>
+    <div class="drill" id="drill">
+      <div class="dstats">
+        <div class="c"><span class="k">Correct</span><span class="v" id="dScore">0 / 0</span></div>
+        <div class="c"><span class="k">Streak</span><span class="v" id="dStreak" style="color:var(--moss)">0</span></div>
+        <div class="c"><span class="k">Best</span><span class="v" id="dBest">0</span></div>
+        <div class="c" style="flex:1;min-width:170px"><span class="k">Tier</span>
+          <div class="seg" style="margin-top:5px;max-width:240px">
+            <button id="dT1" aria-pressed="true">The market</button>
+            <button id="dT2" aria-pressed="false">Sizing</button>
+          </div>
+        </div>
+      </div>
+      <span class="qn" id="dKind">Question</span>
+      <p class="qt" id="dText">Loading…</p>
+      <div class="ansrow">
+        <input type="text" inputmode="decimal" id="dInput" placeholder="your answer" aria-label="Your answer">
+        <span class="unit" id="dUnit"></span>
+        <button class="act" id="dSubmit">Check</button>
+        <button class="act ghost" id="dSkip">Skip</button>
+      </div>
+      <div class="verdict">
+        <div class="vd" id="dVerdict"></div>
+        <div class="work" id="dWork"></div>
+        <div class="btnrow"><button class="act" id="dNext">Next question</button></div>
+      </div>
+    </div>
+    <figcaption>The three worth knowing cold: −110 implies 52.381%, a balanced −110 book holds 4.545%, and years to prove an edge is 4 ÷ Sharpe².</figcaption>
+  </figure>
+
+  <div class="prose" style="margin-top:46px">
+    <p>Six questions across the page.</p>
+  </div>
+
+  <div class="score" id="scoreBox">
+    <span class="big" id="scoreNum">0 / 6</span>
+    <span class="txt" id="scoreTxt">Answered nothing yet. Questions are scored as you go.</span>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 1 · chapter 01</span>
+    <p class="q">Both sides of a market are priced at −110. What does a balanced book keep?</p>
+    <div class="opts">
+      <button>4.762% — the overround</button>
+      <button data-ok="1">4.545% of everything staked. The overround is 4.762 points of probability; the hold spreads that across all the money</button>
+      <button>Nothing, if the sides are balanced</button>
+      <button>10%</button>
+    </div>
+    <div class="ans"><b>4.545%, and with certainty.</b> Two $110 stakes bring in $220 and pay out $210. The overround and the hold are different quantities and the second is the one that describes the business — hold = overround ÷ (1 + overround).</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 2 · chapter 01</span>
+    <p class="q">What win rate does a bettor need at −110 just to break even?</p>
+    <div class="opts">
+      <button>50% — it is an even market</button>
+      <button data-ok="1">52.381%. You must be right 2.38 points more often than a coin before you have made a cent</button>
+      <button>55%</button>
+      <button>47.6%</button>
+    </div>
+    <div class="ans"><b>52.381%, which is the price itself read as a probability.</b> A bettor picking at a true 50% loses 4.545% of every dollar staked — the same number the book keeps, seen from the other chair.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 3 · chapter 02</span>
+    <p class="q">A coin lands heads 60% of the time, paying even money. What is the Kelly stake?</p>
+    <div class="opts">
+      <button>60% of the bankroll</button>
+      <button data-ok="1">20% — which for an even-money bet is just the edge, 2p − 1</button>
+      <button>10%</button>
+      <button>All of it, since the bet is favorable</button>
+    </div>
+    <div class="ans"><b>20%, growing the bankroll 2.03% per bet.</b> "Bet everything" is what maximizing expected money actually recommends, and it goes broke with probability one — which is the whole reason the objective is the logarithm instead.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 4 · chapter 03</span>
+    <p class="q">Betting full Kelly, what is the probability of ever seeing your bankroll halve?</p>
+    <div class="opts">
+      <button>About 5%</button>
+      <button data-ok="1">50% — and 25% of ever quartering. At half Kelly those become 12.5% and 1.6%</button>
+      <button>Essentially zero, since Kelly is growth-optimal</button>
+      <button>100%</button>
+    </div>
+    <div class="ans"><b>A coin flip.</b> The probability of ever falling to a fraction a is a<sup>(2/k − 1)</sup>, so at full Kelly it is just a. Half Kelly keeps 75% of the growth while cutting that to 12.5%, and the asymmetry exists because growth is flat near its peak while risk of ruin is not.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 5 · chapter 04</span>
+    <p class="q">How long does it take to establish a Sharpe ratio of 1.0 at two standard errors?</p>
+    <div class="opts">
+      <button>About six months</button>
+      <button data-ok="1">Four years — and the formula is 4 ÷ Sharpe², which holds in every seat regardless of how often you trade</button>
+      <button>It depends entirely on how many bets you make</button>
+      <button>One year</button>
+    </div>
+    <div class="ans"><b>Four years, and the trade frequency cancels out entirely.</b> A strategy trading a thousand times a day and one trading monthly need the same number of years to prove the same Sharpe. Frequency raises the Sharpe you can achieve; it does not shorten the time to prove the one you have.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 6 · chapter 05</span>
+    <p class="q">Kelly says a Sharpe-1.5 strategy at 10% volatility should run 15× leverage. What is wrong with doing that?</p>
+    <div class="opts">
+      <button>Nothing — the arithmetic is correct</button>
+      <button data-ok="1">The arithmetic is correct and the inputs are not. That Sharpe takes 1.78 years to distinguish from zero, the returns are not Gaussian, and a margin call turns a drawdown into an exit</button>
+      <button>Kelly does not apply to continuous strategies</button>
+      <button>Leverage above 1× is never justified</button>
+    </div>
+    <div class="ans"><b>Correct arithmetic on inputs you cannot measure.</b> Overestimating your edge by a factor of two puts you at double Kelly, where growth is zero. Sizing at half Kelly means that same error lands you on the true full Kelly instead — the fraction buys a margin of error in the input, not just a calmer ride.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="n">The four seats are parameterized from figures that are conventional rather than measured, and each hides something. The card-counting edge assumes bet spreading, which raises both the edge and the variance above the flat-bet figures used here, and it ignores that a counter only plays a fraction of the hands dealt. Live poker win rates above five big blinds per hundred are rare and self-reported ones are selected on having worked. The sports figure assumes a 55% win rate persists, which is a much stronger claim than it looks — the market moves against a bettor who has one. And the volatility seat's 15% alpha at 10% volatility is a smooth description of a return stream whose defining property is that it is not smooth. Every Kelly figure on this page assumes a known edge and a Gaussian, and chapter 05 is about how much both assumptions are worth. Nothing here is advice about money; it is the arithmetic that any advice would have to be consistent with.</p>
+</footer>
+
+<script src="assets/lab.js"></script>
+<script src="assets/stats.js"></script>
+<script src="assets/pwa.js" defer></script>
+<script>
+"use strict";
+
+/* line() in the engine takes arrays, not a function. Sampling a curve is
+   common enough on this page to be worth one helper — and passing a function
+   straight to line() is a silent no-op, which is how it was caught. */
+function curve(o, f, col, w, dash) {
+  const n = 260, xs = [], ys = [];
+  for (let i = 0; i <= n; i++) {
+    const x = o.x0 + (o.x1 - o.x0) * i / n;
+    xs.push(x); ys.push(f(x));
+  }
+  line(o, xs, ys, col, w, dash);
+}
+
+/* ── the book's side ─────────────────────────────────────────────────────
+   Overround and hold are different numbers and the difference matters: the
+   overround is stated in probability, the hold in money. A 4.762-point
+   overround is a 4.545% hold, and it is the hold that describes the trade. */
+const impliedProb = us => us < 0 ? -us / (-us + 100) : 100 / (us + 100);
+const usToDecimal = us => us < 0 ? 1 + 100 / -us : 1 + us / 100;
+function marketMargin(a, b) {
+  const pa = impliedProb(a), pb = impliedProb(b), sum = pa + pb;
+  return {
+    pa: pa, pb: pb, sum: sum,
+    over: sum - 1,                     /* in probability points */
+    hold: (sum - 1) / sum,             /* as a share of everything staked */
+    fair: [pa / sum, pb / sum],        /* de-vigged, proportionally */
+    breakEven: pa
+  };
+}
+
+/* ── Kelly, discrete and continuous ─────────────────────────────────────
+   The discrete form is what a bettor uses; the continuous one is what a
+   trader uses, and the page needs both because they disagree in a way
+   chapter 03 is about. */
+const kelly = (p, b) => (b * p - (1 - p)) / b;
+const logGrowth = (p, f, b) => {
+  if (f <= 0) return 0;
+  if (f >= 1) return -Infinity;
+  return p * Math.log(1 + f * b) + (1 - p) * Math.log(1 - f);
+};
+const kellyC = (mu, sig) => mu / (sig * sig);
+const growthC = (f, mu, sig) => f * mu - f * f * sig * sig / 2;
+/* where the discrete growth curve actually returns to zero, in Kelly multiples */
+function zeroCrossing(p, b) {
+  const k = kelly(p, b);
+  if (k <= 0) return NaN;
+  let lo = k, hi = 0.9999;
+  for (let i = 0; i < 160; i++) {
+    const m = (lo + hi) / 2;
+    if (logGrowth(p, m, b) > 0) lo = m; else hi = m;
+  }
+  return (lo + hi) / 2 / k;
+}
+
+/* ── fractional Kelly: what you keep and what you risk ───────────────────
+   Both closed form under the continuous approximation. The drawdown result
+   is the one people find hard to believe: at full Kelly the chance of ever
+   halving is exactly one half. */
+const growthKept = k => 2 * k - k * k;                  /* share of the maximum */
+const ruinProb = (k, a) => Math.pow(a, 2 / k - 1);      /* P(ever reaching a·bankroll) */
+
+/* ── comparing seats ────────────────────────────────────────────────────
+   Three inputs each, and everything idiosyncratic cancels. The years to a
+   t-statistic of 2 is the punchline: 4 divided by the squared Sharpe, with
+   the trade frequency gone entirely. */
+function seatStats(ev, sd, per) {
+  const srUnit = ev / sd;
+  const srYear = srUnit * Math.sqrt(per);
+  return {
+    ev: ev, sd: sd, per: per,
+    srUnit: srUnit, srYear: srYear,
+    kelly: ev / (sd * sd),
+    unitsToT2: Math.pow(2 / srUnit, 2),
+    yearsToT2: 4 / (srYear * srYear)
+  };
+}
+const SEATS = [
+  { n: "Sports betting", ev: 0.0450, sd: 1.0000, per: 500, unit: "per bet",
+    note: "winning 55% of −110 sides" },
+  { n: "Card counting", ev: 0.0100, sd: 1.1500, per: 20000, unit: "per hand",
+    note: "a 1% average edge, 20,000 hands a year" },
+  { n: "Live poker", ev: 0.0500, sd: 0.9000, per: 300, unit: "per 100 hands",
+    note: "5bb/100 against a 90bb/100 standard deviation" },
+  { n: "Selling vol", ev: 0.15 / 252, sd: 0.10 / Math.sqrt(252), per: 252, unit: "per day",
+    note: "15% alpha at 10% volatility, marked daily" }
+];
+
+/* ══════════ hero ══════════ */
+(function () {
+  const cv = document.getElementById("heroCv"); let w, h, g, raf, t0 = 0;
+  function size() {
+    const dpr = window.devicePixelRatio || 1;
+    w = cv.clientWidth; h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr;
+    g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  /* four bankrolls compounding at four fractions of Kelly, same coin flips */
+  const FR = [1.0, 0.5, 0.25], COLS = ["--verm", "--blue", "--moss"];
+  const paths = FR.map(() => []);
+  (function build() {
+    const r = rng(9107), flips = [];
+    for (let i = 0; i < 260; i++) flips.push(r() < 0.6);
+    FR.forEach((k, j) => {
+      let wv = 1;
+      for (let i = 0; i < flips.length; i++) {
+        wv *= flips[i] ? 1 + 0.2 * k : 1 - 0.2 * k;
+        paths[j].push(Math.log(wv));
+      }
+    });
+  })();
+  function draw(ph) {
+    g.fillStyle = C("--chalk"); g.fillRect(0, 0, w, h);
+    const padX = w * 0.06, gw = w - padX * 2;
+    const shown = Math.max(8, Math.round(paths[0].length * Math.min(1, ph * 0.55)));
+    let lo = 0, hi = 0;
+    paths.forEach(p => p.slice(0, shown).forEach(v => { if (v < lo) lo = v; if (v > hi) hi = v; }));
+    const span = Math.max(hi - lo, 0.5);
+    const Y = v => h * 0.86 - (v - lo) / span * h * 0.70;
+    paths.forEach((p, j) => {
+      g.strokeStyle = C(COLS[j]); g.lineWidth = 1.6; g.globalAlpha = 0.85;
+      g.beginPath();
+      for (let i = 0; i < shown; i++) {
+        const x = padX + gw * i / (paths[0].length - 1);
+        if (i) g.lineTo(x, Y(p[i])); else g.moveTo(x, Y(p[i]));
+      }
+      g.stroke();
+    });
+    g.globalAlpha = 1;
+  }
+  function tick(t) { if (!t0) t0 = t; draw((t - t0) / 1500); raf = requestAnimationFrame(tick); }
+  window.drawHero = function () {
+    size(); if (RM) { draw(4); return; }
+    if (raf) cancelAnimationFrame(raf); t0 = 0; raf = requestAnimationFrame(tick);
+  };
+})();
+
+/* ══════════ 01 — setting the price ══════════ */
+const s1 = { a: -110, b: -110, stake: 110 };
+(function () {
+  sliders(document.getElementById("ctl1"), [
+    { id: "a1", k: "a", lbl: "A", name: "Price on side A", min: -400, max: 400, step: 5,
+      fmt: v => (v >= 100 ? "+" : "") + v.toFixed(0) },
+    { id: "b1", k: "b", lbl: "B", name: "Price on side B", min: -400, max: 400, step: 5,
+      fmt: v => (v >= 100 ? "+" : "") + v.toFixed(0) },
+    { id: "c1", k: "stake", lbl: "$", name: "Staked on each side", min: 10, max: 500, step: 10,
+      fmt: v => "$" + v.toFixed(0) }
+  ], s1, () => draw(), "c1");
+  window.draw1 = draw;
+  function draw() {
+    const a = s1.a < 100 && s1.a > -100 ? -110 : s1.a;
+    const b = s1.b < 100 && s1.b > -100 ? -110 : s1.b;
+    const M = marketMargin(a, b);
+    const o = Fig(document.getElementById("cv1"),
+      { h: 320, x0: 0, x1: Math.max(1.16, M.sum * 1.10), y0: -0.55, y1: 0.55,
+        pad: { l: 20, r: 14, t: 14 } });
+    axes(o, v => (v * 100).toFixed(0) + "%", () => "", 6, 0);
+    const g = o.g, top = o.Y(0.30), bot = o.Y(-0.30);
+    const seg = (from, to, col, alpha) => {
+      g.save(); g.fillStyle = C(col); g.globalAlpha = alpha;
+      g.fillRect(o.X(from), top, o.X(to) - o.X(from), bot - top); g.restore();
+    };
+    seg(0, M.pa, "--blue", 0.82);
+    seg(M.pa, M.pa + M.pb, "--verm", 0.82);
+    if (M.over > 0) seg(1, M.sum, "--ochre", 0.95);
+    /* the 100% mark — where an honest market would end */
+    g.save(); g.strokeStyle = C("--ink"); g.lineWidth = 1.5; g.setLineDash([4, 3]);
+    g.beginPath(); g.moveTo(o.X(1), top - 16); g.lineTo(o.X(1), bot + 16); g.stroke();
+    g.setLineDash([]);
+    g.fillStyle = C("--ink"); g.font = "10px 'IBM Plex Mono', monospace";
+    g.textAlign = "center"; g.textBaseline = "bottom";
+    g.fillText("100%", o.X(1), top - 20);
+    g.restore();
+    const total = 2 * s1.stake;
+    const payout = s1.stake * usToDecimal(a);
+    document.getElementById("kv1").innerHTML = kvHTML([
+      ["Side A implies", (M.pa * 100).toFixed(3) + "%", "blue"],
+      ["Side B implies", (M.pb * 100).toFixed(3) + "%", "verm"],
+      ["They sum to", (M.sum * 100).toFixed(3) + "%"],
+      ["Overround", (M.over * 100).toFixed(3) + " pts", "ochre"],
+      ["Hold", (M.hold * 100).toFixed(3) + "%", "ochre"],
+      ["Break-even win rate", (M.breakEven * 100).toFixed(3) + "%"],
+      ["Staked in total", "$" + total.toFixed(0)],
+      ["Paid to the winner", "$" + payout.toFixed(2)],
+      ["The book keeps", "$" + (total - payout).toFixed(2), "moss"],
+      ["De-vigged fair odds", (M.fair[0] * 100).toFixed(2) + "% / " +
+        (M.fair[1] * 100).toFixed(2) + "%", "grey"]
+    ]);
+  }
+})();
+
+/* ══════════ 02 — how much to bet ══════════ */
+const s2 = { p: 0.60, odds: 100 };
+(function () {
+  sliders(document.getElementById("ctl2"), [
+    { id: "a2", k: "p", lbl: "p", name: "How often you win", min: 0.05, max: 0.95, step: 0.001,
+      fmt: v => (v * 100).toFixed(1) + "%" },
+    { id: "b2", k: "odds", lbl: "±", name: "The price you get", min: -500, max: 900, step: 5,
+      fmt: v => (v >= 100 ? "+" : "") + v.toFixed(0) }
+  ], s2, () => draw(), "c2");
+  window.draw2 = draw;
+  function draw() {
+    const us = s2.odds < 100 && s2.odds > -100 ? 100 : s2.odds;
+    const b = usToDecimal(us) - 1;
+    const k = kelly(s2.p, b);
+    const peak = k > 0 ? logGrowth(s2.p, k, b) : 0;
+    const yTop = Math.max(0.01, peak * 1.35);
+    const o = Fig(document.getElementById("cv2"),
+      { h: 320, x0: 0, x1: Math.max(0.25, Math.min(1, k > 0 ? k * 2.6 : 0.5)),
+        y0: -yTop * 1.6, y1: yTop, pad: { l: 62, r: 14, t: 14 } });
+    axes(o, v => (v * 100).toFixed(0) + "%", v => (v * 100).toFixed(1) + "%", 6, 5);
+    hline(o, 0, C("--hair"), "", [2, 3]);
+    curve(o, f => logGrowth(s2.p, f, b), C("--blue"), 2);
+    if (k > 0) {
+      vline(o, k, C("--ochre"), "f* " + (k * 100).toFixed(1) + "%");
+      vline(o, 2 * k, C("--verm"), "2× f*");
+    }
+    const edge = s2.p * b - (1 - s2.p);
+    const rows = [
+      ["The price implies", (impliedProb(us) * 100).toFixed(2) + "%"],
+      ["You say", (s2.p * 100).toFixed(1) + "%"],
+      ["Edge per $1 staked", (edge >= 0 ? "+" : "") + edge.toFixed(4), edge > 0 ? "moss" : "verm"],
+      ["Kelly stake", k > 0 ? (k * 100).toFixed(2) + "%" : "no bet", k > 0 ? "ochre" : "verm"]
+    ];
+    if (k > 0) {
+      rows.push(["Growth at f*", (Math.exp(peak) * 100 - 100).toFixed(3) + "% per bet", "blue"]);
+      rows.push(["Growth at half f*",
+        (Math.exp(logGrowth(s2.p, k / 2, b)) * 100 - 100).toFixed(3) + "%"]);
+      rows.push(["Growth at 2× f*",
+        (Math.exp(logGrowth(s2.p, Math.min(2 * k, 0.999), b)) * 100 - 100).toFixed(3) + "%", "verm"]);
+      rows.push(["Zero growth at", zeroCrossing(s2.p, b).toFixed(3) + "× f*", "grey"]);
+      rows.push(["Bets to double", Math.round(Math.log(2) / peak).toLocaleString()]);
+    } else {
+      rows.push(["Why", "the price is fair or against you", "verm"]);
+    }
+    document.getElementById("kv2").innerHTML = kvHTML(rows);
+  }
+})();
+
+/* ══════════ 03 — why nobody bets that much ══════════ */
+const s3 = { k: 0.5, level: 0.5 };
+(function () {
+  sliders(document.getElementById("ctl3"), [
+    { id: "a3", k: "k", lbl: "k", name: "Fraction of full Kelly", min: 0.05, max: 1.4, step: 0.01,
+      fmt: v => v.toFixed(2) + "×" },
+    { id: "b3", k: "level", lbl: "↓", name: "The drawdown you care about", min: 0.05, max: 0.90, step: 0.05,
+      fmt: v => "to " + (v * 100).toFixed(0) + "%" }
+  ], s3, () => draw(), "c3");
+  window.draw3 = draw;
+  function draw() {
+    const o = Fig(document.getElementById("cv3"),
+      { h: 320, x0: 0, x1: 1.4, y0: 0, y1: 1.05, pad: { l: 56, r: 14, t: 14 } });
+    axes(o, v => v.toFixed(2) + "×", v => (v * 100).toFixed(0) + "%", 6, 5);
+    curve(o, k => k <= 0 ? NaN : Math.max(0, growthKept(k)), C("--moss"), 2.2);
+    curve(o, k => k <= 0 ? NaN : Math.min(1, ruinProb(k, s3.level)), C("--verm"), 2.2);
+    curve(o, k => k, C("--grey"), 1.2);
+    vline(o, s3.k, C("--ochre"), s3.k.toFixed(2) + "× Kelly");
+    const kept = growthKept(s3.k), ruin = ruinProb(s3.k, s3.level);
+    document.getElementById("kv3").innerHTML = kvHTML([
+      ["Stake", s3.k.toFixed(2) + "× full Kelly", "ochre"],
+      ["Growth retained", (kept * 100).toFixed(1) + "%", "moss"],
+      ["Volatility, relative", (s3.k * 100).toFixed(0) + "%", "grey"],
+      ["Chance of ever halving", (ruinProb(s3.k, 0.5) * 100).toFixed(2) + "%", "verm"],
+      ["— ever quartering", (ruinProb(s3.k, 0.25) * 100).toFixed(2) + "%"],
+      ["— ever losing 90%", (ruinProb(s3.k, 0.10) * 100).toFixed(2) + "%"],
+      ["Chance of reaching " + (s3.level * 100).toFixed(0) + "%",
+        (ruin * 100).toFixed(2) + "%", "verm"],
+      ["Growth per unit of risk", (kept / s3.k).toFixed(3), "moss"]
+    ]);
+  }
+})();
+
+/* ══════════ 04 — four seats, one arithmetic ══════════ */
+const s4 = { seat: 1, edge: 100, freq: 100 };
+(function () {
+  sliders(document.getElementById("ctl4"), [
+    { id: "a4", k: "seat", lbl: "#", name: "Which seat", min: 1, max: 4, step: 1,
+      fmt: v => SEATS[Math.round(v) - 1].n },
+    { id: "b4", k: "edge", lbl: "e", name: "Its edge, as a % of the figure quoted", min: 20, max: 250, step: 5,
+      fmt: v => v.toFixed(0) + "%" },
+    { id: "c4", k: "freq", lbl: "n", name: "Its frequency, likewise", min: 20, max: 400, step: 5,
+      fmt: v => v.toFixed(0) + "%" }
+  ], s4, () => draw(), "c4");
+  window.draw4 = draw;
+  window.__seats = () => SEATS.map(s => {
+    const st = seatStats(s.ev, s.sd, s.per); st.n = s.n; return st;
+  });
+  function draw() {
+    const idx = Math.max(1, Math.min(4, Math.round(s4.seat))) - 1;
+    const stats = SEATS.map((s, i) => {
+      const ev = s.ev * (i === idx ? s4.edge / 100 : 1);
+      const per = Math.max(1, s.per * (i === idx ? s4.freq / 100 : 1));
+      const st = seatStats(ev, s.sd, per); st.n = s.n; return st;
+    });
+    const yTop = Math.max(2.2, Math.max.apply(null, stats.map(s => s.srYear)) * 1.2);
+    const o = Fig(document.getElementById("cv4"),
+      { h: 320, x0: -0.6, x1: 3.6, y0: 0, y1: yTop, pad: { l: 56, r: 52, t: 14 } });
+    axes(o, v => ["sports", "count", "poker", "vol"][Math.round(v)] || "", v => v.toFixed(1), 4, 5);
+    const g = o.g, bw = o.pw / 11;
+    /* Sharpe as a solid bar; years to t=2 on its own scale, as an outline */
+    const yrTop = Math.max(6, Math.max.apply(null, stats.map(s => Math.min(s.yearsToT2, 40))) * 1.15);
+    stats.forEach((s, i) => {
+      g.save(); g.fillStyle = C("--blue"); g.globalAlpha = i === idx ? 0.95 : 0.55;
+      g.fillRect(o.X(i) - bw, o.Y(s.srYear), bw, o.Y(0) - o.Y(s.srYear));
+      g.restore();
+      const yv = Math.min(s.yearsToT2, yrTop) / yrTop * yTop;
+      g.save(); g.strokeStyle = C("--verm"); g.lineWidth = 2; g.globalAlpha = i === idx ? 1 : 0.6;
+      g.strokeRect(o.X(i) + 2, o.Y(yv), bw, o.Y(0) - o.Y(yv));
+      g.restore();
+      g.fillStyle = C("--ink2"); g.font = "9.5px 'IBM Plex Mono', monospace";
+      g.textAlign = "center"; g.textBaseline = "bottom";
+      g.fillText(s.srYear.toFixed(2), o.X(i) - bw / 2, o.Y(s.srYear) - 4);
+      g.fillStyle = C("--verm");
+      g.fillText(s.yearsToT2 > 40 ? "40+" : s.yearsToT2.toFixed(1) + "y",
+        o.X(i) + 2 + bw / 2, o.Y(yv) - 4);
+    });
+    const s = stats[idx];
+    document.getElementById("kv4").innerHTML = kvHTML([
+      ["Seat", s.n, "blue"],
+      ["Edge per unit", (s.ev * 100).toFixed(3) + "%"],
+      ["Standard deviation", s.sd.toFixed(3)],
+      ["Units per year", Math.round(s.per).toLocaleString()],
+      ["Sharpe per unit", s.srUnit.toFixed(4)],
+      ["Annual Sharpe", s.srYear.toFixed(3), "blue"],
+      ["Full Kelly stake", (s.kelly * 100).toFixed(2) + "%", "ochre"],
+      ["Units to t = 2", Math.round(s.unitsToT2).toLocaleString()],
+      ["Years to t = 2", s.yearsToT2.toFixed(2), "verm"],
+      ["— which is 4 ÷ SR²", (4 / (s.srYear * s.srYear)).toFixed(2), "grey"]
+    ]);
+  }
+})();
+
+/* ══════════ 05 — where it breaks ══════════ */
+const s5 = { assumed: 0.15, actual: 0.075, vol: 0.10, frac: 1.0 };
+(function () {
+  sliders(document.getElementById("ctl5"), [
+    { id: "a5", k: "assumed", lbl: "μ̂", name: "The edge you assumed", min: 0.01, max: 0.40, step: 0.005,
+      fmt: v => (v * 100).toFixed(1) + "%" },
+    { id: "b5", k: "actual", lbl: "μ", name: "The edge you actually have", min: -0.10, max: 0.40, step: 0.005,
+      fmt: v => (v * 100).toFixed(1) + "%" },
+    { id: "c5", k: "vol", lbl: "σ", name: "Volatility", min: 0.03, max: 0.40, step: 0.005,
+      fmt: v => (v * 100).toFixed(1) + "%" },
+    { id: "d5", k: "frac", lbl: "k", name: "Fraction of Kelly you use", min: 0.1, max: 1.2, step: 0.05,
+      fmt: v => v.toFixed(2) + "×" }
+  ], s5, () => draw(), "c5");
+  window.draw5 = draw;
+  function draw() {
+    const chosen = kellyC(s5.assumed, s5.vol) * s5.frac;
+    const trueK = kellyC(s5.actual, s5.vol);
+    const xMax = Math.max(chosen * 1.5, Math.abs(trueK) * 2.2, 2);
+    const gA = f => growthC(f, s5.assumed, s5.vol);
+    const gT = f => growthC(f, s5.actual, s5.vol);
+    const peak = Math.max(gA(kellyC(s5.assumed, s5.vol)), 0.01);
+    const o = Fig(document.getElementById("cv5"),
+      { h: 320, x0: 0, x1: xMax, y0: Math.min(-peak * 1.4, gT(chosen) * 1.3 - 0.01), y1: peak * 1.25,
+        pad: { l: 62, r: 14, t: 14 } });
+    axes(o, v => v.toFixed(1) + "×", v => (v * 100).toFixed(0) + "%", 6, 5);
+    hline(o, 0, C("--hair"), "", [2, 3]);
+    curve(o, gA, C("--blue"), 2);
+    curve(o, gT, C("--verm"), 2, [6, 4]);
+    vline(o, chosen, C("--ochre"), "you bet " + chosen.toFixed(2) + "×");
+    const realized = gT(chosen);
+    const ratio = s5.actual !== 0 ? chosen / trueK : Infinity;
+    document.getElementById("kv5").innerHTML = kvHTML([
+      ["Kelly on the assumed edge", kellyC(s5.assumed, s5.vol).toFixed(2) + "×"],
+      ["You staked", chosen.toFixed(2) + "×", "ochre"],
+      ["Kelly on the true edge", isFinite(trueK) ? trueK.toFixed(2) + "×" : "—"],
+      ["So you are betting", isFinite(ratio) ? ratio.toFixed(2) + "× true Kelly" : "—",
+        ratio > 2 ? "verm" : ratio > 1 ? "ochre" : "moss"],
+      ["Growth you expected", (gA(chosen) * 100).toFixed(2) + "%", "blue"],
+      ["Growth you will get", (realized * 100).toFixed(2) + "%", realized < 0 ? "verm" : "moss"],
+      ["The difference", ((gA(chosen) - realized) * 100).toFixed(2) + " pts"],
+      ["Assumed Sharpe", (s5.assumed / s5.vol).toFixed(2)],
+      ["Years to prove it", (4 / Math.pow(s5.assumed / s5.vol, 2)).toFixed(2), "verm"],
+      ["Verdict", realized < 0 ? "losing money" : ratio >= 1.995 ? "zero growth"
+        : ratio > 1.005 ? "overbet" : "sized safely",
+        realized < 0 ? "verm" : ratio > 1 ? "ochre" : "moss"]
+    ]);
+  }
+})();
+
+/* ══════════ 06 — the drill ══════════ */
+(function () {
+  const E = id => document.getElementById(id);
+  let cur = null, sc = 0, asked = 0, streak = 0, best = 0, tier = 1;
+  const R = Math.random;
+  const pick = a => a[Math.floor(R() * a.length)];
+  const PRICES = [-110, -120, -150, -200, -300, 110, 130, 150, 200, 400];
+  function make() {
+    if (tier === 1) {
+      const t = Math.floor(R() * 4);
+      if (t === 0) {
+        const us = pick(PRICES), a = impliedProb(us) * 100;
+        return { kind: "Price into probability", unit: "%", a: a, tol: 0.05,
+          q: "What probability does <b>" + (us > 0 ? "+" : "") + us + "</b> imply?",
+          w: (us < 0 ? "For a negative price, −u/(−u+100) = " + (-us) + "/" + (-us + 100)
+            : "For a positive price, 100/(u+100) = 100/" + (us + 100)) +
+            " = <b>" + a.toFixed(3) + "%</b>." };
+      }
+      if (t === 1) {
+        const us = pick([-110, -120, -105, -115, -130]);
+        const a = marketMargin(us, us).over * 100;
+        return { kind: "Overround", unit: "pts", a: a, tol: 0.05,
+          q: "Both sides of a market are priced at <b>" + us + "</b>. What is the overround?",
+          w: "Each side implies " + (impliedProb(us) * 100).toFixed(3) + "%, which sums to " +
+            (2 * impliedProb(us) * 100).toFixed(3) + "% — an overround of <b>" + a.toFixed(3) +
+            "</b> points of probability that do not exist." };
+      }
+      if (t === 2) {
+        const us = pick([-110, -120, -105, -115, -130]);
+        const a = marketMargin(us, us).hold * 100;
+        return { kind: "The hold", unit: "%", a: a, tol: 0.05,
+          q: "Both sides at <b>" + us + "</b>. What share of everything staked does a balanced book keep?",
+          w: "hold = overround ÷ (1 + overround) = " +
+            (marketMargin(us, us).over).toFixed(5) + " / " +
+            (marketMargin(us, us).sum).toFixed(5) + " = <b>" + a.toFixed(3) +
+            "%</b> — smaller than the overround, and the number that describes the business." };
+      }
+      const us = pick(PRICES), a = impliedProb(us) * 100;
+      return { kind: "Break-even win rate", unit: "%", a: a, tol: 0.05,
+        q: "You are betting at <b>" + (us > 0 ? "+" : "") + us +
+          "</b>. What fraction must you win just to break even?",
+        w: "It is the implied probability itself: <b>" + a.toFixed(3) +
+          "%</b>. Anything below that and the price is taking money from you." };
+    }
+    const t = Math.floor(R() * 4);
+    if (t === 0) {
+      const p = pick([0.55, 0.58, 0.60, 0.65, 0.70]);
+      const a = kelly(p, 1) * 100;
+      return { kind: "Kelly on an even-money bet", unit: "%", a: a, tol: 0.05,
+        q: "A bet pays even money and you win it <b>" + (p * 100).toFixed(0) +
+          "%</b> of the time. What is the Kelly stake?",
+        w: "With b = 1 it collapses to the edge itself: 2p − 1 = <b>" + a.toFixed(1) +
+          "%</b> of the bankroll." };
+    }
+    if (t === 1) {
+      const us = pick([-200, -150, 150, 200, 400]);
+      const imp = impliedProb(us);
+      const p = Math.min(0.95, imp + pick([0.03, 0.05, 0.08]));
+      const b = usToDecimal(us) - 1;
+      const a = kelly(p, b) * 100;
+      return { kind: "Kelly at a real price", unit: "%", a: a, tol: Math.max(0.05, Math.abs(a) * 0.02),
+        q: "The price is <b>" + (us > 0 ? "+" : "") + us + "</b>, implying " +
+          (imp * 100).toFixed(1) + "%. You think it wins <b>" + (p * 100).toFixed(1) +
+          "%</b>. What is the Kelly stake?",
+        w: "b = " + b.toFixed(3) + ", so (bp − q)/b = <b>" + a.toFixed(2) +
+          "%</b>. Note it is edge over odds, not edge alone." };
+    }
+    if (t === 2) {
+      const sr = pick([0.5, 0.75, 1.0, 1.25, 1.5, 2.0]);
+      const a = 4 / (sr * sr);
+      return { kind: "Years to prove an edge", unit: "years", a: a, tol: 0.02,
+        q: "A strategy has an annual Sharpe ratio of <b>" + sr.toFixed(2) +
+          "</b>. How many years before its record is two standard errors from zero?",
+        w: "4 ÷ Sharpe² = 4 / " + (sr * sr).toFixed(4) + " = <b>" + a.toFixed(2) +
+          " years</b>. Trade frequency does not enter it." };
+    }
+    const k = pick([0.25, 0.5, 0.75, 1.0]);
+    const a = growthKept(k) * 100;
+    return { kind: "Growth kept at fractional Kelly", unit: "%", a: a, tol: 0.05,
+      q: "You bet <b>" + k.toFixed(2) + "×</b> full Kelly. What share of the maximum growth do you keep?",
+      w: "2k − k² = " + (2 * k).toFixed(2) + " − " + (k * k).toFixed(4) + " = <b>" + a.toFixed(1) +
+        "%</b>, while your chance of ever halving falls to " +
+        (ruinProb(k, 0.5) * 100).toFixed(2) + "%." };
+  }
+  function next() {
+    cur = make();
+    E("dKind").textContent = cur.kind; E("dText").innerHTML = cur.q;
+    E("dUnit").textContent = cur.unit; E("dInput").value = "";
+    E("drill").classList.remove("done");
+    focusSoft(E("dInput"), E("drill"));
+  }
+  function submit() {
+    if (!cur || E("drill").classList.contains("done")) return;
+    const raw = parseFloat(String(E("dInput").value).replace(/[$,%\s]/g, ""));
+    asked++;
+    const ok = isFinite(raw) && Math.abs(raw - cur.a) <= cur.tol;
+    if (ok) { sc++; streak++; if (streak > best) best = streak; } else streak = 0;
+    E("dVerdict").textContent = ok ? "CORRECT" : ("NOT QUITE — the answer is " + cur.a.toFixed(3));
+    E("dVerdict").className = "vd " + (ok ? "ok" : "no");
+    E("dWork").innerHTML = cur.w;
+    E("dScore").textContent = sc + " / " + asked;
+    E("dStreak").textContent = String(streak); E("dBest").textContent = String(best);
+    E("drill").classList.add("done");
+  }
+  E("dSubmit").addEventListener("click", submit);
+  E("dInput").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+  E("dNext").addEventListener("click", next);
+  E("dSkip").addEventListener("click", () => { streak = 0; E("dStreak").textContent = "0"; next(); });
+  [1, 2].forEach(k => E("dT" + k).addEventListener("click", () => {
+    tier = k;
+    [1, 2].forEach(j => E("dT" + j).setAttribute("aria-pressed", j === k ? "true" : "false"));
+    next();
+  }));
+  window.drawDrill = next;
+  window.__drill = () => {
+    const o = [];
+    for (let i = 0; i < 2; i++) { tier = i + 1; for (let j = 0; j < 400; j++) o.push(make()); }
+    tier = 1; return o;
+  };
+})();
+
+function drawAll() {
+  drawHero(); draw1(); draw2(); draw3(); draw4(); draw5(); drawDrill();
+}
+LAB.boot(drawAll);
+
+</script>
+</body>
+</html>

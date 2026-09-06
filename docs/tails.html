@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F4F1E8">
+<title>The Tails — Chance, visually</title>
+<meta name="description" content="Five days out of ten years carry fourteen percent of a decade&#x27;s variance. Why value at risk can get worse when you diversify, what expected shortfall answers instead, and why a tail model is almost impossible to backtest.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The Tails — Chance, visually">
+<meta property="og:description" content="Five days out of ten years carry fourteen percent of a decade&#x27;s variance. Why value at risk can get worse when you diversify, what expected shortfall answers instead, and why a tail model is almost impossible to backtest.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F1E8'/><rect x='5' y='19' width='4' height='7' fill='%230B6E75'/><rect x='11' y='12' width='4' height='14' fill='%230B6E75'/><rect x='17' y='7' width='4' height='19' fill='%230B6E75'/><rect x='23' y='16' width='4' height='10' fill='%230B6E75'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lab.css">
+<link rel="stylesheet" href="assets/mobile.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chance">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+<header class="serieshead">
+  <div class="in">
+    <a class="home" href="index.html">← Chance, visually</a>
+    <span class="num">No. 08 · Tails</span>
+  </div>
+</header>
+
+<div class="progress" id="prog"></div>
+<nav class="chapnav" id="chapnav" aria-label="Chapters">
+  <a href="#c1"><span>Where the variance lives</span><i></i></a>
+  <a href="#c2"><span>VaR and what it hides</span><i></i></a>
+  <a href="#c3"><span>Diversifying made it worse</span><i></i></a>
+  <a href="#c4"><span>Measuring the shape</span><i></i></a>
+  <a href="#c5"><span>What actually breaks</span><i></i></a>
+  <a href="#c6"><span>Drills</span><i></i></a>
+</nav>
+
+<div class="hero">
+  <canvas id="heroCv" aria-hidden="true"></canvas>
+  <div class="heroInner">
+    <div class="eyebrow">An interactive derivation · No. 08</div>
+    <h1>The last one percent is the <em>whole</em> job</h1>
+    <p class="sub">Everything before this module assumed the middle of the distribution was the interesting part. Five days out of ten years carry fourteen percent of a decade's variance, the standard risk measure can get worse when you diversify, and the average of a fat-tailed thing may not mean anything at all.</p>
+  </div>
+  <div class="scrollcue">Scroll ↓</div>
+</div>
+
+<main>
+
+<div class="orient">
+  <h2>Start here</h2>
+  <p class="lede">This is the last of the foundations and the one that argues with the others. Modules 03 and 05 leaned on the normal distribution and on averages; this one is about where both stop working, and what people use instead.</p>
+  <ol>
+    <li><b>Chapter 01 is the fact to carry.</b> Over ten years of returns, the worst <em>five</em> days hold about 14% of the total squared return and the worst 1% of days hold about 31%. Risk is not spread evenly across time.</li>
+    <li><b>Chapter 03 is the one that surprises risk managers.</b> Value at risk is not subadditive: two independent positions can have a combined VaR larger than the sum of theirs, so the number gets <em>worse</em> when you diversify.</li>
+    <li><b>Chapter 05 is the honest ending.</b> The failure mode is never the model's middle. It is that a tail parameter was estimated from a sample containing no tail.</li>
+  </ol>
+  <details class="drop">
+    <summary>Notation — every symbol used on this page</summary>
+    <table class="ntab">
+      <tr><td>Skewness</td><td>Whether the long side of the distribution is the left or the right. Zero for anything symmetric.</td></tr>
+      <tr><td>Excess kurtosis</td><td>How much of the variance comes from the extremes, scaled so a normal reads zero.</td></tr>
+      <tr><td>VaR</td><td>Value at risk: the loss you exceed a stated fraction of the time. A quantile, and nothing more.</td></tr>
+      <tr><td>Expected shortfall</td><td>The average loss <em>given</em> that you exceeded the VaR. Answers "how bad when it is bad."</td></tr>
+      <tr><td>Subadditive</td><td>A risk measure where combining positions never increases the total. Expected shortfall is; VaR is not.</td></tr>
+      <tr><td>Tail index</td><td>How fast a tail decays as a power law. Below 2 the variance is infinite; below 1 the mean is.</td></tr>
+      <tr><td>Backtest exception</td><td>A day whose loss exceeded the model's VaR. Counting them is how a risk model is judged.</td></tr>
+      <tr><td>Concentration</td><td>The share of total variance carried by the worst handful of observations.</td></tr>
+    </table>
+  </details>
+</div>
+
+<!-- ══════════ 01 ══════════ -->
+<section class="chapter" id="c1">
+  <div class="chead">
+    <div class="cnum">01</div>
+    <h2>A decade of risk lives in a handful of days</h2>
+    <p class="dek">Sort ten years of returns by size and look at how quickly the total accumulates. It is not gradual.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Take ten years of daily returns — 2,520 observations — and rank them by absolute size. Then ask how much of the total squared return, which is what variance is made of, the biggest few contribute.</p>
+    <p>The single worst day carries about <b>3.3%</b> of a decade's variance. The worst <b>five</b> days — one fifth of one percent of the sample — carry about <b>14%</b>. The worst <b>25</b> days, one percent of them, carry about <b>31%</b>. The worst <b>5%</b> of days carry <b>54%</b> — more than half a decade of risk in about six months' worth of sessions.</p>
+    <p>Nothing exotic produced that. The returns here come from a two-regime mixture like <a href="dist.html">module 04</a>'s — normal 94% of the time and turbulent the rest — which is about as mild a departure from normality as it is possible to construct.</p>
+    <p>Two consequences follow immediately. Any risk estimate computed from a window that happens to exclude those days is not slightly low, it is wrong by a third. And any strategy whose returns come from being present on ordinary days and absent on extreme ones is being measured against the wrong denominator.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Cumulative share of variance, days sorted worst first</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Fat-tailed returns</span>
+            <span><i class="swl" style="background:var(--verm)"></i>A normal, for comparison</span>
+          </span>
+        </div>
+        <canvas id="cv1" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl1"></div>
+        <div class="kv" style="margin-top:20px" id="kv1"></div>
+      </div>
+    </div>
+    <figcaption>Notice how steep the blue curve is at the far left. Both series have the same total variance; they differ entirely in how few days it takes to accumulate it.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A ten-year volatility estimate is computed from a window that happens to miss the worst 25 days. How wrong is it?</p>
+    <div class="opts">
+      <button>Slightly low — 25 days out of 2,520 is 1% of the sample</button>
+      <button data-ok="1">Low by around 30% in variance terms, because those 25 days carry about a third of the total. In volatility terms roughly 17%</button>
+      <button>Unaffected, since the sample is large</button>
+      <button>Too high</button>
+    </div>
+    <div class="ans"><b>A third of the variance, from one percent of the sample.</b> Which is why volatility estimates drop so far during calm stretches and why they are least reliable exactly when they look most stable. It is also the argument for using a long window even though the recent one forecasts better — the long window is the only one likely to contain a tail.</div>
+  </div>
+</section>
+
+<!-- ══════════ 02 ══════════ -->
+<section class="chapter" id="c2">
+  <div class="chead">
+    <div class="cnum">02</div>
+    <h2>Value at risk, and the question it refuses to answer</h2>
+    <p class="dek">VaR tells you the threshold you cross 1% of the time. It says nothing about how far past it you go.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead"><span class="term" data-t="Value at risk" data-def="The loss level that is exceeded with a stated probability over a stated horizon. A quantile of the loss distribution and nothing more — it says where the threshold is, not what lies beyond it.">Value at risk</span> is a quantile. The 99% one-day VaR is the loss you exceed on one day in a hundred, and under a normal distribution it sits at <b>2.326</b> standard deviations.</p>
+    <p>The complaint is not that it is wrong; it is that it is silent about everything past the threshold. Two books can have identical VaR and completely different behavior on the days that breach it — one loses slightly more, the other loses everything.</p>
+    <p><b>Expected shortfall</b> answers the missing question: given that you breached, how bad is it on average? Under a normal at the 99% level it is <b>2.665</b> standard deviations, a ratio of <b>1.15</b> to the VaR. That ratio is the useful number, because it is the one that changes with the tail shape — under fatter tails, VaR barely moves and expected shortfall moves a lot.</p>
+    <p>On a $10 million book with 1.26% daily volatility: 99% VaR of <b>$293,000</b> and an expected shortfall of <b>$336,000</b>. The second number is what you should be sizing against.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The threshold, and the average of everything past it</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Loss distribution</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>VaR</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Expected shortfall</span>
+          </span>
+        </div>
+        <canvas id="cv2" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl2"></div>
+        <div class="kv" style="margin-top:20px" id="kv2"></div>
+      </div>
+    </div>
+    <figcaption>Notice the shaded region has an average, and that average is the red line — always further out than the orange one, and further still when the tail is fat.</figcaption>
+  </figure>
+
+  <div class="mline">VaR<sub>p</sub> = the p-quantile of losses     ES<sub>p</sub> = E[ loss | loss > VaR<sub>p</sub> ]</div>
+  <p class="mread">Reads as: <b>one is where the tail starts and the other is the average of what is in it.</b> Two books can match on the first and differ by any amount on the second.</p>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Switch the distribution to the fat-tailed one and watch which of the two numbers moves. Predict first.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c2" data-patch='{"fat":0}' data-focus="cv2">Normal</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"fat":1}' data-focus="cv2">Fat-tailed</button>
+      <button class="act ghost" data-preset="c2" data-patch='{"p":0.001,"fat":1}' data-focus="cv2">And out at 99.9%</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Two books have the same 99% VaR. What do you know about their risk?</p>
+    <div class="opts">
+      <button>That they are equally risky</button>
+      <button data-ok="1">Only that they breach at the same level. What happens past the breach can differ without limit, which is what expected shortfall measures</button>
+      <button>That they have the same volatility</button>
+      <button>That one is short options and the other is not</button>
+    </div>
+    <div class="ans"><b>Nothing about the tail.</b> A book that is short far out-of-the-money options can be engineered to have a small VaR at any confidence level — you simply place the strikes past the quantile — while its expected shortfall is enormous. That is not a hypothetical; it is a known way to game a risk limit, and it is a large part of why regulators moved to expected shortfall.</div>
+  </div>
+</section>
+
+<!-- ══════════ 03 ══════════ -->
+<section class="chapter" id="c3">
+  <div class="chead">
+    <div class="cnum">03</div>
+    <h2>Diversify, and the risk number goes up</h2>
+    <p class="dek">Two independent positions, each with a 95% VaR of zero. Put them together and it is 100. That is not a bug in the arithmetic.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Here is the cleanest demonstration that VaR is not a coherent measure of risk. Two bonds, independent, each defaulting with probability <b>3%</b> and losing 100 when it does.</p>
+    <p>The 95% VaR of one bond is <b>zero</b>. The loss is 100 only 3% of the time, and 3% is inside the 5% tail you are ignoring, so the 95th percentile of the loss distribution is zero. Both bonds, separately, report no risk.</p>
+    <p>Now hold both. The chance that <em>at least one</em> defaults is 1 − 0.97² = <b>5.91%</b>, which is more than 5%. So the 95th percentile of the combined loss is <b>100</b>, and the portfolio's VaR is <b>100 &gt; 0 + 0</b>.</p>
+    <p>Diversifying made the reported risk go up. This is <span class="term" data-t="Subadditivity" data-def="The property that a risk measure of a combined portfolio never exceeds the sum of its parts' measures. It is what makes 'diversification reduces risk' true as arithmetic rather than as a slogan. VaR does not have it.">subadditivity</span> failing, and it is not a rounding artifact — it is structural, and it happens whenever losses are lumpy near the quantile you chose.</p>
+    <p>Expected shortfall does not do this. On the same pair: <b>60</b> for each bond alone and <b>101.8</b> for the pair, which is comfortably under the sum of 120. Expected shortfall is subadditive by construction, and that property is the main technical reason the Basel framework moved to it.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>One bond, and two — the loss distributions and their quantiles</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>One bond</span>
+            <span><i class="sw" style="background:var(--verm)"></i>Two bonds</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>The 95% quantile</span>
+          </span>
+        </div>
+        <canvas id="cv3" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl3"></div>
+        <div class="kv" style="margin-top:20px" id="kv3"></div>
+      </div>
+    </div>
+    <figcaption>Drag the default rate and watch the pair's VaR jump from 0 to 100 while each bond's stays at zero. The jump happens exactly where 1 − (1−p)² crosses 5%.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Why does expected shortfall avoid the problem that VaR has here?</p>
+    <div class="opts">
+      <button>Because it uses a higher confidence level</button>
+      <button data-ok="1">Because it averages over the whole tail rather than reading one point off it. Averages add; quantiles do not</button>
+      <button>Because it assumes normality</button>
+      <button>Because it is computed from more data</button>
+    </div>
+    <div class="ans"><b>Averaging is linear; taking a quantile is not.</b> That single difference gives expected shortfall subadditivity for free, and it is why the property is provable rather than empirical. The cost is that expected shortfall is harder to estimate — it depends on the shape of a tail you have few observations of, which is chapter 05's problem.</div>
+  </div>
+</section>
+
+<!-- ══════════ 04 ══════════ -->
+<section class="chapter" id="c4">
+  <div class="chead">
+    <div class="cnum">04</div>
+    <h2>Measuring the shape you are exposed to</h2>
+    <p class="dek">Two numbers describe a tail: which side it is on, and how heavy it is. Both are unstable in exactly the situations where they matter.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead"><b>Skewness</b> says which side the long tail is on. Equity index returns are negatively skewed — the crashes are bigger than the rallies — and short-option strategies are extremely so, which is the shape that makes them feel good for years and then not.</p>
+    <p><b>Excess kurtosis</b> says how much of the variance is in the extremes. A normal reads zero; daily equity returns typically read between 3 and 8; a single crisis in a sample can double it.</p>
+    <p>The catch is in that last clause. Skewness is a third moment and kurtosis a fourth, so both are dominated by the largest few observations. A sample can produce a kurtosis of 2 in its first half and 9 in its second because one bad week landed in the second — and the honest response is not to average them but to notice that a fourth moment estimated from a few hundred observations barely has a value.</p>
+    <p>The more robust way to describe a tail is to fit how fast it decays. If the probability of a loss larger than <em>x</em> falls like x<sup>−α</sup>, then α is the <b>tail index</b>, and it has a striking property: <b>the variance is infinite when α &lt; 2, and the mean is infinite when α &lt; 1.</b> Estimates of α for equity returns cluster around 3 to 5 — comfortably finite, but close enough to the boundary that the fourth moment, which needs α &gt; 4, is genuinely borderline. Which is a formal way of saying kurtosis estimates for financial returns may not converge at all.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The same sample, with its skewness and kurtosis recomputed as it grows</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Excess kurtosis</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Skewness</span>
+          </span>
+        </div>
+        <canvas id="cv4" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl4"></div>
+        <div class="kv" style="margin-top:20px" id="kv4"></div>
+      </div>
+    </div>
+    <figcaption>Notice the jumps. Each vertical step is a single extreme observation arriving, and between them the estimate drifts downward as ordinary days dilute it. That sawtooth is what an unstable moment looks like.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Why is a tail index more useful than kurtosis for describing extreme risk?</p>
+    <div class="opts">
+      <button>It is easier to compute</button>
+      <button data-ok="1">It describes the rate at which the tail decays rather than a single moment, so it stays meaningful even when the fourth moment does not exist</button>
+      <button>It is always finite</button>
+      <button>It does not depend on the data</button>
+    </div>
+    <div class="ans"><b>It survives where moments do not.</b> If the tail index is below 4 the kurtosis is infinite in the population, so any sample kurtosis you compute is an artifact of the sample size rather than an estimate of anything. The tail index remains well defined all the way down, which is why extreme value theory works in α rather than in moments.</div>
+  </div>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section class="chapter" id="c5">
+  <div class="chead">
+    <div class="cnum">05</div>
+    <h2>What actually breaks</h2>
+    <p class="dek">Not the model's middle. A tail parameter estimated from a sample containing no tail.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Every module in this series has pointed at the same structural failure from a different angle, and it is worth stating once directly.</p>
+    <p><b>The data that would validate a tail model does not exist in the sample used to fit it.</b> Two years of daily returns is about 500 observations. A 99% VaR should be breached five times in it; a 99.9% level should be breached once. There is no amount of statistical technique that turns five observations into a reliable estimate of the shape of a tail, and none that turns one observation into anything at all.</p>
+    <p>So tail parameters get set by one of three routes, all of which have failure modes worth naming. <b>Extrapolate a parametric family</b> — fast, and wrong by two orders of magnitude if the family is wrong, as <a href="dist.html">module 04</a> showed with a mixture that is thinner at two sigma and 116 times fatter at four. <b>Use a longer history</b> — better, and it assumes the world has not changed. <b>Use a stress scenario</b> — honest about being a judgment, and no longer a probability statement at all.</p>
+    <p>The practical posture that follows is not despair, it is asymmetry. Be precise about the middle, where you have data. Be conservative about the tail, where you do not. And size positions so that being wrong about the tail is survivable — which is <a href="ev.html">module 02</a>'s argument for fractional Kelly, arriving from the other direction.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>How many breaches you should expect, and how many you will see</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>Expected exceptions</span>
+            <span><i class="swl" style="background:var(--verm)"></i>The 95% range of what you'd observe</span>
+          </span>
+        </div>
+        <canvas id="cv5" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl5"></div>
+        <div class="kv" style="margin-top:20px" id="kv5"></div>
+      </div>
+    </div>
+    <figcaption>Notice how wide the band is relative to the count. At a 99% level over two years you expect five breaches and could easily see one or ten — neither of which distinguishes a good model from a bad one.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A 99% VaR model produces two exceptions in a year of daily data instead of the expected 2.5. What have you learned?</p>
+    <div class="opts">
+      <button>The model is well calibrated</button>
+      <button data-ok="1">Almost nothing. With an expectation of 2.5 the 95% range runs from 0 to 6, so two is entirely ordinary under both a correct model and a fairly wrong one</button>
+      <button>The model is too conservative</button>
+      <button>The model is broken</button>
+    </div>
+    <div class="ans"><b>Nothing distinguishable.</b> This is the structural problem with backtesting tail models: at the confidence levels people care about, the number of observations that carry information is tiny, and the Poisson noise in that count swamps the difference between a right model and a wrong one. It takes years of data to reject a bad 99% model and decades to reject a bad 99.9% one.</div>
+  </div>
+</section>
+
+<!-- ══════════ 06 ══════════ -->
+<section class="chapter" id="c6">
+  <div class="chead">
+    <div class="cnum">06</div>
+    <h2>Drill it</h2>
+    <p class="dek">VaR and expected shortfall in sigmas and in dollars, and how many breaches to expect.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The first tier is the two risk measures. The second is the sanity checks — how many exceptions, and what a tail index implies.</p>
+  </div>
+
+  <figure>
+    <div class="drill" id="drill">
+      <div class="dstats">
+        <div class="c"><span class="k">Correct</span><span class="v" id="dScore">0 / 0</span></div>
+        <div class="c"><span class="k">Streak</span><span class="v" id="dStreak" style="color:var(--moss)">0</span></div>
+        <div class="c"><span class="k">Best</span><span class="v" id="dBest">0</span></div>
+        <div class="c" style="flex:1;min-width:170px"><span class="k">Tier</span>
+          <div class="seg" style="margin-top:5px;max-width:240px">
+            <button id="dT1" aria-pressed="true">Measures</button>
+            <button id="dT2" aria-pressed="false">Checks</button>
+          </div>
+        </div>
+      </div>
+      <span class="qn" id="dKind">Question</span>
+      <p class="qt" id="dText">Loading…</p>
+      <div class="ansrow">
+        <input type="text" inputmode="decimal" id="dInput" placeholder="your answer" aria-label="Your answer">
+        <span class="unit" id="dUnit"></span>
+        <button class="act" id="dSubmit">Check</button>
+        <button class="act ghost" id="dSkip">Skip</button>
+      </div>
+      <div class="verdict">
+        <div class="vd" id="dVerdict"></div>
+        <div class="work" id="dWork"></div>
+        <div class="btnrow"><button class="act" id="dNext">Next question</button></div>
+      </div>
+    </div>
+    <figcaption>The sigma multipliers are worth memorizing: 1.645 and 2.326 for VaR at 95% and 99%, 2.063 and 2.665 for expected shortfall.</figcaption>
+  </figure>
+
+  <div class="prose" style="margin-top:46px">
+    <p>Six questions across the page.</p>
+  </div>
+
+  <div class="score" id="scoreBox">
+    <span class="big" id="scoreNum">0 / 6</span>
+    <span class="txt" id="scoreTxt">Answered nothing yet. Questions are scored as you go.</span>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 1 · chapter 01</span>
+    <p class="q">Over ten years of fat-tailed daily returns, roughly what share of the total variance sits in the worst 1% of days?</p>
+    <div class="opts">
+      <button>About 1% — that is the share of days</button>
+      <button data-ok="1">About 31%. Risk is not spread evenly across time</button>
+      <button>About 5%</button>
+      <button>About 80%</button>
+    </div>
+    <div class="ans"><b>Roughly a third, from one percent of the sample.</b> Which is why a volatility estimated from a window that missed those days is wrong by a third in variance and about 17% in volatility, and why calm-period estimates are least reliable exactly when they look most stable.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 2 · chapter 02</span>
+    <p class="q">Under a normal distribution, where does the 99% VaR sit?</p>
+    <div class="opts">
+      <button>2.0 standard deviations</button>
+      <button data-ok="1">2.326 standard deviations, and the expected shortfall sits at 2.665</button>
+      <button>3.0 standard deviations</button>
+      <button>1.645 standard deviations</button>
+    </div>
+    <div class="ans"><b>2.326, with expected shortfall 15% further out.</b> The fourth answer is the 95% VaR. Both multipliers are worth memorizing, and so is the ratio between VaR and expected shortfall — it is the number that moves most when the tail is not normal.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 3 · chapter 02</span>
+    <p class="q">What does expected shortfall tell you that VaR does not?</p>
+    <div class="opts">
+      <button>How often you will lose money</button>
+      <button data-ok="1">How bad the loss is on average given that you breached the threshold. VaR locates the tail; expected shortfall describes it</button>
+      <button>The maximum possible loss</button>
+      <button>The volatility of the book</button>
+    </div>
+    <div class="ans"><b>The average of what is past the threshold.</b> Two books with identical VaR can behave completely differently beyond it — and a book that is short far out-of-the-money options can be built to have a small VaR at any chosen level while its expected shortfall is enormous.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 4 · chapter 03</span>
+    <p class="q">Two independent bonds each default 3% of the time losing 100. What are the 95% VaRs, separately and together?</p>
+    <div class="opts">
+      <button>100 each and 200 together</button>
+      <button data-ok="1">Zero each and 100 together — the combined VaR exceeds the sum of the parts</button>
+      <button>Zero each and zero together</button>
+      <button>50 each and 100 together</button>
+    </div>
+    <div class="ans"><b>Zero, zero, and 100.</b> Each bond's 3% default sits inside the 5% tail VaR ignores, but the pair defaults at least once 5.91% of the time, which crosses the threshold. Diversifying raised the reported risk — a structural failure of quantiles, not an arithmetic slip.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 5 · chapter 04</span>
+    <p class="q">A tail decays like x<sup>−α</sup> with α = 3. What exists?</p>
+    <div class="opts">
+      <button>Everything — all moments are finite</button>
+      <button data-ok="1">The mean and the variance, but not the kurtosis, which needs α &gt; 4</button>
+      <button>Nothing — α = 3 means infinite variance</button>
+      <button>Only the mean</button>
+    </div>
+    <div class="ans"><b>Mean and variance yes, fourth moment no.</b> Which matters practically: equity tail indices are estimated around 3 to 5, so the kurtosis everyone quotes is at or past the boundary of existing. A sample kurtosis in that regime is a function of how much data you collected rather than an estimate of a population quantity.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 6 · chapter 05</span>
+    <p class="q">A 99% VaR model shows two exceptions in a year instead of the expected 2.5. What does that establish?</p>
+    <div class="opts">
+      <button>The model is correctly calibrated</button>
+      <button data-ok="1">Very little. The 95% range for the count runs from 0 to 6, so two is consistent with both a correct model and a fairly wrong one</button>
+      <button>The model is too conservative</button>
+      <button>The model needs recalibrating</button>
+    </div>
+    <div class="ans"><b>Nothing distinguishable.</b> At the confidence levels people care about, the informative observations are so few that Poisson noise swamps the signal — it takes years to reject a bad 99% model and decades for a 99.9% one. Which is the argument for sizing positions so that being wrong about the tail is survivable, rather than for estimating it more precisely.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="n">The return series on this page is a two-regime mixture rather than real market data, chosen because it is reproducible and because it is a <em>mild</em> departure from normality — real equity returns are worse, with volatility clustering that makes extreme days arrive together rather than independently, which concentrates the variance further than anything shown here. Every VaR and expected shortfall figure quoted in sigmas assumes a normal distribution and is therefore optimistic; the point of quoting them is the ratio between the two measures rather than either level. The tail index discussion treats α as a fixed property, and estimates of it are notoriously unstable — different estimators on the same data routinely disagree by a full unit, which is enough to move the fourth moment from existing to not. And the subadditivity counterexample uses independent defaults; real credit portfolios are correlated, which makes the problem worse rather than better.</p>
+</footer>
+
+<script src="assets/lab.js"></script>
+<script src="assets/stats.js"></script>
+<script src="assets/pwa.js" defer></script>
+<script>
+"use strict";
+
+/* line() in the engine takes arrays, not a function. Sampling a curve is
+   common enough on this page to be worth one helper — and passing a function
+   straight to line() is a silent no-op, which is how it was caught. */
+function curve(o, f, col, w, dash) {
+  const n = 260, xs = [], ys = [];
+  for (let i = 0; i <= n; i++) {
+    const x = o.x0 + (o.x1 - o.x0) * i / n;
+    xs.push(x); ys.push(f(x));
+  }
+  line(o, xs, ys, col, w, dash);
+}
+
+/* ── the two risk measures, in sigma units ──────────────────────────────
+   Both are closed form for a normal and for a mixture of normals, which is
+   the only fat-tailed family used on this page. Doing them analytically
+   rather than by simulation matters: the whole chapter is about the tail,
+   and a simulated tail is made of the handful of draws that landed in it. */
+const varSigma = p => -qnorm(p);
+const esSigma = p => dnorm(qnorm(p)) / p;
+
+/* a two-regime mixture, rescaled so its total variance is exactly one —
+   so the comparison against a normal is a comparison of SHAPE alone */
+function mixParts(w, ratio) {
+  const a = Math.sqrt(1 / (w + (1 - w) * ratio * ratio));
+  return { w: w, a: a, b: a * ratio };
+}
+const mixCdf = (x, m) => m.w * pnorm(x / m.a) + (1 - m.w) * pnorm(x / m.b);
+const mixPdf = (x, m) =>
+  m.w * dnorm(x / m.a) / m.a + (1 - m.w) * dnorm(x / m.b) / m.b;
+function mixVaR(p, m) {
+  let lo = -40, hi = 0;
+  for (let i = 0; i < 200; i++) { const q = (lo + hi) / 2; if (mixCdf(q, m) < p) lo = q; else hi = q; }
+  return -(lo + hi) / 2;
+}
+/* E[X · 1{X < q}] for a zero-mean normal is -s·phi(q/s); the mixture just adds */
+function mixES(p, m) {
+  const q = -mixVaR(p, m);
+  return -(m.w * (-m.a * dnorm(q / m.a)) + (1 - m.w) * (-m.b * dnorm(q / m.b))) / p;
+}
+
+/* ── the subadditivity counterexample, as arithmetic ────────────────────
+   Independent bonds, each losing `loss` with probability `p`. Everything
+   below is exact — no simulation, because the whole point is a quantile
+   landing on one side of a threshold rather than the other. */
+function bondRisk(p, loss, conf) {
+  const tail = 1 - conf;                       /* the tail VaR ignores */
+  const one = [[loss, p], [0, 1 - p]];
+  const two = [[2 * loss, p * p], [loss, 2 * p * (1 - p)], [0, (1 - p) * (1 - p)]];
+  const varOf = atoms => {                     /* the (1-tail) quantile of loss */
+    let acc = 0;
+    for (let i = 0; i < atoms.length; i++) { acc += atoms[i][1]; if (acc > tail) return atoms[i][0]; }
+    return 0;
+  };
+  const esOf = atoms => {                      /* mean loss over the worst `tail` */
+    let rem = tail, acc = 0;
+    for (let i = 0; i < atoms.length; i++) {
+      const take = Math.min(atoms[i][1], rem);
+      acc += take * atoms[i][0]; rem -= take;
+      if (rem <= 1e-15) break;
+    }
+    return acc / tail;
+  };
+  return {
+    v1: varOf(one), v2: varOf(two), e1: esOf(one), e2: esOf(two),
+    pAny: 1 - (1 - p) * (1 - p), pBoth: p * p,
+    pStar: 1 - Math.sqrt(conf),                /* where the pair's VaR jumps */
+    varBroken: varOf(two) > 2 * varOf(one),
+    esOk: esOf(two) <= 2 * esOf(one) + 1e-9
+  };
+}
+
+/* ── how concentrated the variance is ───────────────────────────────────
+   Sort squared returns worst first and accumulate. The curve, not the
+   single number, is the thing worth seeing. */
+function concentration(seed, n, w, ratio, calm) {
+  const r = rng(seed), ret = [];
+  for (let i = 0; i < n; i++) ret.push(r() < w ? r.normal(0, calm) : r.normal(0, calm * ratio));
+  const sq = ret.map(x => x * x).sort((a, b) => b - a);
+  const tot = sq.reduce((a, b) => a + b, 0);
+  const cum = []; let c = 0;
+  for (let i = 0; i < n; i++) { c += sq[i]; cum.push(c / tot); }
+  return { cum: cum, tot: tot, n: n, share: k => cum[Math.max(0, Math.min(n - 1, k - 1))] };
+}
+/* the same series' worth of variance, redrawn from a single normal */
+function concentrationNormal(seed, n, totalVar) {
+  const r = rng(seed + 1), ret = [];
+  const s = Math.sqrt(totalVar / n);
+  for (let i = 0; i < n; i++) ret.push(r.normal(0, s));
+  const sq = ret.map(x => x * x).sort((a, b) => b - a);
+  const tot = sq.reduce((a, b) => a + b, 0);
+  const cum = []; let c = 0;
+  for (let i = 0; i < n; i++) { c += sq[i]; cum.push(c / tot); }
+  return { cum: cum, share: k => cum[Math.max(0, Math.min(n - 1, k - 1))] };
+}
+
+/* ── backtest exceptions ────────────────────────────────────────────────
+   How many breaches a correct model produces, and the range you would
+   actually observe. The gap between those two is chapter 05's argument. */
+function exceptionRange(n, p) {
+  let c = 0, lo = null, hi = null;
+  for (let k = 0; k <= n; k++) {
+    c += dbinom(k, n, p);
+    if (lo === null && c > 0.025) lo = k;
+    if (hi === null && c >= 0.975) { hi = k; break; }
+  }
+  return { exp: n * p, lo: lo === null ? 0 : lo, hi: hi === null ? n : hi };
+}
+
+/* ══════════ hero ══════════ */
+(function () {
+  const cv = document.getElementById("heroCv"); let w, h, g, raf, t0 = 0;
+  function size() {
+    const dpr = window.devicePixelRatio || 1;
+    w = cv.clientWidth; h = cv.clientHeight; cv.width = w * dpr; cv.height = h * dpr;
+    g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  /* a return series where almost everything is small and a few are not */
+  const r = rng(31), series = [];
+  for (let i = 0; i < 320; i++) series.push(r() < 0.945 ? r.normal(0, 0.20) : r.normal(0, 0.95));
+  function draw(ph) {
+    g.fillStyle = C("--chalk"); g.fillRect(0, 0, w, h);
+    const padX = w * 0.06, gw = w - padX * 2, mid = h * 0.52;
+    const sweep = 0.5 + 0.5 * Math.sin(ph * 0.5);   /* threshold breathes */
+    const thr = 0.35 + 1.15 * sweep;
+    g.lineWidth = 1;
+    for (let i = 0; i < series.length; i++) {
+      const x = padX + gw * i / (series.length - 1);
+      const v = series[i], big = Math.abs(v) > thr;
+      g.strokeStyle = C(big ? "--verm" : "--hair");
+      g.globalAlpha = big ? 0.9 : 0.5;
+      g.beginPath(); g.moveTo(x, mid); g.lineTo(x, mid - v * h * 0.30); g.stroke();
+    }
+    g.globalAlpha = 0.35; g.strokeStyle = C("--ink"); g.setLineDash([3, 4]);
+    [mid - thr * h * 0.30, mid + thr * h * 0.30].forEach(y => {
+      g.beginPath(); g.moveTo(padX, y); g.lineTo(padX + gw, y); g.stroke();
+    });
+    g.setLineDash([]); g.globalAlpha = 1;
+  }
+  function tick(t) { if (!t0) t0 = t; draw((t - t0) / 1400); raf = requestAnimationFrame(tick); }
+  window.drawHero = function () {
+    size(); if (RM) { draw(1.6); return; }
+    if (raf) cancelAnimationFrame(raf); t0 = 0; raf = requestAnimationFrame(tick);
+  };
+})();
+
+/* ══════════ 01 — where the variance lives ══════════ */
+const s1 = { years: 10, w: 0.94, ratio: 4, seed: 88 };
+(function () {
+  sliders(document.getElementById("ctl1"), [
+    { id: "a1", k: "years", lbl: "N", name: "Years of daily returns", min: 2, max: 20, step: 1, fmt: v => v + " yr" },
+    { id: "b1", k: "w", lbl: "w", name: "Share of calm days", min: 0.80, max: 0.995, step: 0.005, fmt: v => (v * 100).toFixed(1) + "%" },
+    { id: "c1", k: "ratio", lbl: "×", name: "How much wilder the rest are", min: 1.5, max: 8, step: 0.1, fmt: v => v.toFixed(1) + "×" }
+  ], s1, () => draw(), "c1");
+  window.draw1 = draw;
+  function draw() {
+    const n = Math.round(s1.years * 252);
+    const F = concentration(s1.seed, n, s1.w, s1.ratio, 0.008);
+    const G = concentrationNormal(s1.seed, n, F.tot);
+    const xmax = 0.05;                       /* the worst 5% of days */
+    const o = Fig(document.getElementById("cv1"),
+      { h: 320, x0: 0, x1: xmax * 100, y0: 0, y1: 1, pad: { l: 52, r: 14, t: 14 } });
+    axes(o, v => v.toFixed(0) + "%", v => (v * 100).toFixed(0) + "%", 6, 5);
+    const kmax = Math.max(2, Math.round(n * xmax));
+    const trace = (src, col) => curve(o, x => {
+      const k = Math.max(1, Math.round(n * x / 100));
+      return k > kmax ? NaN : src.share(k);
+    }, col, 2);
+    trace(G, C("--verm")); trace(F, C("--blue"));
+    vline(o, 1, C("--ochre"), "worst 1%");
+    const k1 = Math.max(1, Math.round(n * 0.01));
+    let half = n;
+    for (let k = 1; k <= n; k++) if (F.cum[k - 1] >= 0.5) { half = k; break; }
+    document.getElementById("kv1").innerHTML = kvHTML([
+      ["Days in the sample", n.toLocaleString()],
+      ["Worst single day", (F.share(1) * 100).toFixed(2) + "%", "verm"],
+      ["Worst 5 days", (F.share(5) * 100).toFixed(2) + "%", "verm"],
+      ["Worst 1% of days", (F.share(k1) * 100).toFixed(2) + "%", "verm"],
+      ["Worst 5% of days", (F.share(kmax) * 100).toFixed(2) + "%"],
+      ["— same, if normal", (G.share(kmax) * 100).toFixed(2) + "%", "grey"],
+      ["Half the variance sits in", half + " days"],
+      ["— which is", (half / n * 100).toFixed(2) + "% of them", "blue"]
+    ]);
+  }
+})();
+
+/* ══════════ 02 — VaR and expected shortfall ══════════ */
+const s2 = { p: 0.01, fat: 0, notional: 10, vol: 1.26 };
+(function () {
+  sliders(document.getElementById("ctl2"), [
+    { id: "a2", k: "p", lbl: "p", name: "Tail probability", min: 0.001, max: 0.10, step: 0.001, fmt: v => (v * 100).toFixed(1) + "%" },
+    { id: "b2", k: "fat", lbl: "◈", name: "Fat tails (0 = normal)", min: 0, max: 1, step: 1, fmt: v => v ? "mixture" : "normal" },
+    { id: "c2n", k: "notional", lbl: "$", name: "Book size, $m", min: 1, max: 100, step: 1, fmt: v => "$" + v + "m" },
+    { id: "d2", k: "vol", lbl: "σ", name: "Daily volatility", min: 0.2, max: 4, step: 0.02, fmt: v => v.toFixed(2) + "%" }
+  ], s2, () => draw(), "c2");
+  window.draw2 = draw;
+  function draw() {
+    const m = mixParts(0.94, 4);
+    const fat = s2.fat > 0.5;
+    const pdf = x => fat ? mixPdf(x, m) : dnorm(x);
+    const V = fat ? mixVaR(s2.p, m) : varSigma(s2.p);
+    const E = fat ? mixES(s2.p, m) : esSigma(s2.p);
+    const lim = Math.max(4.2, Math.min(9, E * 1.35));
+    const o = Fig(document.getElementById("cv2"),
+      { h: 320, x0: -lim, x1: lim * 0.55, y0: 0, y1: 0.56, pad: { l: 52, r: 14, t: 14 } });
+    axes(o, v => v.toFixed(0) + "σ", v => v.toFixed(2), 7, 4);
+    shade(o, pdf, -lim, -V, C("--verm"), 0.30);
+    curve(o, pdf, C("--blue"), 2);
+    vline(o, -V, C("--ochre"), "VaR " + V.toFixed(2) + "σ");
+    vline(o, -E, C("--verm"), "ES " + E.toFixed(2) + "σ");
+    const dollars = x => s2.notional * 1e6 * s2.vol / 100 * x;
+    const gap = fat ? (V / varSigma(s2.p) - 1) : 0;
+    const rows = [
+      ["Confidence", ((1 - s2.p) * 100).toFixed(1) + "%"],
+      ["VaR", V.toFixed(3) + "σ", "ochre"],
+      ["Expected shortfall", E.toFixed(3) + "σ", "verm"],
+      ["ES ÷ VaR", (E / V).toFixed(3)],
+      ["VaR, in dollars", "$" + Math.round(dollars(V)).toLocaleString()],
+      ["ES, in dollars", "$" + Math.round(dollars(E)).toLocaleString(), "verm"],
+      ["The extra ES asks for", "$" + Math.round(dollars(E - V)).toLocaleString()]
+    ];
+    if (fat) {
+      rows.push(["VaR vs a normal", (gap >= 0 ? "+" : "") + (gap * 100).toFixed(1) + "%",
+        gap < 0 ? "moss" : "grey"]);
+      rows.push(["ES vs a normal", "+" + ((E / esSigma(s2.p) - 1) * 100).toFixed(1) + "%", "verm"]);
+    }
+    document.getElementById("kv2").innerHTML = kvHTML(rows);
+  }
+})();
+
+/* ══════════ 03 — diversifying made it worse ══════════ */
+const s3 = { p: 0.03, conf: 0.95, loss: 100 };
+(function () {
+  sliders(document.getElementById("ctl3"), [
+    { id: "a3", k: "p", lbl: "p", name: "Default rate of each bond", min: 0.002, max: 0.12, step: 0.001, fmt: v => (v * 100).toFixed(1) + "%" },
+    { id: "b3", k: "conf", lbl: "c", name: "Confidence level", min: 0.90, max: 0.995, step: 0.005, fmt: v => (v * 100).toFixed(1) + "%" },
+    { id: "c3", k: "loss", lbl: "L", name: "Loss on default", min: 20, max: 200, step: 10, fmt: v => v.toFixed(0) }
+  ], s3, () => draw(), "c3");
+  window.draw3 = draw;
+  function draw() {
+    const R = bondRisk(s3.p, s3.loss, s3.conf);
+    const labs = [0, s3.loss, 2 * s3.loss];
+    const o = Fig(document.getElementById("cv3"),
+      { h: 320, x0: -0.55, x1: 2.55, y0: 0, y1: 1.08, pad: { l: 56, r: 14, t: 14 } });
+    axes(o, v => { const i = Math.round(v); return labs[i] === undefined ? "" : String(labs[i]); },
+      v => (v * 100).toFixed(0) + "%", 3, 5);
+    const g = o.g, bw = o.pw / 9;
+    const one = [1 - s3.p, s3.p, 0];
+    const two = [(1 - s3.p) * (1 - s3.p), 2 * s3.p * (1 - s3.p), s3.p * s3.p];
+    [[one, "--blue", -0.62], [two, "--verm", 0.62]].forEach(set => {
+      for (let i = 0; i < 3; i++) {
+        if (set[0][i] <= 0) continue;
+        g.save(); g.fillStyle = C(set[1]); g.globalAlpha = 0.85;
+        g.fillRect(o.X(i) + set[2] * bw - bw / 2, o.Y(set[0][i]), bw, o.Y(0) - o.Y(set[0][i]));
+        g.restore();
+        g.fillStyle = C("--ink2"); g.font = "9.5px 'IBM Plex Mono', monospace";
+        g.textAlign = "center"; g.textBaseline = "bottom";
+        g.fillText((set[0][i] * 100).toFixed(2) + "%", o.X(i) + set[2] * bw, o.Y(set[0][i]) - 4);
+      }
+    });
+    /* the tail VaR ignores, drawn as the band it is */
+    hline(o, 1 - s3.conf, C("--ochre"), "the " + ((1 - s3.conf) * 100).toFixed(1) + "% tail VaR ignores");
+    document.getElementById("kv3").innerHTML = kvHTML([
+      ["P(at least one)", (R.pAny * 100).toFixed(3) + "%"],
+      ["The tail ignored", ((1 - s3.conf) * 100).toFixed(2) + "%", "ochre"],
+      ["VaR, one bond", R.v1.toFixed(0), "blue"],
+      ["VaR, the pair", R.v2.toFixed(0), "verm"],
+      ["Sum of the parts", (2 * R.v1).toFixed(0)],
+      ["Subadditive?", R.varBroken ? "NO — worse" : "yes", R.varBroken ? "verm" : "moss"],
+      ["ES, one bond", R.e1.toFixed(2)],
+      ["ES, the pair", R.e2.toFixed(2), "moss"],
+      ["— against a sum of", (2 * R.e1).toFixed(2)],
+      ["VaR breaks above", (R.pStar * 100).toFixed(2) + "%"]
+    ]);
+  }
+})();
+
+/* ══════════ 04 — measuring the shape ══════════ */
+const s4 = { seed: 88, w: 0.94, crash: -1.2, ratio: 4 };
+(function () {
+  sliders(document.getElementById("ctl4"), [
+    { id: "a4", k: "seed", lbl: "#", name: "Which sample", min: 1, max: 60, step: 1, fmt: v => "#" + v },
+    { id: "b4", k: "crash", lbl: "↘", name: "Downward bias in the wild days", min: -3, max: 0, step: 0.1, fmt: v => v.toFixed(1) + "%" },
+    { id: "c4", k: "ratio", lbl: "×", name: "How much wilder they are", min: 2, max: 7, step: 0.1, fmt: v => v.toFixed(1) + "×" }
+  ], s4, () => draw(), "c4");
+  window.draw4 = draw;
+  window.__moments = function (seed, n, w, crash, ratio) {
+    const r = rng(seed), a = [];
+    for (let i = 0; i < n; i++)
+      a.push(r() < w ? r.normal(0, 0.008) : r.normal(crash / 100, 0.008 * ratio));
+    return { skew: skewness(a), kurt: kurtosis(a), n: n };
+  };
+  function draw() {
+    const N = 1260;
+    const r = rng(s4.seed), a = [], ks = [], ss = [];
+    for (let i = 0; i < N; i++) {
+      a.push(r() < s4.w ? r.normal(0, 0.008) : r.normal(s4.crash / 100, 0.008 * s4.ratio));
+      if (i >= 59) { ks.push([i + 1, kurtosis(a)]); ss.push([i + 1, skewness(a)]); }
+    }
+    let kTop = 6, sBot = -3;
+    for (let i = 0; i < ks.length; i++) { if (ks[i][1] > kTop) kTop = ks[i][1]; if (ss[i][1] < sBot) sBot = ss[i][1]; }
+    const o = Fig(document.getElementById("cv4"),
+      { h: 320, x0: 60, x1: N, y0: Math.floor(sBot * 1.2), y1: Math.ceil(kTop * 1.12), pad: { l: 52, r: 14, t: 14 } });
+    axes(o, v => (v / 252).toFixed(0) + "y", v => v.toFixed(0), 6, 5);
+    hline(o, 0, C("--hair"), "a normal reads zero here", [2, 3]);
+    const poly = (pts, col) => {
+      const gg = o.g; gg.save(); gg.strokeStyle = col; gg.lineWidth = 1.8;
+      gg.beginPath(); gg.rect(o.P.l, o.P.t, o.pw, o.ph); gg.clip();
+      gg.beginPath();
+      for (let i = 0; i < pts.length; i++) {
+        const x = o.X(pts[i][0]), y = o.Y(pts[i][1]);
+        if (i) gg.lineTo(x, y); else gg.moveTo(x, y);
+      }
+      gg.stroke(); gg.restore();
+    };
+    poly(ks, C("--blue")); poly(ss, C("--verm"));
+    const kf = ks[ks.length - 1][1], sf = ss[ss.length - 1][1];
+    const kHalf = ks[Math.floor(ks.length / 2)][1];
+    let kHi = -Infinity, kLo = Infinity;
+    for (let i = 0; i < ks.length; i++) { if (ks[i][1] > kHi) kHi = ks[i][1]; if (ks[i][1] < kLo) kLo = ks[i][1]; }
+    document.getElementById("kv4").innerHTML = kvHTML([
+      ["Sample", N.toLocaleString() + " days"],
+      ["Excess kurtosis, final", kf.toFixed(2), "blue"],
+      ["— halfway through", kHalf.toFixed(2), "grey"],
+      ["— it moved by", Math.abs(kf - kHalf).toFixed(2)],
+      ["Skewness, final", sf.toFixed(3), "verm"],
+      ["Highest kurtosis reached", kHi.toFixed(2)],
+      ["Lowest", kLo.toFixed(2)],
+      ["A normal would read", "0.00 and 0.000", "grey"]
+    ]);
+  }
+})();
+
+/* ══════════ 05 — what actually breaks ══════════ */
+const s5 = { p: 0.01 };
+(function () {
+  sliders(document.getElementById("ctl5"), [
+    { id: "a5", k: "p", lbl: "p", name: "The model's confidence level", min: 0.001, max: 0.05, step: 0.001, fmt: v => (100 - v * 100).toFixed(1) + "% VaR" }
+  ], s5, () => draw(), "c5");
+  window.draw5 = draw;
+  function draw() {
+    const nMax = 1260;
+    const o = Fig(document.getElementById("cv5"),
+      { h: 320, x0: 60, x1: nMax, y0: 0, y1: Math.max(4, nMax * s5.p * 1.9), pad: { l: 52, r: 14, t: 14 } });
+    axes(o, v => (v / 252).toFixed(0) + "y", v => v.toFixed(0), 6, 5);
+    /* the observable range, as a band */
+    const g = o.g; g.save();
+    g.beginPath(); g.rect(o.P.l, o.P.t, o.pw, o.ph); g.clip();
+    g.fillStyle = C("--verm"); g.globalAlpha = 0.16;
+    const steps = 46, pts = [];
+    for (let i = 0; i <= steps; i++) {
+      const n = Math.round(60 + (nMax - 60) * i / steps);
+      pts.push([n, exceptionRange(n, s5.p)]);
+    }
+    g.beginPath();
+    for (let i = 0; i < pts.length; i++) {
+      const x = o.X(pts[i][0]), y = o.Y(pts[i][1].hi);
+      if (i) g.lineTo(x, y); else g.moveTo(x, y);
+    }
+    for (let i = pts.length - 1; i >= 0; i--) g.lineTo(o.X(pts[i][0]), o.Y(pts[i][1].lo));
+    g.closePath(); g.fill(); g.restore();
+    curve(o, n => n * s5.p, C("--blue"), 2);
+    vline(o, 504, C("--ochre"), "two years");
+    const oneY = exceptionRange(252, s5.p), twoY = exceptionRange(504, s5.p),
+      fiveY = exceptionRange(1260, s5.p);
+    document.getElementById("kv5").innerHTML = kvHTML([
+      ["Confidence level", ((1 - s5.p) * 100).toFixed(1) + "%"],
+      ["One year — expected", oneY.exp.toFixed(2)],
+      ["— you could see", oneY.lo + " to " + oneY.hi, "verm"],
+      ["Two years — expected", twoY.exp.toFixed(2)],
+      ["— you could see", twoY.lo + " to " + twoY.hi, "verm"],
+      ["Five years — expected", fiveY.exp.toFixed(2)],
+      ["— you could see", fiveY.lo + " to " + fiveY.hi],
+      ["The two-year band spans", (twoY.hi - twoY.lo) + " counts", "verm"]
+    ]);
+  }
+})();
+
+/* ══════════ 06 — the drill ══════════ */
+(function () {
+  const E = id => document.getElementById(id);
+  let cur = null, sc = 0, asked = 0, streak = 0, best = 0, tier = 1;
+  const R = Math.random;
+  const pick = a => a[Math.floor(R() * a.length)];
+  function make() {
+    if (tier === 1) {
+      const t = Math.floor(R() * 4);
+      if (t === 0) {
+        const p = pick([0.05, 0.025, 0.01, 0.005]);
+        const a = varSigma(p);
+        return { kind: "VaR in sigmas", unit: "σ", a: a, tol: 0.02,
+          q: "Under a normal, where does the <b>" + ((1 - p) * 100).toFixed(1) + "%</b> VaR sit?",
+          w: "It is the " + (p * 100).toFixed(1) + "% quantile of a standard normal: <b>" +
+            a.toFixed(3) + "σ</b>. The two worth memorizing are 1.645 at 95% and 2.326 at 99%." };
+      }
+      if (t === 1) {
+        const p = pick([0.05, 0.025, 0.01, 0.005]);
+        const a = esSigma(p);
+        return { kind: "Expected shortfall in sigmas", unit: "σ", a: a, tol: 0.02,
+          q: "Under a normal, what is the <b>" + ((1 - p) * 100).toFixed(1) +
+            "%</b> expected shortfall?",
+          w: "phi(z)/p with z = " + qnorm(p).toFixed(3) + " gives <b>" + a.toFixed(3) +
+            "σ</b> — always further out than the VaR of " + varSigma(p).toFixed(3) + "σ." };
+      }
+      if (t === 2) {
+        const N = pick([5, 10, 20, 50, 100]), v = pick([0.8, 1.0, 1.26, 1.5, 2.0]);
+        const p = pick([0.05, 0.01]);
+        const a = N * 1e6 * v / 100 * varSigma(p);
+        return { kind: "VaR in dollars", unit: "$", a: a, tol: Math.max(500, a * 0.01),
+          q: "A <b>$" + N + "m</b> book with <b>" + v.toFixed(2) + "%</b> daily volatility. " +
+            "What is the <b>" + ((1 - p) * 100).toFixed(0) + "%</b> one-day VaR?",
+          w: "$" + N + "m × " + v.toFixed(2) + "% × " + varSigma(p).toFixed(3) + " = <b>$" +
+            Math.round(a).toLocaleString() + "</b>." };
+      }
+      const N = pick([5, 10, 20, 50]), v = pick([0.8, 1.0, 1.26, 1.5]);
+      const p = pick([0.05, 0.01]);
+      const a = N * 1e6 * v / 100 * esSigma(p);
+      return { kind: "Expected shortfall in dollars", unit: "$", a: a, tol: Math.max(500, a * 0.01),
+        q: "The same <b>$" + N + "m</b> book at <b>" + v.toFixed(2) + "%</b> daily vol. " +
+          "What is the <b>" + ((1 - p) * 100).toFixed(0) + "%</b> expected shortfall?",
+        w: "$" + N + "m × " + v.toFixed(2) + "% × " + esSigma(p).toFixed(3) + " = <b>$" +
+          Math.round(a).toLocaleString() + "</b>, which is " +
+          ((esSigma(p) / varSigma(p) - 1) * 100).toFixed(0) + "% more than the VaR." };
+    }
+    const t = Math.floor(R() * 3);
+    if (t === 0) {
+      const yrs = pick([1, 2, 4, 5]), p = pick([0.05, 0.01, 0.001]);
+      const n = yrs * 252, a = n * p;
+      const rg = exceptionRange(n, p);
+      return { kind: "Expected exceptions", unit: "days", a: a, tol: Math.max(0.05, a * 0.02),
+        q: "A <b>" + ((1 - p) * 100).toFixed(1) + "%</b> VaR model over <b>" + yrs +
+          (yrs === 1 ? " year" : " years") + "</b> of daily data. How many breaches should you expect?",
+        w: n + " × " + p + " = <b>" + a.toFixed(2) + "</b>. But you would observe anywhere from " +
+          rg.lo + " to " + rg.hi + " — which is why backtesting a tail model settles very little." };
+    }
+    if (t === 1) {
+      const alpha = pick([0.8, 1.5, 2.5, 3.5, 4.5]);
+      const a = Math.floor(alpha);   /* the highest finite moment */
+      return { kind: "Which moments exist", unit: "moments", a: a, tol: 0.01,
+        q: "A tail decays like x<sup>−α</sup> with <b>α = " + alpha.toFixed(1) +
+          "</b>. How many moments are finite? (1 = the mean only, 2 = mean and variance, and so on)",
+        w: "The k-th moment is finite when α is above k, so with α = " + alpha.toFixed(1) +
+          " the answer is <b>" + a + "</b>. Below 2 the variance is infinite; below 4, the kurtosis is." };
+    }
+    const p = pick([0.05, 0.01, 0.005]);
+    const a = esSigma(p) / varSigma(p);
+    return { kind: "The ES-to-VaR ratio", unit: "", a: a, tol: 0.01,
+      q: "Under a normal, what is the ratio of expected shortfall to VaR at <b>" +
+        ((1 - p) * 100).toFixed(1) + "%</b>?",
+      w: esSigma(p).toFixed(3) + " / " + varSigma(p).toFixed(3) + " = <b>" + a.toFixed(3) +
+        "</b>. It shrinks toward 1 further out — and it is far larger under a fat tail." };
+  }
+  function next() {
+    cur = make();
+    E("dKind").textContent = cur.kind; E("dText").innerHTML = cur.q;
+    E("dUnit").textContent = cur.unit; E("dInput").value = "";
+    E("drill").classList.remove("done");
+    focusSoft(E("dInput"), E("drill"));
+  }
+  function submit() {
+    if (!cur || E("drill").classList.contains("done")) return;
+    const raw = parseFloat(String(E("dInput").value).replace(/[$,%\s]/g, ""));
+    asked++;
+    const ok = isFinite(raw) && Math.abs(raw - cur.a) <= cur.tol;
+    if (ok) { sc++; streak++; if (streak > best) best = streak; } else streak = 0;
+    E("dVerdict").textContent = ok ? "CORRECT"
+      : ("NOT QUITE — the answer is " +
+        (cur.a > 5000 ? Math.round(cur.a).toLocaleString() : cur.a.toFixed(3)));
+    E("dVerdict").className = "vd " + (ok ? "ok" : "no");
+    E("dWork").innerHTML = cur.w;
+    E("dScore").textContent = sc + " / " + asked;
+    E("dStreak").textContent = String(streak); E("dBest").textContent = String(best);
+    E("drill").classList.add("done");
+  }
+  E("dSubmit").addEventListener("click", submit);
+  E("dInput").addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+  E("dNext").addEventListener("click", next);
+  E("dSkip").addEventListener("click", () => { streak = 0; E("dStreak").textContent = "0"; next(); });
+  [1, 2].forEach(k => E("dT" + k).addEventListener("click", () => {
+    tier = k;
+    [1, 2].forEach(j => E("dT" + j).setAttribute("aria-pressed", j === k ? "true" : "false"));
+    next();
+  }));
+  window.drawDrill = next;
+  window.__drill = () => {
+    const o = [];
+    for (let i = 0; i < 2; i++) { tier = i + 1; for (let j = 0; j < 400; j++) o.push(make()); }
+    tier = 1; return o;
+  };
+})();
+
+function drawAll() {
+  drawHero(); draw1(); draw2(); draw3(); draw4(); draw5(); drawDrill();
+}
+LAB.boot(drawAll);
+
+</script>
+</body>
+</html>

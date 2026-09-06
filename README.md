@@ -1,8 +1,9 @@
 # Chance, visually
 
 Probability and statistics built from simulation rather than asserted, for
-people who price risk. Eight modules, each one earning its ideas on the way to
-something a trading desk actually does.
+people who price risk. Nine modules, each one earning its ideas on the way to
+something a trading desk actually does — ending with the arithmetic pointed at
+bookmaking, bet sizing, poker, blackjack and options trading.
 
 **Live:** https://cafe-helado.github.io/stats-trading/
 
@@ -36,6 +37,26 @@ figure computes 42%; that has happened, on the companion series, twice.
 The Jupyter notebooks and `app.py` at the root are the earlier version of this
 project. `CONTEXT.md` holds personal curriculum notes and is deliberately
 gitignored — it stays on disk and out of the published repo.
+
+## Two traps, both already paid for
+
+**`line()` takes arrays, not a function.** Its signature is
+`line(o, xs, ys, col, w, dash)`. Passing a function where `xs` goes is a
+*silent* no-op — `xs.length` is `undefined`, the loop never runs, and the curve
+simply does not appear. Nothing catches it on its own: `check.js` executes the
+page happily, `verify.js` only re-derives numbers, and the figure still draws
+its axes so it looks finished. It cost three curves on module 08 and two on
+module 09, found only by sampling canvas pixels for the color that should have
+been there. `check.js` now refuses a `line()` whose third argument is a color
+or whose second is a function. Use the local `curve(o, f, col, w)` helper on
+pages that plot a sampled function.
+
+**A figure can open in a state that hides its own point.** Module 09's fifth
+figure plots the growth you expected against the growth you will get; with the
+two edges equal at load, the second curve sat exactly on top of the first and
+the legend promised a line that was not visible. It now opens with the true
+edge at half the assumed one, which is the chapter's actual claim — 2x true
+Kelly, zero growth — and the overlay is dashed so coincident curves still read.
 
 ## Companion
 

@@ -99,6 +99,50 @@ function check(file) {
     });
   }
 
+  // 4b2. line() takes ARRAYS (o, xs, ys, col, w). Handing it a function is a
+  //      silent no-op: xs.length is undefined, the loop never runs, and the
+  //      curve simply does not appear. Nothing else catches this — check.js
+  //      executes the page happily, verify.js only re-derives numbers, and the
+  //      figure still draws its axes, so it looks finished. It cost two curves
+  //      on page 09 and three on page 08 before a pixel sample found them.
+  //      Use the local curve(o, f, col, w) helper for a sampled function.
+  //
+  //      The reliable signal is positional rather than syntactic: in a correct
+  //      call the third argument is the y-values and the fourth is the color,
+  //      so a C("--token") sitting in the third slot means an argument is
+  //      missing. Matching the arrow-function form alone is not enough — the
+  //      first version of this guard missed `line(o, gA, C("--blue"), 2)`,
+  //      where the function arrives as a plain variable.
+  {
+    const args = (src, from) => {           // split one call's arguments
+      let d = 0, cur = "", out = [], i = from;
+      for (; i < src.length; i++) {
+        const ch = src[i];
+        if (ch === "(" || ch === "[" || ch === "{") d++;
+        else if (ch === ")" || ch === "]" || ch === "}") {
+          if (ch === ")" && d === 0) break;
+          d--;
+        }
+        if (ch === "," && d === 0) { out.push(cur.trim()); cur = ""; continue; }
+        cur += ch;
+      }
+      out.push(cur.trim());
+      return out;
+    };
+    const re = /(?<![\w$.])line\s*\(/g;
+    let m;
+    while ((m = re.exec(js)) !== null) {
+      const a = args(js, m.index + m[0].length);
+      if (a.length < 3) continue;
+      const isFn = t => /^(?:[A-Za-z_$][\w$]*|\([^)]*\))\s*=>/.test(t) || /^function\b/.test(t);
+      const isCol = t => /^C\s*\(/.test(t);
+      if (isFn(a[1]) || isCol(a[2]))
+        problems.push("line() wants (o, xs, ys, col) and got a function or a " +
+          "color in the y-values slot — it draws nothing: line(" +
+          a.slice(0, 3).join(", ").replace(/\s+/g, " ").slice(0, 52) + "…)");
+    }
+  }
+
   // 4c. the page must actually LINK the engine it is checked against.
   //     check.js concatenates lab.js and stats.js itself, so a page missing
   //     one of the <script src> tags passes here and throws in the browser.

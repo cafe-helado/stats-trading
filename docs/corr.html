@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#F4F1E8">
+<title>Two Things Moving Together — Chance, visually</title>
+<meta name="description" content="Covariance, correlation, regression and beta. What diversification actually buys, why a 0.7 correlation leaves half the variance unexplained, how noisy a measured correlation is, and four datasets with identical statistics that look nothing alike.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Two Things Moving Together — Chance, visually">
+<meta property="og:description" content="Covariance, correlation, regression and beta. What diversification actually buys, why a 0.7 correlation leaves half the variance unexplained, how noisy a measured correlation is, and four datasets with identical statistics that look nothing alike.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23F4F1E8'/><rect x='5' y='19' width='4' height='7' fill='%230B6E75'/><rect x='11' y='12' width='4' height='14' fill='%230B6E75'/><rect x='17' y='7' width='4' height='19' fill='%230B6E75'/><rect x='23' y='16' width='4' height='10' fill='%230B6E75'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lab.css">
+<link rel="stylesheet" href="assets/mobile.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Chance">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body>
+<header class="serieshead">
+  <div class="in">
+    <a class="home" href="index.html">← Chance, visually</a>
+    <span class="num">No. 07 · Together</span>
+  </div>
+</header>
+
+<div class="progress" id="prog"></div>
+<nav class="chapnav" id="chapnav" aria-label="Chapters">
+  <a href="#c1"><span>What diversification buys</span><i></i></a>
+  <a href="#c2"><span>Correlation is not slope</span><i></i></a>
+  <a href="#c3"><span>How little it explains</span><i></i></a>
+  <a href="#c4"><span>How noisy it is</span><i></i></a>
+  <a href="#c5"><span>Four identical datasets</span><i></i></a>
+  <a href="#c6"><span>Drills</span><i></i></a>
+</nav>
+
+<div class="hero">
+  <canvas id="heroCv" aria-hidden="true"></canvas>
+  <div class="heroInner">
+    <div class="eyebrow">An interactive derivation · No. 07</div>
+    <h1>One number for a whole <em>cloud</em></h1>
+    <p class="sub">Correlation compresses a scatter plot into a single figure, and everything it throws away is still there. Here is what it buys you in a portfolio, what it is not, how much it explains, how noisy it is, and four datasets with identical statistics that look nothing alike.</p>
+  </div>
+  <div class="scrollcue">Scroll ↓</div>
+</div>
+
+<main>
+
+<div class="orient">
+  <h2>Start here</h2>
+  <p class="lede">Everything so far has been about one quantity at a time. This module is about two, which is where portfolios, hedges and regressions live — and where a single summary number does the most damage.</p>
+  <ol>
+    <li><b>Chapter 01 is the practical payoff.</b> Two equally volatile assets at zero correlation halve the variance and cut the volatility by 29.3%. At correlation one they cut nothing at all, and the curve between those is not a straight line.</li>
+    <li><b>Chapter 03 is the corrective.</b> A correlation of 0.7 — which anyone would call strong — leaves <em>51% of the variance unexplained</em>.</li>
+    <li><b>Chapter 05 is the warning.</b> Four datasets with the same means, the same variances, the same correlation and the same fitted line, and four completely different pictures.</li>
+  </ol>
+  <details class="drop">
+    <summary>Notation — every symbol used on this page</summary>
+    <table class="ntab">
+      <tr><td>Covariance</td><td>The average product of two variables' deviations from their means. Has units, so it is hard to interpret directly.</td></tr>
+      <tr><td>ρ, r</td><td>Correlation: covariance divided by both standard deviations. Unitless, between −1 and 1, symmetric in its two arguments.</td></tr>
+      <tr><td>β</td><td>The slope of a regression. Unlike correlation it is <em>not</em> symmetric — regressing Y on X gives a different number from X on Y.</td></tr>
+      <tr><td>R²</td><td>The share of one variable's variance explained by the other. For a simple regression it is exactly ρ².</td></tr>
+      <tr><td>Residual</td><td>What the line does not explain. Its standard deviation is σ·√(1−ρ²).</td></tr>
+      <tr><td>Fisher z</td><td>The transform that makes a correlation's sampling distribution roughly normal, so an interval can be built for it.</td></tr>
+      <tr><td>Diversification benefit</td><td>How much portfolio volatility falls below the weighted average of its parts. Zero at correlation one.</td></tr>
+      <tr><td>Anscombe's quartet</td><td>Four datasets constructed to share every common summary statistic while looking entirely different.</td></tr>
+    </table>
+  </details>
+</div>
+
+<!-- ══════════ 01 ══════════ -->
+<section class="chapter" id="c1">
+  <div class="chead">
+    <div class="cnum">01</div>
+    <h2>What diversification actually buys</h2>
+    <p class="dek">Two assets, same volatility, split evenly. The correlation between them decides everything and the relationship is not linear.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Take two assets, each at 20% volatility, and hold half of each. What is the portfolio's volatility?</p>
+    <p>At <b>correlation 1</b> the answer is <b>20%</b> — you have bought the same thing twice and gained nothing. At <b>correlation 0</b> it is <b>14.14%</b>, a <b>29.3%</b> reduction, which is the famous 1/√2. At correlation 0.6 it is <b>17.89%</b> and the benefit has already shrunk to <b>10.6%</b>.</p>
+    <p>The shape of that curve is the important part. Most of the benefit is gone by the time correlation reaches 0.6, and correlations among risky assets are usually higher than that — and higher still in exactly the weeks you need the diversification. That is the finding <a href="https://cafe-helado.github.io/options-visually/dispersion.html">the options series</a> reaches from the other direction: correlation is bounded at one, and it gets there on the day you cannot afford it.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Portfolio volatility against correlation</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Portfolio volatility</span>
+            <span><i class="swl" style="background:var(--verm)"></i>No diversification at all</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>Where you are</span>
+          </span>
+        </div>
+        <canvas id="cv1" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl1"></div>
+        <div class="kv" style="margin-top:20px" id="kv1"></div>
+      </div>
+    </div>
+    <figcaption>Notice the curve is steepest at the left. The first move away from perfect correlation is worth far more than the last, which is why a small genuine diversifier beats a large nearly-redundant one.</figcaption>
+  </figure>
+
+  <div class="mline">σ²_p = w²σ₁² + (1−w)²σ₂² + 2w(1−w)ρσ₁σ₂</div>
+  <p class="mread">Reads as: <b>variances add, plus a cross term set by the correlation.</b> Everything diversification does is in that third term, and it vanishes at ρ = 0.</p>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Set the correlation to −1 and predict the portfolio volatility. Then find the weight that makes it zero.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c1" data-patch='{"rho":0,"w":0.5}' data-focus="cv1">Uncorrelated</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"rho":0.7,"w":0.5}' data-focus="cv1">A typical equity pair</button>
+      <button class="act ghost" data-preset="c1" data-patch='{"rho":-1,"w":0.5}' data-focus="cv1">Perfectly opposed</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Two assets at 20% volatility with a correlation of 0.9. How much does a 50/50 split reduce volatility?</p>
+    <div class="opts">
+      <button>By 10%, in line with the correlation</button>
+      <button data-ok="1">By 2.5% — to 19.49%. Almost nothing, because the cross term dominates when correlation is high</button>
+      <button>By half</button>
+      <button>Not at all</button>
+    </div>
+    <div class="ans"><b>Two and a half percent, which is nothing.</b> Diversification is not a linear function of correlation, and at the levels typical of risky assets it delivers much less than the word suggests. A portfolio of forty highly correlated names is close to one position with a smaller ticket.</div>
+  </div>
+</section>
+
+<!-- ══════════ 02 ══════════ -->
+<section class="chapter" id="c2">
+  <div class="chead">
+    <div class="cnum">02</div>
+    <h2>Correlation is symmetric; slope is not</h2>
+    <p class="dek">Regress Y on X and get 2.0. Regress X on Y and get 0.125. Same data, same correlation, and the two are not reciprocals.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Take X at 10% volatility and Y at 40%, correlated 0.5. The regression slope of Y on X is <b>ρ·σ_Y/σ_X = 2.0</b>. The slope of X on Y is <b>ρ·σ_X/σ_Y = 0.125</b>.</p>
+    <p>If a slope were simply "the relationship," those two would be reciprocals — 2.0 and 0.5. They are not, and the gap is exactly the thing regression does: it minimizes error in <em>one</em> direction, and swapping which variable is on which axis changes the problem.</p>
+    <p>Their product is <b>0.25</b>, which is ρ². That identity is worth carrying: <b>the two slopes multiply to R²</b>, so the more they disagree, the less the relationship explains.</p>
+    <p>The practical version is hedging. If you hedge Y with X you use β = 2.0 units of X per unit of Y. If you hedge X with Y you use 0.125. Reaching for the reciprocal of the first — 0.5 — would leave you four times overhedged, and it is a mistake people make under time pressure.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The same cloud, with both regression lines</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>The data</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Y on X</span>
+            <span><i class="swl" style="background:var(--moss)"></i>X on Y</span>
+          </span>
+        </div>
+        <canvas id="cv2" height="320"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl2"></div>
+        <div class="kv" style="margin-top:20px" id="kv2"></div>
+      </div>
+    </div>
+    <figcaption>Notice the two lines only coincide when the correlation is ±1. The angle between them is a picture of how much is unexplained.</figcaption>
+  </figure>
+
+  <div class="mline">β<sub>Y|X</sub> = ρ · σ<sub>Y</sub>/σ<sub>X</sub>      β<sub>X|Y</sub> = ρ · σ<sub>X</sub>/σ<sub>Y</sub>      β<sub>Y|X</sub> · β<sub>X|Y</sub> = ρ²</div>
+  <p class="mread">Reads as: <b>a slope is a correlation scaled by the ratio of the two spreads.</b> Correlation does not know which variable you care about; a slope does.</p>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">Stock Y has twice the volatility of index X, and they are 0.6 correlated. What is Y's beta to X?</p>
+    <div class="opts">
+      <button>0.6, the correlation</button>
+      <button data-ok="1">1.2 — the correlation times the volatility ratio, 0.6 × 2</button>
+      <button>2.0, the volatility ratio</button>
+      <button>0.3</button>
+    </div>
+    <div class="ans"><b>1.2.</b> Beta and correlation get used interchangeably and they are only equal when the two volatilities happen to match. A high-volatility stock with a modest correlation can have a large beta, and a low-volatility one with a high correlation can have a small one — which is why hedge ratios are computed rather than eyeballed.</div>
+  </div>
+</section>
+
+<!-- ══════════ 03 ══════════ -->
+<section class="chapter" id="c3">
+  <div class="chead">
+    <div class="cnum">03</div>
+    <h2>How little a strong correlation explains</h2>
+    <p class="dek">0.7 sounds like a lot. It accounts for 49% of the variance and leaves 51% on the table.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Correlation is on a scale that flatters it. Square it and you get <b>R²</b>, the share of variance one variable accounts for, and the squaring is brutal.</p>
+    <ul style="max-width:60ch;margin:18px auto 22px;padding-left:22px;color:var(--ink2);font-weight:300;line-height:1.7">
+      <li>ρ = 0.3 explains <b>9%</b> — the residual is 95.4% as volatile as the original.</li>
+      <li>ρ = 0.5 explains <b>25%</b> — residual 86.6%.</li>
+      <li>ρ = 0.7 explains <b>49%</b> — residual 71.4%.</li>
+      <li>ρ = 0.9 explains <b>81%</b> — residual 43.6%.</li>
+    </ul>
+    <p>Read the last column rather than the first. Hedging an asset with something 0.7 correlated removes barely a quarter of the volatility, because volatility falls with <b>√(1−ρ²)</b> and not with ρ. A hedge that "captures 70% of the move" leaves you with 71% of the risk.</p>
+    <p>This is the single most common way correlation misleads. It is reported on a scale where 0.7 reads as most of the way to one, and it operates on a scale where 0.7 is barely past halfway.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>What is left after hedging, against the correlation of your hedge</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>Residual volatility</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Variance explained</span>
+          </span>
+        </div>
+        <canvas id="cv3" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl3"></div>
+        <div class="kv" style="margin-top:20px" id="kv3"></div>
+      </div>
+    </div>
+    <figcaption>The two curves cross around 0.79. Below that, more of the risk survives the hedge than is removed by it — which is most of the correlations anyone actually trades.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">You hedge a position with an instrument correlated 0.8 to it. How much of the volatility is left?</p>
+    <div class="opts">
+      <button>20%</button>
+      <button data-ok="1">60% — the residual volatility is √(1−0.64) = 0.6 of the original</button>
+      <button>36%</button>
+      <button>None, if the hedge ratio is right</button>
+    </div>
+    <div class="ans"><b>Sixty percent survives, even with a perfect hedge ratio.</b> The third answer is 1−ρ², which is the variance left rather than the volatility — a factor-of-almost-two difference that matters because risk limits are usually set in volatility. And no hedge ratio can do better: 0.6 is the minimum, achieved exactly at β.</div>
+  </div>
+</section>
+
+<!-- ══════════ 04 ══════════ -->
+<section class="chapter" id="c4">
+  <div class="chead">
+    <div class="cnum">04</div>
+    <h2>And it is noisier than you think</h2>
+    <p class="dek">Thirty observations and a measured correlation of 0.3. The 95% interval includes zero.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">Correlations get quoted to two decimal places from samples that cannot support one. Estimate ρ from <em>n</em> paired observations and the standard error is roughly <b>(1−ρ²)/√n</b>.</p>
+    <p>At <b>r = 0.3</b> with <b>30</b> observations the standard error is <b>0.166</b>, and a proper interval — using the Fisher transform, which handles the boundary at ±1 — runs from <b>−0.068 to 0.596</b>. It includes zero. You cannot even conclude that the two things are related.</p>
+    <p>With <b>250</b> observations the same 0.3 gets an interval of <b>0.187 to 0.413</b>, which is usable. To call a correlation of 0.30 distinguishable from zero at all takes about <b>44</b> paired observations, and to pin it to ±0.05 takes several hundred.</p>
+    <p>Which sets a rule for reading correlation matrices: a matrix built from a year of monthly data has twelve observations per pair, and every number in it is noise dressed as precision.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>The interval around a measured correlation</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="swl" style="background:var(--blue)"></i>95% interval</span>
+            <span><i class="swl" style="background:var(--verm)"></i>Zero</span>
+            <span><i class="swl" style="background:var(--ochre)"></i>Your sample size</span>
+          </span>
+        </div>
+        <canvas id="cv4" height="310"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl4"></div>
+        <div class="kv" style="margin-top:20px" id="kv4"></div>
+      </div>
+    </div>
+    <figcaption>Notice where the lower bound finally clears zero. For a modest correlation that takes dozens of observations; for a weak one it takes hundreds.</figcaption>
+  </figure>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">A correlation matrix is built from one year of monthly returns. How much should you trust its entries?</p>
+    <div class="opts">
+      <button>They are fine — a year is a standard window</button>
+      <button data-ok="1">Barely at all. Twelve observations per pair gives standard errors around 0.3, so most entries are indistinguishable from zero and from each other</button>
+      <button>Only the large entries are reliable</button>
+      <button>They are reliable if the returns are normal</button>
+    </div>
+    <div class="ans"><b>Twelve observations is nothing.</b> The third answer has a grain of truth — large correlations do have smaller standard errors, since the (1−ρ²) shrinks — but at n = 12 even a measured 0.7 has an interval running from about 0.2 to 0.9. A correlation matrix is a place where enormous numbers of weakly estimated quantities get treated as data.</div>
+  </div>
+</section>
+
+<!-- ══════════ 05 ══════════ -->
+<section class="chapter" id="c5">
+  <div class="chead">
+    <div class="cnum">05</div>
+    <h2>Four datasets, identical statistics</h2>
+    <p class="dek">Same means, same variances, same correlation, same fitted line. Now look at them.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">In 1973 Frank Anscombe built four small datasets to make a point that no amount of argument had managed. Each has a mean x of <b>9.00</b>, a mean y of <b>7.50</b>, an x-variance of <b>11.00</b>, a y-variance of <b>4.13</b>, a correlation of <b>0.816</b> and a fitted slope of <b>0.500</b>.</p>
+    <p>Every summary statistic anyone would compute is the same. The pictures are: a genuine linear relationship, a perfect parabola, a perfect line with one outlier, and a vertical stack of points with a single distant one that creates the entire correlation by itself.</p>
+    <p>The fourth is the one to sit with. Ten points share an identical x value, so they contain no information about slope at all. One eleventh point, far away, determines the entire fit. Remove it and the correlation is undefined; keep it and the statistics look unremarkable.</p>
+    <p>The lesson is not "always plot your data," though you should. It is that <b>summary statistics are lossy in ways they do not advertise</b>, and the way to find out what they dropped is to look at the thing itself.</p>
+  </div>
+
+  <figure class="bleed">
+    <div class="split wide">
+      <div>
+        <div class="figtop">
+          <h3>Anscombe's quartet</h3>
+          <span class="legend" style="margin:0">
+            <span><i class="sw" style="background:var(--blue)"></i>The data</span>
+            <span><i class="swl" style="background:var(--verm)"></i>The fitted line</span>
+          </span>
+        </div>
+        <canvas id="cv5" height="330"></canvas>
+      </div>
+      <div class="rail panel">
+        <h4>Controls</h4>
+        <div id="ctl5"></div>
+        <div class="kv" style="margin-top:20px" id="kv5"></div>
+      </div>
+    </div>
+    <figcaption>Step through all four and watch the panel on the right refuse to change. That is the entire argument, made in 1973 and still routinely ignored.</figcaption>
+  </figure>
+
+  <div class="try">
+    <span class="lab">Try this</span>
+    <p>Step to set IV and look at the statistics before you look at the picture. Then look at the picture.</p>
+    <div class="btnrow">
+      <button class="act ghost" data-preset="c5" data-patch='{"set":0}' data-focus="cv5">I</button>
+      <button class="act ghost" data-preset="c5" data-patch='{"set":1}' data-focus="cv5">II</button>
+      <button class="act ghost" data-preset="c5" data-patch='{"set":2}' data-focus="cv5">III</button>
+      <button class="act ghost" data-preset="c5" data-patch='{"set":3}' data-focus="cv5">IV</button>
+    </div>
+  </div>
+
+  <div class="check">
+    <span class="lab">Check yourself</span>
+    <p class="q">In Anscombe's fourth dataset, ten of the eleven points share the same x value. What does that do?</p>
+    <div class="opts">
+      <button>Nothing — the statistics are still valid</button>
+      <button data-ok="1">It means the single remaining point determines the entire slope and correlation. There is no information about the relationship in the other ten</button>
+      <button>It makes the correlation undefined</button>
+      <button>It makes the fit more precise</button>
+    </div>
+    <div class="ans"><b>One point is doing all the work.</b> The correlation is well-defined and it is entirely an artifact of a single observation — remove it and there is no x-variation left to correlate with anything. This is not an exotic pathology: any regression with concentrated x values and one distant lever has the same structure, and it shows up constantly in factor models with a few extreme names.</div>
+  </div>
+</section>
+
+<!-- ══════════ 06 ══════════ -->
+<section class="chapter" id="c6">
+  <div class="chead">
+    <div class="cnum">06</div>
+    <h2>Drill it</h2>
+    <p class="dek">Betas, residual volatilities and portfolio variance.</p>
+  </div>
+
+  <div class="prose">
+    <p class="lead">The first tier is converting between correlation, beta and R². The second is portfolio arithmetic, which is the same formula pointed at money.</p>
+  </div>
+
+  <figure>
+    <div class="drill" id="drill">
+      <div class="dstats">
+        <div class="c"><span class="k">Correct</span><span class="v" id="dScore">0 / 0</span></div>
+        <div class="c"><span class="k">Streak</span><span class="v" id="dStreak" style="color:var(--moss)">0</span></div>
+        <div class="c"><span class="k">Best</span><span class="v" id="dBest">0</span></div>
+        <div class="c" style="flex:1;min-width:170px"><span class="k">Tier</span>
+          <div class="seg" style="margin-top:5px;max-width:240px">
+            <button id="dT1" aria-pressed="true">Conversions</button>
+            <button id="dT2" aria-pressed="false">Portfolios</button>
+          </div>
+        </div>
+      </div>
+      <span class="qn" id="dKind">Question</span>
+      <p class="qt" id="dText">Loading…</p>
+      <div class="ansrow">
+        <input type="text" inputmode="decimal" id="dInput" placeholder="your answer" aria-label="Your answer">
+        <span class="unit" id="dUnit"></span>
+        <button class="act" id="dSubmit">Check</button>
+        <button class="act ghost" id="dSkip">Skip</button>
+      </div>
+      <div class="verdict">
+        <div class="vd" id="dVerdict"></div>
+        <div class="work" id="dWork"></div>
+        <div class="btnrow"><button class="act" id="dNext">Next question</button></div>
+      </div>
+    </div>
+    <figcaption>The residual-volatility questions are the ones worth getting fast. √(1−ρ²) is the number that tells you whether a hedge is worth putting on.</figcaption>
+  </figure>
+
+  <div class="prose" style="margin-top:46px">
+    <p>Six questions across the page.</p>
+  </div>
+
+  <div class="score" id="scoreBox">
+    <span class="big" id="scoreNum">0 / 6</span>
+    <span class="txt" id="scoreTxt">Answered nothing yet. Questions are scored as you go.</span>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 1 · chapter 01</span>
+    <p class="q">Two assets at 20% volatility, correlation zero, split 50/50. Portfolio volatility?</p>
+    <div class="opts">
+      <button>20% — averaging does not change it</button>
+      <button data-ok="1">14.14% — 20% divided by √2, a 29.3% reduction</button>
+      <button>10%</button>
+      <button>0%</button>
+    </div>
+    <div class="ans"><b>14.14%.</b> Halving the variance, not the volatility, which is the whole reason diversification underwhelms people who expect the second. And at correlation 0.9 the same split gives 19.49% — a 2.5% reduction.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 2 · chapter 02</span>
+    <p class="q">X is at 10% volatility, Y at 40%, correlation 0.5. What is the beta of Y on X?</p>
+    <div class="opts">
+      <button>0.5</button>
+      <button data-ok="1">2.0 — the correlation times the volatility ratio, 0.5 × 4</button>
+      <button>0.125</button>
+      <button>4.0</button>
+    </div>
+    <div class="ans"><b>2.0, and 0.125 is the other regression.</b> Their product is 0.25 = ρ², which is a good check: if two betas multiply to something other than R², one of them is wrong.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 3 · chapter 03</span>
+    <p class="q">A correlation of 0.7. How much of the variance does it explain?</p>
+    <div class="opts">
+      <button>70%</button>
+      <button data-ok="1">49% — R² is ρ², so slightly less than half</button>
+      <button>84%</button>
+      <button>30%</button>
+    </div>
+    <div class="ans"><b>49%, and the residual volatility is 71.4% of the original.</b> Correlation is reported on a scale that makes 0.7 look like most of the way to one, and it operates on a scale where 0.7 is barely half.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 4 · chapter 03</span>
+    <p class="q">You hedge with an instrument correlated 0.6. What fraction of the volatility survives?</p>
+    <div class="opts">
+      <button>40%</button>
+      <button data-ok="1">80% — √(1 − 0.36) = 0.8</button>
+      <button>64%</button>
+      <button>36%</button>
+    </div>
+    <div class="ans"><b>Eighty percent survives.</b> A 0.6-correlated hedge removes a fifth of the risk, which is often not worth the cost and the basis exposure it introduces. The third answer is the variance rather than the volatility.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 5 · chapter 04</span>
+    <p class="q">You measure a correlation of 0.30 from 30 paired observations. What can you conclude?</p>
+    <div class="opts">
+      <button>That the two are moderately related</button>
+      <button data-ok="1">Almost nothing. The 95% interval runs from about −0.07 to 0.60, so zero is not excluded</button>
+      <button>That the correlation is exactly 0.30</button>
+      <button>That the relationship is weak</button>
+    </div>
+    <div class="ans"><b>The interval includes zero.</b> It takes about 44 paired observations even to distinguish a 0.30 correlation from no relationship at all — which is a useful benchmark when someone shows you a correlation matrix built from a year of monthly data.</div>
+  </div>
+
+  <div class="check" data-quiz="1" style="margin-left:0;max-width:none">
+    <span class="lab">Question 6 · chapter 05</span>
+    <p class="q">What does Anscombe's quartet demonstrate?</p>
+    <div class="opts">
+      <button>That correlation is usually wrong</button>
+      <button data-ok="1">That summary statistics are lossy. Four datasets share every common statistic — mean, variance, correlation, fitted line — and look entirely different</button>
+      <button>That small samples are unreliable</button>
+      <button>That regression requires normal data</button>
+    </div>
+    <div class="ans"><b>Lossiness, not error.</b> Every statistic in the quartet is correctly computed; they simply cannot distinguish a linear relationship from a parabola, an outlier, or a single leverage point. The remedy is to look at the data, and the reason it keeps needing repeating is that the statistics give no hint that anything was lost.</div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p class="n">Correlation as used here measures <em>linear</em> association only: two variables can be perfectly dependent and read zero correlation, which Anscombe's second dataset nearly demonstrates and a symmetric parabola demonstrates exactly. Everything in chapters 01 and 03 assumes the correlation is stable, and financial correlations are not — they rise in stress, which is when the diversification is being counted on, and the assets in a portfolio built for its correlation matrix will not have that matrix in the week it matters. The standard errors in chapter 04 assume independent paired observations drawn from a bivariate normal; overlapping windows, autocorrelation and fat tails all make them optimistic. And none of this touches causation, which no correlation of any size and no sample of any length can establish on its own.</p>
+</footer>
+
+<script src="assets/lab.js"></script>
+<script src="assets/stats.js"></script>
+<script src="assets/pwa.js" defer></script>
+<script>
+"use strict";
+
+/* Portfolio volatility, and the two things people confuse with correlation. */
+const portVol = (w, s1, s2, rho) =>
+  Math.sqrt(w * w * s1 * s1 + (1 - w) * (1 - w) * s2 * s2 + 2 * w * (1 - w) * rho * s1 * s2);
+const betaOf = (rho, sY, sX) => rho * sY / sX;
+const residualShare = rho => Math.sqrt(1 - rho * rho);
+/* Fisher's transform — the honest way to put an interval on a correlation,
+   because r is bounded at ±1 and its sampling distribution is skewed near
+   the ends. The naive (1−r²)/√n reads fine in the middle and badly at the edge. */
+const fisherZ = r => 0.5 * Math.log((1 + r) / (1 - r));
+const unFisher = z => (Math.exp(2 * z) - 1) / (Math.exp(2 * z) + 1);
+function corrInterval(r, n, conf) {
+  const se = 1 / Math.sqrt(n - 3), z = qnorm(0.5 + (conf || 0.95) / 2);
+  return { lo: unFisher(fisherZ(r) - z * se), hi: unFisher(fisherZ(r) + z * se), se };
+}
+/* how many paired observations before a given correlation clears zero */
+function nForSignificance(r, conf) {
+  const z = qnorm(0.5 + (conf || 0.95) / 2);
+  let n = 5;
+  while (n < 100000 && z / Math.sqrt(n - 3) >= Math.abs(fisherZ(r))) n++;
+  return n;
+}
+
+/* Anscombe's quartet, as published */
+const ANSCOMBE = [
+  {name:"I",   x:[10,8,13,9,11,14,6,4,12,7,5],
+               y:[8.04,6.95,7.58,8.81,8.33,9.96,7.24,4.26,10.84,4.82,5.68]},
+  {name:"II",  x:[10,8,13,9,11,14,6,4,12,7,5],
+               y:[9.14,8.14,8.74,8.77,9.26,8.10,6.13,3.10,9.13,7.26,4.74]},
+  {name:"III", x:[10,8,13,9,11,14,6,4,12,7,5],
+               y:[7.46,6.77,12.74,7.11,7.81,8.84,6.08,5.39,8.15,6.42,5.73]},
+  {name:"IV",  x:[8,8,8,8,8,8,8,19,8,8,8],
+               y:[6.58,5.76,7.71,8.84,8.47,7.04,5.25,12.50,5.56,7.91,6.89]}
+];
+
+/* ══════════ hero ══════════ */
+(function(){
+  const cv=document.getElementById("heroCv");let w,h,g,raf,t0=0;
+  function size(){const dpr=window.devicePixelRatio||1;
+    w=cv.clientWidth;h=cv.clientHeight;cv.width=w*dpr;cv.height=h*dpr;
+    g=cv.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);}
+  const PTS=[];
+  (function(){const r=rng(606);for(let i=0;i<220;i++){
+    const a=r.normal(0,1),b=r.normal(0,1);PTS.push([a,b]);}})();
+  function draw(ph){
+    g.fillStyle=C("--chalk");g.fillRect(0,0,w,h);
+    const rho=Math.sin(ph*0.45)*0.85;
+    const padX=w*0.08,padY=h*0.14,gw=w-padX*2,gh=h-padY*2;
+    const X=v=>padX+gw*(v+3)/6, Y=v=>padY+gh-gh*(v+3)/6;
+    g.fillStyle=rho>=0?C("--blue"):C("--verm");
+    PTS.forEach(([a,b])=>{
+      const y=rho*a+Math.sqrt(1-rho*rho)*b;
+      g.globalAlpha=0.13;
+      g.beginPath();g.arc(X(a),Y(y),2.4,0,6.2832);g.fill();
+    });
+    g.globalAlpha=1;
+  }
+  function tick(t){if(!t0)t0=t;draw((t-t0)/2600);raf=requestAnimationFrame(tick);}
+  window.drawHero=function(){size();if(RM){draw(0);return;}
+    if(raf)cancelAnimationFrame(raf);t0=0;raf=requestAnimationFrame(tick);};
+})();
+
+/* ══════════ 01 — what diversification buys ══════════ */
+const s1={rho:0.5,w:0.5,s1v:0.20,s2v:0.20};
+(function(){
+  sliders(document.getElementById("ctl1"),[
+    {id:"a1",k:"rho",lbl:"ρ",name:"Correlation",min:-1,max:1,step:0.01,fmt:v=>v.toFixed(2)},
+    {id:"b1",k:"w",lbl:"w",name:"Weight in the first",min:0,max:1,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"c1a",k:"s1v",lbl:"σ₁",name:"First asset volatility",min:0.05,max:0.60,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"d1",k:"s2v",lbl:"σ₂",name:"Second asset volatility",min:0.05,max:0.60,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"}
+  ],s1,()=>draw(),"c1");
+  window.draw1=draw;
+  window.__port=portVol;
+  function draw(){
+    const xs=[],ys=[],flat=[];
+    const avg=s1.w*s1.s1v+(1-s1.w)*s1.s2v;
+    for(let i=0;i<=200;i++){const r=-1+2*i/200;xs.push(r);
+      ys.push(portVol(s1.w,s1.s1v,s1.s2v,r)*100);flat.push(avg*100);}
+    const o=Fig(document.getElementById("cv1"),
+      {h:310,x0:-1,x1:1,y0:0,y1:Math.max(avg,s1.s1v,s1.s2v)*115,pad:{l:60,r:14,t:14}});
+    axes(o,v=>v.toFixed(1),v=>v.toFixed(0)+"%",5,4);
+    clip(o,()=>{line(o,xs,flat,C("--verm"),1.7,[5,4]);line(o,xs,ys,C("--blue"),2.2);});
+    vline(o,s1.rho,C("--ochre"),"ρ = "+s1.rho.toFixed(2));
+    const pv=portVol(s1.w,s1.s1v,s1.s2v,s1.rho);
+    /* the weight that minimizes variance */
+    let bw=0.5,best=Infinity;
+    for(let i=0;i<=1000;i++){const ww=i/1000;const v=portVol(ww,s1.s1v,s1.s2v,s1.rho);
+      if(v<best){best=v;bw=ww;}}
+    document.getElementById("kv1").innerHTML=kvHTML([
+      ["Correlation",s1.rho.toFixed(3)],
+      ["Weights",(s1.w*100).toFixed(0)+"% / "+((1-s1.w)*100).toFixed(0)+"%"],
+      ["Weighted average vol",(avg*100).toFixed(3)+"%"],
+      ["Portfolio volatility",(pv*100).toFixed(3)+"%"],
+      ["Diversification benefit",((avg-pv)/avg*100).toFixed(2)+"%"],
+      ["At ρ = 0",(portVol(s1.w,s1.s1v,s1.s2v,0)*100).toFixed(3)+"%"],
+      ["At ρ = 1",(portVol(s1.w,s1.s1v,s1.s2v,1)*100).toFixed(3)+"%"],
+      ["At ρ = 0.9",(portVol(s1.w,s1.s1v,s1.s2v,0.9)*100).toFixed(3)+"%"],
+      ["Minimum-variance weight",(bw*100).toFixed(1)+"%"],
+      ["  its volatility",(best*100).toFixed(3)+"%"]
+    ]);
+  }
+})();
+
+/* ══════════ 02 — correlation is not slope ══════════ */
+const s2={rho:0.5,sX:0.10,sY:0.40,n:400};
+(function(){
+  sliders(document.getElementById("ctl2"),[
+    {id:"a2",k:"rho",lbl:"ρ",name:"Correlation",min:-0.95,max:0.95,step:0.01,fmt:v=>v.toFixed(2)},
+    {id:"b2",k:"sX",lbl:"σx",name:"Volatility of X",min:0.02,max:0.50,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"},
+    {id:"c2y",k:"sY",lbl:"σy",name:"Volatility of Y",min:0.02,max:0.80,step:0.01,fmt:v=>(v*100).toFixed(0)+"%"}
+  ],s2,()=>draw(),"c2");
+  window.draw2=draw;
+  window.__beta=betaOf;
+  function draw(){
+    const r=rng(1717), n=s2.n, xs=[],ys=[];
+    for(let i=0;i<n;i++){
+      const a=r.normal(0,1),b=r.normal(0,1);
+      xs.push(a*s2.sX);
+      ys.push((s2.rho*a+Math.sqrt(1-s2.rho*s2.rho)*b)*s2.sY);
+    }
+    const lim=Math.max(s2.sX,s2.sY)*3.2;
+    const o=Fig(document.getElementById("cv2"),
+      {h:320,x0:-s2.sX*3.4,x1:s2.sX*3.4,y0:-s2.sY*3.4,y1:s2.sY*3.4,pad:{l:66,r:14,t:14}});
+    axes(o,v=>(v*100).toFixed(0)+"%",v=>(v*100).toFixed(0)+"%",5,4);
+    clip(o,()=>{
+      dots(o,xs,ys,C("--blue"),2.1,0.30);
+      const bYX=betaOf(s2.rho,s2.sY,s2.sX);
+      const bXY=betaOf(s2.rho,s2.sX,s2.sY);
+      line(o,[-s2.sX*4,s2.sX*4],[-bYX*s2.sX*4,bYX*s2.sX*4],C("--verm"),2.1);
+      /* x on y: the line y = x / bXY */
+      line(o,[-bXY*s2.sY*4,bXY*s2.sY*4],[-s2.sY*4,s2.sY*4],C("--moss"),2.1);
+    });
+    const bYX=betaOf(s2.rho,s2.sY,s2.sX), bXY=betaOf(s2.rho,s2.sX,s2.sY);
+    document.getElementById("kv2").innerHTML=kvHTML([
+      ["Correlation",s2.rho.toFixed(3)],
+      ["Volatility of X",(s2.sX*100).toFixed(1)+"%"],
+      ["Volatility of Y",(s2.sY*100).toFixed(1)+"%"],
+      ["  their ratio",(s2.sY/s2.sX).toFixed(3)],
+      ["β of Y on X",bYX.toFixed(4)],
+      ["β of X on Y",bXY.toFixed(4)],
+      ["  reciprocal of the first",(1/bYX).toFixed(4)],
+      ["  they are not equal",Math.abs(bXY-1/bYX)<1e-9?"unless ρ = ±1":"correct"],
+      ["Their product",(bYX*bXY).toFixed(4)],
+      ["  which is ρ²",(s2.rho*s2.rho).toFixed(4)]
+    ]);
+  }
+})();
+
+/* ══════════ 03 — how little it explains ══════════ */
+const s3={rho:0.7};
+(function(){
+  sliders(document.getElementById("ctl3"),[
+    {id:"a3",k:"rho",lbl:"ρ",name:"Correlation of your hedge",min:0,max:0.99,step:0.01,fmt:v=>v.toFixed(2)}
+  ],s3,()=>draw(),"c3");
+  window.draw3=draw;
+  window.__resid=residualShare;
+  function draw(){
+    const xs=[],res=[],exp=[];
+    for(let i=0;i<=200;i++){const r=i/200;xs.push(r);
+      res.push(residualShare(r)*100);exp.push(r*r*100);}
+    const o=Fig(document.getElementById("cv3"),
+      {h:310,x0:0,x1:1,y0:0,y1:105,pad:{l:60,r:14,t:14}});
+    axes(o,v=>v.toFixed(1),v=>v.toFixed(0)+"%",5,4);
+    clip(o,()=>{line(o,xs,exp,C("--verm"),2.1);line(o,xs,res,C("--blue"),2.2);});
+    vline(o,s3.rho,C("--ochre"),"ρ = "+s3.rho.toFixed(2));
+    /* where the two curves cross */
+    let cross=NaN;
+    for(let i=1;i<xs.length;i++)
+      if(res[i-1]>exp[i-1]&&res[i]<=exp[i]){cross=xs[i];break;}
+    document.getElementById("kv3").innerHTML=kvHTML([
+      ["Correlation",s3.rho.toFixed(3)],
+      ["R² (variance explained)",(s3.rho*s3.rho*100).toFixed(2)+"%"],
+      ["Variance left",((1-s3.rho*s3.rho)*100).toFixed(2)+"%"],
+      ["Residual VOLATILITY",(residualShare(s3.rho)*100).toFixed(2)+"%"],
+      ["  of the original","that survives the hedge"],
+      ["At ρ = 0.3",(residualShare(0.3)*100).toFixed(1)+"% survives"],
+      ["At ρ = 0.5",(residualShare(0.5)*100).toFixed(1)+"% survives"],
+      ["At ρ = 0.7",(residualShare(0.7)*100).toFixed(1)+"% survives"],
+      ["At ρ = 0.9",(residualShare(0.9)*100).toFixed(1)+"% survives"],
+      ["The curves cross at",isFinite(cross)?cross.toFixed(2):"—"]
+    ]);
+  }
+})();
+
+/* ══════════ 04 — how noisy it is ══════════ */
+const s4={r:0.30,n:30};
+(function(){
+  sliders(document.getElementById("ctl4"),[
+    {id:"a4",k:"r",lbl:"r",name:"Measured correlation",min:-0.95,max:0.95,step:0.01,fmt:v=>v.toFixed(2)},
+    {id:"b4",k:"n",lbl:"n",name:"Paired observations",min:6,max:2000,step:1,
+      fmt:v=>v>=1000?(v/1000).toFixed(1)+"k":v.toFixed(0)}
+  ],s4,()=>draw(),"c4");
+  window.draw4=draw;
+  window.__ci=corrInterval;
+  window.__nSig=nForSignificance;
+  function draw(){
+    const xs=[],lo=[],hi=[];
+    for(let i=0;i<=240;i++){
+      const n=Math.round(6*Math.pow(2000/6,i/240));
+      const ci=corrInterval(s4.r,n,0.95);
+      xs.push(Math.log10(n));lo.push(ci.lo);hi.push(ci.hi);
+    }
+    const o=Fig(document.getElementById("cv4"),
+      {h:310,x0:Math.log10(6),x1:Math.log10(2000),y0:-1,y1:1,pad:{l:58,r:14,t:14}});
+    axes(o,v=>{const n=Math.pow(10,v);return n>=1000?(n/1000).toFixed(1)+"k":n.toFixed(0);},
+      v=>v.toFixed(1),5,4);
+    clip(o,()=>{line(o,xs,lo,C("--blue"),2.0);line(o,xs,hi,C("--blue"),2.0);});
+    hline(o,0,C("--verm"),"zero",[3,3]);
+    hline(o,s4.r,C("--hair"),"your estimate",[2,4]);
+    vline(o,Math.log10(s4.n),C("--ochre"),String(Math.round(s4.n)));
+    const ci=corrInterval(s4.r,Math.round(s4.n),0.95);
+    const nSig=nForSignificance(s4.r,0.95);
+    document.getElementById("kv4").innerHTML=kvHTML([
+      ["Measured correlation",s4.r.toFixed(3)],
+      ["Paired observations",String(Math.round(s4.n))],
+      ["Naive se, (1−r²)/√n",((1-s4.r*s4.r)/Math.sqrt(s4.n)).toFixed(4)],
+      ["Fisher 95% interval",ci.lo.toFixed(3)+" to "+ci.hi.toFixed(3)],
+      ["  width",(ci.hi-ci.lo).toFixed(3)],
+      ["Does it include zero?",(ci.lo<0&&ci.hi>0)?"yes — no conclusion":"no"],
+      ["Observations to clear zero",nSig>50000?"more than 50k":String(nSig)],
+      ["At n = 30",corrInterval(s4.r,30,0.95).lo.toFixed(3)+" to "+corrInterval(s4.r,30,0.95).hi.toFixed(3)],
+      ["At n = 250",corrInterval(s4.r,250,0.95).lo.toFixed(3)+" to "+corrInterval(s4.r,250,0.95).hi.toFixed(3)],
+      ["A year of monthly data","n = 12"]
+    ]);
+  }
+})();
+
+/* ══════════ 05 — Anscombe ══════════ */
+const s5={set:0};
+(function(){
+  sliders(document.getElementById("ctl5"),[
+    {id:"a5",k:"set",lbl:"#",name:"Which dataset",min:0,max:3,step:1,fmt:v=>ANSCOMBE[Math.round(v)].name}
+  ],s5,()=>draw(),"c5");
+  window.draw5=draw;
+  window.__anscombe=ANSCOMBE;
+  function draw(){
+    const d=ANSCOMBE[Math.round(s5.set)];
+    const fit=fitLine(d.x,d.y);
+    const o=Fig(document.getElementById("cv5"),
+      {h:330,x0:2,x1:21,y0:2,y1:14,pad:{l:56,r:14,t:14}});
+    axes(o,v=>v.toFixed(0),v=>v.toFixed(0),5,4);
+    clip(o,()=>{
+      line(o,[2,21],[fit.intercept+fit.slope*2,fit.intercept+fit.slope*21],C("--verm"),2.0);
+      dots(o,d.x,d.y,C("--blue"),4.5,0.9);
+    });
+    document.getElementById("kv5").innerHTML=kvHTML([
+      ["Dataset",d.name],
+      ["Points",String(d.x.length)],
+      ["Mean of x",mean(d.x).toFixed(2)],
+      ["Mean of y",mean(d.y).toFixed(3)],
+      ["Variance of x",variance(d.x).toFixed(2)],
+      ["Variance of y",variance(d.y).toFixed(3)],
+      ["Correlation",fit.r.toFixed(4)],
+      ["Slope",fit.slope.toFixed(4)],
+      ["Intercept",fit.intercept.toFixed(4)],
+      ["R²",fit.r2.toFixed(4)],
+      ["Distinct x values",String(new Set(d.x).size)]
+    ]);
+  }
+})();
+
+/* ══════════ 06 — the drill ══════════ */
+(function(){
+  let tier=1,sc=0,asked=0,streak=0,best=0,cur=null;
+  const E=id=>document.getElementById(id);
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  function make(){
+    const R=Math.random;
+    if(tier===1){
+      const t=Math.floor(R()*3);
+      if(t===0){const rho=pick([0.2,0.3,0.5,0.6,0.7,0.8]),sX=pick([0.10,0.15,0.20]),
+          sY=pick([0.20,0.30,0.40,0.50]);
+        const a=betaOf(rho,sY,sX);
+        return{kind:"Beta from a correlation",unit:"",a:a,tol:Math.max(0.01,a*0.02),
+          q:"X is at <b>"+(sX*100).toFixed(0)+"%</b> volatility, Y at <b>"+(sY*100).toFixed(0)+
+            "%</b>, correlation <b>"+rho.toFixed(2)+"</b>. What is the beta of Y on X?",
+          w:"ρ × σy/σx = "+rho.toFixed(2)+" × "+(sY/sX).toFixed(3)+" = <b>"+a.toFixed(3)+"</b>."};}
+      if(t===1){const rho=pick([0.3,0.4,0.5,0.6,0.7,0.8,0.9]);
+        const a=residualShare(rho)*100;
+        return{kind:"What survives a hedge",unit:"%",a:a,tol:Math.max(0.1,a*0.02),
+          q:"You hedge with something correlated <b>"+rho.toFixed(2)+
+            "</b>. What percentage of the volatility survives?",
+          w:"√(1 − ρ²) = √(1 − "+(rho*rho).toFixed(4)+") = <b>"+a.toFixed(2)+
+            "%</b>. Not 1 − ρ², which is the variance."};}
+      const rho=pick([0.2,0.35,0.5,0.65,0.8,0.95]);
+      const a=rho*rho*100;
+      return{kind:"R squared",unit:"%",a:a,tol:Math.max(0.1,a*0.02),
+        q:"A correlation of <b>"+rho.toFixed(2)+"</b>. What percentage of the variance does it explain?",
+        w:"ρ² = "+rho.toFixed(2)+"² = <b>"+a.toFixed(2)+"%</b>. The residual volatility is √(1−ρ²) = "+
+          (residualShare(rho)*100).toFixed(1)+"%."};
+    }
+    const t=Math.floor(R()*3);
+    if(t===0){const s=pick([0.15,0.20,0.25,0.30]),rho=pick([0,0.3,0.5,0.7,0.9]);
+      const a=portVol(0.5,s,s,rho)*100;
+      return{kind:"Portfolio volatility",unit:"%",a:a,tol:Math.max(0.05,a*0.01),
+        q:"Two assets at <b>"+(s*100).toFixed(0)+"%</b> volatility, correlation <b>"+
+          rho.toFixed(2)+"</b>, split 50/50. Portfolio volatility?",
+        w:"σ√((1+ρ)/2) = "+(s*100).toFixed(0)+"% × √"+((1+rho)/2).toFixed(3)+
+          " = <b>"+a.toFixed(2)+"%</b>."};}
+    if(t===1){const s=pick([0.20,0.25]),rho=pick([0,0.3,0.6,0.9]);
+      const a=(s-portVol(0.5,s,s,rho))/s*100;
+      return{kind:"Diversification benefit",unit:"%",a:a,tol:Math.max(0.05,Math.abs(a)*0.02),
+        q:"Two assets at <b>"+(s*100).toFixed(0)+"%</b>, correlation <b>"+rho.toFixed(2)+
+          "</b>, 50/50. By what percentage does the portfolio's volatility fall below theirs?",
+        w:"1 − √((1+ρ)/2) = 1 − "+Math.sqrt((1+rho)/2).toFixed(4)+" = <b>"+a.toFixed(2)+
+          "%</b>. At ρ = 1 it is exactly zero."};}
+    const r=pick([0.2,0.3,0.4,0.5]);
+    const a=nForSignificance(r,0.95);
+    return{kind:"Observations to clear zero",unit:"",a:a,tol:Math.max(2,a*0.03),
+      q:"How many paired observations before a correlation of <b>"+r.toFixed(2)+
+        "</b> is distinguishable from zero at 95%?",
+      w:"Solve 1.96/√(n−3) < arctanh("+r.toFixed(2)+") = "+fisherZ(r).toFixed(4)+
+        ", giving n = <b>"+a+"</b>."};
+  }
+  function next(){
+    cur=make();
+    E("dKind").textContent=cur.kind;E("dText").innerHTML=cur.q;
+    E("dUnit").textContent=cur.unit;E("dInput").value="";
+    E("drill").classList.remove("done");
+    focusSoft(E("dInput"),E("drill"));
+  }
+  function submit(){
+    if(!cur||E("drill").classList.contains("done"))return;
+    const raw=parseFloat(String(E("dInput").value).replace(/[$,%\s]/g,""));
+    asked++;
+    const ok=isFinite(raw)&&Math.abs(raw-cur.a)<=cur.tol;
+    if(ok){sc++;streak++;if(streak>best)best=streak;}else streak=0;
+    E("dVerdict").textContent=ok?"CORRECT":("NOT QUITE — the answer is "+cur.a.toFixed(3));
+    E("dVerdict").className="vd "+(ok?"ok":"no");
+    E("dWork").innerHTML=cur.w;
+    E("dScore").textContent=sc+" / "+asked;
+    E("dStreak").textContent=String(streak);E("dBest").textContent=String(best);
+    E("drill").classList.add("done");
+  }
+  E("dSubmit").addEventListener("click",submit);
+  E("dInput").addEventListener("keydown",e=>{if(e.key==="Enter")submit();});
+  E("dNext").addEventListener("click",next);
+  E("dSkip").addEventListener("click",()=>{streak=0;E("dStreak").textContent="0";next();});
+  [1,2].forEach(k=>E("dT"+k).addEventListener("click",()=>{
+    tier=k;[1,2].forEach(j=>E("dT"+j).setAttribute("aria-pressed",j===k?"true":"false"));
+    next();}));
+  window.drawDrill=next;
+  window.__drill=()=>{const o=[];for(let i=0;i<2;i++){tier=i+1;for(let j=0;j<400;j++)o.push(make());}tier=1;return o;};
+})();
+
+function drawAll(){
+  drawHero();draw1();draw2();draw3();draw4();draw5();drawDrill();
+}
+LAB.boot(drawAll);
+
+</script>
+</body>
+</html>
